@@ -1,0 +1,48 @@
+//
+This is the default elementset for Archipelo. Feel free to copy this code to make your own elementset for the game.
+The following settings will not have any effect if you are making a elementset since they are developer only. However,
+if you are making new tiles, than they will work:
+- collidable
+
+Here is a list of all possible settings. No setting is necessary, you can skip all if you want, it will simply use
+a default value then:
+- name (Not necessary but highly suggested. It will make it easier to identify in the map editor. Default: "Element")
+- spritesheet-x (X coordinate of where the tile's texture is located on the spritesheet. Default: 0)
+- spritesheet-y (Y coordinate of where the tile's texture is located on the spritesheet. Default: 0)
+- collidable (Whether a player can walk through it or not. Note that this is not a simple boolean value like for tiles, 
+this uses an array to specify which segments of the element are collidable and which aren't. Look at "Pointy Tree" element 
+for example. 1 is collidable and 0 isn't. Default: 0)
+- offset-x (Image drawing x offset. This is used to draw the image in a different location than it really is. Uses actual 
+pixel coordinates, not tile coordinates. Default: 0)
+- offset-y (Image drawing y offset. This is used to draw the image in a different location than it really is. Uses actual 
+pixel coordinates, not tile coordinates. Default: 0)
+- width (Width of element measured in tiles, not pixels. Default: 1)
+- height (Height of element measured in tiles, not pixels. Default: 1)
+- animation-speed (Time in seconds between each frame of the element's animation. Use decimals for a short time. Default: 0)
+- number-of-frames (Number of frames in the animation to switch between. Default: 1)
+- rotation (Clockwise rotation of element. 0 = 0 degrees, 1 = 90 degrees, 2 = 180 degrees, 3 = 270 degrees. Default: 0)
+- flip-x (Making this true will flip the image horizontally. Default: false)
+- flip-y (Making this true will flip the image vertically. Default: false)
+
+If you decide to do an animation, keep in mind that the spritesheet will start the animation on the spritesheet-x and 
+spritesheet-y coordinate and will get other frames by going from left-right using the same width and height as the 
+previous frame. See default spritesheet to see how it works (See "Flowers 1" tile).
+//
+
+
+Element 0
+name: "Blank"
+collidable: 0
+end;
+
+Element 1
+name: "Pointy Tree"
+spritesheet-x: 1
+offset-x: -1
+width: 2
+height: 3
+collidable:
+0 0
+0 0
+1 1
+end;
