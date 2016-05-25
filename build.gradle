@@ -1,0 +1,41 @@
+apply plugin: "java"
+
+sourceCompatibility = 1.6
+version = '1.0'
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Quickstart',
+                   'Implementation-Version': version
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+test {
+    systemProperties 'property': 'value'
+}
+
+dependencies {
+		compile 'com.badlogicgames.gdx:gdx-backend-headless:1.9.1'
+}
+
+uploadArchives {
+    repositories {
+       flatDir {
+           dirs 'repos'
+       }
+    }
+}
+
+task afterEclipseImport(description: "Post processing after project generation", group: "IDE") {
+  doLast {
+    def classpath = new XmlParser().parse(file(".classpath"))
+    def writer = new FileWriter(file(".classpath"))
+    def printer = new XmlNodePrinter(new PrintWriter(writer))
+    printer.setPreserveWhitespace(true)
+    printer.print(classpath)
+  }
+}

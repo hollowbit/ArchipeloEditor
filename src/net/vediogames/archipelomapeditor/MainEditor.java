@@ -268,40 +268,22 @@ public class MainEditor implements Runnable{
 			}
 
 			@Override
-			public void windowActivated(WindowEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void windowActivated(WindowEvent e) {}
 
 			@Override
-			public void windowClosed(WindowEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void windowClosed(WindowEvent e) {}
 
 			@Override
-			public void windowDeactivated(WindowEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void windowDeactivated(WindowEvent e) {}
 
 			@Override
-			public void windowDeiconified(WindowEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void windowDeiconified(WindowEvent e) {}
 
 			@Override
-			public void windowIconified(WindowEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void windowIconified(WindowEvent e) {}
 
 			@Override
-			public void windowOpened(WindowEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
+			public void windowOpened(WindowEvent e) {}
 			
 		});
 		
@@ -322,7 +304,7 @@ public class MainEditor implements Runnable{
 						if(option == JOptionPane.YES_OPTION){
 							if(saveLocation == null){
 								JFileChooser saveFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-								saveFile.setFileFilter(new FileNameExtensionFilter("map", "map"));
+								saveFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
 				                saveFile.showSaveDialog(null);
 				                if(saveFile.getSelectedFile() == null) return;
 				                File selectedFile = saveFile.getSelectedFile();
@@ -340,7 +322,7 @@ public class MainEditor implements Runnable{
 							}
 							if(saved){
 								JFileChooser openFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-								openFile.setFileFilter(new FileNameExtensionFilter("map", "map"));
+								openFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
 			                	openFile.showOpenDialog(null);
 				                if(openFile.getSelectedFile() == null) return;
 			                	File selectedFile = openFile.getSelectedFile();
@@ -355,7 +337,7 @@ public class MainEditor implements Runnable{
 						}else if(option == JOptionPane.NO_OPTION){
 			                saved = true;
 							JFileChooser openFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-							openFile.setFileFilter(new FileNameExtensionFilter("map", "map"));
+							openFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
 			                openFile.showOpenDialog(null);
 			                if(openFile.getSelectedFile() == null) return;
 			                File selectedFile = openFile.getSelectedFile();
@@ -369,7 +351,7 @@ public class MainEditor implements Runnable{
 					}
 				}else{
 					JFileChooser openFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-					openFile.setFileFilter(new FileNameExtensionFilter("map", "map"));
+					openFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
 	                openFile.showOpenDialog(null);
 	                if(openFile.getSelectedFile() == null) return;
 	                File selectedFile = openFile.getSelectedFile();
