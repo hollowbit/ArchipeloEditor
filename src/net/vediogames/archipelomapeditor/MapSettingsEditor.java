@@ -81,7 +81,7 @@ public class MapSettingsEditor extends JFrame {
 		comboBoxClimate.addItem("Grassy - 0");
 		comboBoxClimate.addItem("Sandy - 1");
 		comboBoxClimate.addItem("Snowy - 2");
-		comboBoxClimate.setSelectedIndex(new Integer(MainEditor.map.getClimate()));
+		comboBoxClimate.setSelectedIndex(new Integer(MainEditor.map.getClimat()));
 		getContentPane().add(comboBoxClimate);
 		
 		JLabel lblClimate = new JLabel("Climate:");
@@ -146,7 +146,7 @@ public class MapSettingsEditor extends JFrame {
 				ChangeList.addChanges(new SettingsChange(), new ResizeChange());
 				MainEditor.map.setName(textFieldName.getText());
 				MainEditor.map.setType((byte) comboBoxType.getSelectedIndex());
-				MainEditor.map.setClimate((byte) comboBoxClimate.getSelectedIndex());
+				MainEditor.map.setClimat((byte) comboBoxClimate.getSelectedIndex());
 				MainEditor.map.resize((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue());
                 editor.panelMapPanel.setPreferredSize(new Dimension(MainEditor.map.getWidth() * 18, MainEditor.map.getHeight() * 18));
                 editor.panelMapPanel.revalidate();

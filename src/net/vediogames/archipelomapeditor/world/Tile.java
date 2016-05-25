@@ -63,7 +63,7 @@ public class Tile implements Icon{
 
 	@Override
 	public void paintIcon(Component c, Graphics g, int x, int y) {
-		switch(MainEditor.map.getClimate()){
+		switch(MainEditor.map.getClimat()){
 		case 0:
 			g.drawImage(grassyTexture, x, y, null);
 			break;

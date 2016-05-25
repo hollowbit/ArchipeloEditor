@@ -159,7 +159,7 @@ public class NewMapMenu extends JFrame {
 				}
 				MainEditor.map.setName(textFieldName.getText());
 				MainEditor.map.setType((byte) comboBoxType.getSelectedIndex());
-				MainEditor.map.setClimate((byte) comboBoxClimate.getSelectedIndex());
+				MainEditor.map.setClimat((byte) comboBoxClimate.getSelectedIndex());
 				MainEditor.map.setTiles(new String[(int) spinnerHeight.getValue()][(int) spinnerWidth.getValue()]);
 				MainEditor.map.setElements(new String[(int) spinnerHeight.getValue()][(int) spinnerWidth.getValue()]);
 				MainEditor.map.resize((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue());

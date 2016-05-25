@@ -377,14 +377,14 @@ public class MainEditor implements Runnable{
 						if(option == JOptionPane.YES_OPTION){
 							if(saveLocation == null){
 								JFileChooser saveFile = new JFileChooser();
-								saveFile.setFileFilter(new FileNameExtensionFilter("map", "map"));
+								saveFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
 				                saveFile.showSaveDialog(null);
 				                if(saveFile.getSelectedFile() == null) return;
 				                File selectedFile = saveFile.getSelectedFile();
 				                if(selectedFile != null){
 				                	saveLocation = selectedFile.getPath();
 				                	saveLocation = saveLocation.replaceFirst("[.][^.]+$", "");
-				                	saveLocation = saveLocation + ".map";
+				                	saveLocation = saveLocation + ".json";
 				                	lblMapPath.setText("         " + saveLocation);
 					                map.save(new File(saveLocation));
 					                saved = true;
@@ -421,14 +421,14 @@ public class MainEditor implements Runnable{
 				if(mntmSave.isEnabled()){
 					if(saveLocation == null){
 						JFileChooser saveFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-						saveFile.setFileFilter(new FileNameExtensionFilter("map", "map"));
+						saveFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
 		                saveFile.showSaveDialog(null);
 		                if(saveFile.getSelectedFile() == null) return;
 		                File selectedFile = saveFile.getSelectedFile();
 		                if(selectedFile != null){
 		                	saveLocation = selectedFile.getPath();
 		                	saveLocation = saveLocation.replaceFirst("[.][^.]+$", "");
-		                	saveLocation = saveLocation + ".map";
+		                	saveLocation = saveLocation + ".json";
 		                	lblMapPath.setText("         " + saveLocation);
 			                map.save(new File(saveLocation));
 		                }
@@ -447,14 +447,14 @@ public class MainEditor implements Runnable{
 			public void mouseReleased(MouseEvent e) {
 				if(mntmSaveAs.isEnabled()){
 					JFileChooser saveFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-					saveFile.setFileFilter(new FileNameExtensionFilter("map", "map"));
+					saveFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
 	                saveFile.showSaveDialog(null);
 	                if(saveFile.getSelectedFile() == null) return;
 	                File selectedFile = saveFile.getSelectedFile();
 	                if(selectedFile != null){
 	                	saveLocation = selectedFile.getPath();
 	                	saveLocation = saveLocation.replaceFirst("[.][^.]+$", "");
-	                	saveLocation = saveLocation + ".map";
+	                	saveLocation = saveLocation + ".json";
 	                	lblMapPath.setText("         " + saveLocation);
 		                map.save(new File(saveLocation));
 	                }
@@ -479,14 +479,14 @@ public class MainEditor implements Runnable{
 				if(option == JOptionPane.YES_OPTION){
 					if(saveLocation == null){
 						JFileChooser saveFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-						saveFile.setFileFilter(new FileNameExtensionFilter("map", "map"));
+						saveFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
 		                saveFile.showSaveDialog(null);
 		                if(saveFile.getSelectedFile() == null) return;
 		                File selectedFile = saveFile.getSelectedFile();
 		                if(selectedFile != null){
 		                	saveLocation = selectedFile.getPath();
 		                	saveLocation = saveLocation.replaceFirst("[.][^.]+$", "");
-		                	saveLocation = saveLocation + ".map";
+		                	saveLocation = saveLocation + ".json";
 		                	lblMapPath.setText("         " + saveLocation);
 			                map.save(new File(saveLocation));
 		                }

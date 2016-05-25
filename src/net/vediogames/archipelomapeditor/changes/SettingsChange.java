@@ -5,34 +5,34 @@ import net.vediogames.archipelomapeditor.MainEditor;
 public class SettingsChange extends Change {
 	
 	private String name = "";
-	private byte type;
-	private byte climate;
+	private int type;
+	private int climat;
 	
 	private String redoName = "";
-	private byte redoType;
-	private byte redoClimate;
+	private int redoType;
+	private int redoClimat;
 	
 	public SettingsChange() {
 		name = new String(MainEditor.map.getName());
-		type = new Byte(MainEditor.map.getType());
-		climate = new Byte(MainEditor.map.getClimate());
+		type = MainEditor.map.getType();
+		climat = MainEditor.map.getClimat();
 	}
 	
 	@Override
 	public void undoChange() {
 		redoName = new String(MainEditor.map.getName());
-		redoType = new Byte(MainEditor.map.getType());
-		redoClimate = new Byte(MainEditor.map.getClimate());
+		redoType = new Integer(MainEditor.map.getType());
+		redoClimat = new Integer(MainEditor.map.getClimat());
 		MainEditor.map.setName(new String(name));
-		MainEditor.map.setType(new Byte(type));
-		MainEditor.map.setClimate(new Byte(climate));
+		MainEditor.map.setType(type);
+		MainEditor.map.setClimat(climat);
 	}
 	
 	@Override
 	public void redoChanges() {
 		MainEditor.map.setName(new String(redoName));
-		MainEditor.map.setType(new Byte(redoType));
-		MainEditor.map.setClimate(new Byte(redoClimate));
+		MainEditor.map.setType(redoType);
+		MainEditor.map.setClimat(redoClimat);
 	}
 
 }

@@ -2,8 +2,14 @@ package net.vediogames.archipelomapeditor.world;
 
 import java.awt.Graphics2D;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Formatter;
+import java.util.Scanner;
+
+import com.badlogic.gdx.utils.Json;
 
 import net.vediogames.archipelomapeditor.MainEditor;
+import net.vediogames.archipelomapeditor.entity.EntitySnapshot;
 
 public class Map implements Cloneable {
 	
@@ -18,42 +24,40 @@ public class Map implements Cloneable {
 	
 	public static boolean isMapOpen = false;
 	
-	private String name = "";
-	private int width;
-	private int height;
-	private byte type;
-	private byte climate;
-	private String id;
+	private String displayName = "";
+	private int type;
+	private int climat;
+	private String name;
 	private String[][] tiles;
 	private String[][] elements;
+	private ArrayList<EntitySnapshot> entitySnapshots;
 	
 	public void draw(Graphics2D g, int x, int y, int visibleX, int visibleY, int visibleWidth, int visibleHeight){
-		if(MainEditor.showTiles){
+		if(MainEditor.showTiles && tiles != null){
 			for(int i = visibleY - 3; i < visibleY + visibleHeight + 3; i++){
 				for(int u = visibleX - 3; u < visibleX + visibleWidth + 3; u++){
-					if(i >= 0 && u >= 0 && i < height && u < width){
+					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
 						if(tiles != null){
 							if(tiles[i][u] != null)
 								drawTileByCoords(g, u * 18 + x, i * 18 + y, u, i);
 						}
 						if(i == MainEditor.tileX && u == MainEditor.tileY && MainEditor.list.getSelectedValue() != null && MainEditor.selectedLayer == 0)
-							Assets.getTileByID(((MapTile) MainEditor.list.getSelectedValue()).id).draw(g, u * 18 + x, i * 18 + y, climate);
+							Assets.getTileByID(((MapTile) MainEditor.list.getSelectedValue()).id).draw(g, u * 18 + x, i * 18 + y, climat);
 					}
 				}
 			}
 		}
 
-		//TODO Draw elements
-		if(MainEditor.showElements){
+		if(MainEditor.showElements && elements != null){
 			for(int i = visibleY - 3; i < visibleY + visibleHeight + 3; i++){
 				for(int u = visibleX - 3; u < visibleX + visibleWidth + 3; u++){
-					if(i >= 0 && u >= 0 && i < height && u < width){
+					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
 						if(elements != null){
 							if(elements[i][u] != null)
 								drawElementByCoords(g, u * 18 + x, i * 18 + y, u, i);
 						}
 						if(i == MainEditor.tileX && u == MainEditor.tileY && MainEditor.list.getSelectedValue() != null && MainEditor.selectedLayer == 1)
-							Assets.getElementByID(((MapElement) MainEditor.list.getSelectedValue()).id).draw(g, u * 18 + x, i * 18 + y, climate);
+							Assets.getElementByID(((MapElement) MainEditor.list.getSelectedValue()).id).draw(g, u * 18 + x, i * 18 + y, climat);
 					}
 				}
 			}
@@ -63,7 +67,7 @@ public class Map implements Cloneable {
 		if(MainEditor.showGrid){			
 			for(int i = visibleY - 3; i < visibleY + visibleHeight + 3; i++){
 				for(int u = visibleX - 3; u < visibleX + visibleWidth + 3; u++){
-					if(i >= 0 && u >= 0 && i < height && u < width){
+					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
 						g.drawImage(MainEditor.gridTile, u * 18 + x, i * 18 + y, null);
 					}
 				}
@@ -74,63 +78,104 @@ public class Map implements Cloneable {
 	}
 	
 	private void drawTileByCoords(Graphics2D g, int drawX, int drawY, int x, int y){
-		Assets.drawTileByID(g, drawX, drawY, climate, tiles[y][x]);
+		Assets.drawTileByID(g, drawX, drawY, climat, tiles[y][x]);
 	}
 	
 	private void drawElementByCoords(Graphics2D g, int drawX, int drawY, int x, int y){
-		Assets.drawElementByID(g, drawX, drawY, climate, elements[y][x]);
+		Assets.drawElementByID(g, drawX, drawY, climat, elements[y][x]);
 	}
 	
 	public void load(File file){
-		MapFile mapFile = new MapFile(file);
-		id = mapFile.id;
-		name = mapFile.name;
-		width = mapFile.width;
-		height = mapFile.height;
+		//Load file
+		Scanner scanner = null;
+		String fileData = "";
+		try {
+			scanner = new Scanner(file);
+			while (scanner.hasNext()) {
+				fileData += scanner.next();
+			}
+			scanner.close();
+		} catch (Exception e) {
+			System.out.println("Could not map read file!");
+			e.printStackTrace();
+		}
+		
+		Json json = new Json();
+		MapData mapFile = json.fromJson(MapData.class, fileData);
+		name = file.getName().replaceFirst("[.][^.]+$", "");
+		displayName = mapFile.displayName;
 		type = mapFile.type;
-		climate = mapFile.climate;
-		tiles = mapFile.tiles;
-		elements = mapFile.elements;
+		climat = mapFile.climat;
+		tiles = mapFile.tileData;
+		elements = mapFile.elementData;
+		entitySnapshots = mapFile.entitySnapshots;
+		
 		isMapOpen = true;
 	}
 	
 	public void save(File file){
-		MapFile.writeFile(file, name, type, climate, width, height, tiles, elements);
+		Json json = new Json();
+		MapData mapFile = new MapData();
+		mapFile.displayName = displayName;
+		mapFile.type = type;
+		mapFile.climat = climat;
+		mapFile.tileData = tiles;
+		mapFile.elementData = elements;
+		mapFile.entitySnapshots = entitySnapshots;
+		
+		try {
+			if(!file.exists()){
+				file.getParentFile().mkdirs();
+				file.createNewFile();
+			}
+			Formatter formatter = new Formatter(file.getPath());
+			
+			formatter.format("%s", json.prettyPrint(mapFile));
+			
+			formatter.flush();
+			formatter.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void close(){
 		isMapOpen = false;
-		name = "";
-		width = 0;
-		height = 0;
+		displayName = "";
 		type = 0;
-		climate = 0;
-		id = "";
+		climat = 0;
+		name = "";
 		tiles = null;
 		elements = null;
 	}
 
-	public String getName() {
-		return name;
+	public String getDisplayName() {
+		return displayName;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
 	}
 
-	public  int getWidth() {
-		return width;
+	public int getWidth() {
+		if (tiles == null)
+			return 0;
+		else
+			return tiles[0].length;
 	}
 
 	public  int getHeight() {
-		return height;
+		if (tiles == null)
+			return 0;
+		else
+			return tiles.length;
 	}
 	
 	public  void resize(int width, int height){
-		String[][] newTiles = new String[height][width];
+		String[][] newTiles = new String[height][tiles[0].length];
 		for(int i = 0; i < height; i++){
-			for(int u = 0; u < width; u++){
-				if(u >= this.width || i >= this.height){
+			for(int u = 0; u < tiles[0].length; u++){
+				if(u >= this.tiles[0].length || i >= tiles.length){
 					newTiles[i][u] = "-1";
 				}else{
 					if(tiles[i][u] == null)
@@ -141,10 +186,10 @@ public class Map implements Cloneable {
 			}
 		}
 		tiles = newTiles;
-		String[][] newElements = new String[height][width];
+		String[][] newElements = new String[height][tiles[0].length];
 		for(int i = 0; i < height; i++){
-			for(int u = 0; u < width; u++){
-				if(u >= this.width || i >= this.height){
+			for(int u = 0; u < tiles[0].length; u++){
+				if(u >= this.tiles[0].length || i >= tiles.length){
 					newElements[i][u] = "0";
 				}else{
 					if(elements[i][u] == null)
@@ -155,52 +200,46 @@ public class Map implements Cloneable {
 			}
 		}
 		elements = newElements;
-		this.width = width;
-		this.height = height;
 	}
 	
-	public  byte getType() {
+	public int getType() {
 		return type;
 	}
 
-	public  void setType(byte type) {
+	public  void setType(int type) {
 		this.type = type;
 	}
 
-	public  byte getClimate() {
-		return climate;
+	public int getClimat() {
+		return climat;
 	}
 
-	public  void setClimate(byte climate) {
-		this.climate = climate;
+	public void setClimat(int climat) {
+		this.climat = climat;
 	}
 
-	public  String getID() {
-		return id;
+	public String getName() {
+		return name;
 	}
 
-	public  void setID(String id) {
-		this.id = id;
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public String[][] getTiles() {
 		return tiles;
 	}
 
-	public  void setTiles(String[][] tiles) {
+	public void setTiles(String[][] tiles) {
 		this.tiles = tiles;
-		height = tiles.length;
-		width = tiles[0].length;
 	}
 
-	public  String[][] getElements() {
+	public String[][] getElements() {
 		return elements;
 	}
 
-	public  void setElements(String[][] elements) {
+	public void setElements(String[][] elements) {
 		this.elements = elements;
-		height = elements.length;
-		width = elements[0].length;
 	}
 
 }
