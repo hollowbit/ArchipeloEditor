@@ -1,4 +1,4 @@
-package net.vediogames.archipelomapeditor;
+package net.hollowbit.archipeloeditor;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;

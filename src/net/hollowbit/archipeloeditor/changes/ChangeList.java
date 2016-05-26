@@ -1,8 +1,8 @@
-package net.vediogames.archipelomapeditor.changes;
+package net.hollowbit.archipeloeditor.changes;
 
 import java.util.ArrayList;
 
-import net.vediogames.archipelomapeditor.MainEditor;
+import net.hollowbit.archipeloeditor.MainEditor;
 
 public class ChangeList {
 	

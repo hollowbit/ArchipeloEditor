@@ -1,4 +1,4 @@
-package net.vediogames.archipelomapeditor;
+package net.hollowbit.archipeloeditor;
 
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -14,9 +14,9 @@ import javax.swing.JLabel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 
-import net.vediogames.archipelomapeditor.changes.ChangeList;
-import net.vediogames.archipelomapeditor.changes.ResizeChange;
-import net.vediogames.archipelomapeditor.changes.SettingsChange;
+import net.hollowbit.archipeloeditor.changes.ChangeList;
+import net.hollowbit.archipeloeditor.changes.ResizeChange;
+import net.hollowbit.archipeloeditor.changes.SettingsChange;
 
 
 public class MapSettingsEditor extends JFrame {

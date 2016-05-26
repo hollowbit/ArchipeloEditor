@@ -1,4 +1,4 @@
-package net.vediogames.archipelomapeditor.changes;
+package net.hollowbit.archipeloeditor.changes;
 
 public abstract class Change {
 	

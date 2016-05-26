@@ -1,4 +1,4 @@
-package net.vediogames.archipelomapeditor;
+package net.hollowbit.archipeloeditor;
 
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
@@ -18,7 +18,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import net.vediogames.archipelomapeditor.world.Map;
+import net.hollowbit.archipeloeditor.world.Map;
 
 public class NewMapMenu extends JFrame {
 

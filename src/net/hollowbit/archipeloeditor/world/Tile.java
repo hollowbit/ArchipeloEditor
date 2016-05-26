@@ -1,4 +1,4 @@
-package net.vediogames.archipelomapeditor.world;
+package net.hollowbit.archipeloeditor.world;
 
 import java.awt.Component;
 import java.awt.Graphics;
@@ -9,7 +9,7 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.Icon;
 
-import net.vediogames.archipelomapeditor.MainEditor;
+import net.hollowbit.archipeloeditor.MainEditor;
 
 public class Tile implements Icon{
 

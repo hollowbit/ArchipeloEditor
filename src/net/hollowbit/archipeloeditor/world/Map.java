@@ -1,4 +1,4 @@
-package net.vediogames.archipelomapeditor.world;
+package net.hollowbit.archipeloeditor.world;
 
 import java.awt.Graphics2D;
 import java.io.File;
@@ -8,8 +8,8 @@ import java.util.Scanner;
 
 import com.badlogic.gdx.utils.Json;
 
-import net.vediogames.archipelomapeditor.MainEditor;
-import net.vediogames.archipelomapeditor.entity.EntitySnapshot;
+import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloeditor.entity.EntitySnapshot;
 
 public class Map implements Cloneable {
 	
@@ -42,7 +42,7 @@ public class Map implements Cloneable {
 								drawTileByCoords(g, u * 18 + x, i * 18 + y, u, i);
 						}
 						if(i == MainEditor.tileX && u == MainEditor.tileY && MainEditor.list.getSelectedValue() != null && MainEditor.selectedLayer == 0)
-							Assets.getTileByID(((MapTile) MainEditor.list.getSelectedValue()).id).draw(g, u * 18 + x, i * 18 + y, climat);
+							Assets.getTileByID(((MapTile) MainEditor.list.getSelectedValue()).id).draw(g, u * 18 + x, i * 18 + y);
 					}
 				}
 			}
@@ -57,7 +57,7 @@ public class Map implements Cloneable {
 								drawElementByCoords(g, u * 18 + x, i * 18 + y, u, i);
 						}
 						if(i == MainEditor.tileX && u == MainEditor.tileY && MainEditor.list.getSelectedValue() != null && MainEditor.selectedLayer == 1)
-							Assets.getElementByID(((MapElement) MainEditor.list.getSelectedValue()).id).draw(g, u * 18 + x, i * 18 + y, climat);
+							Assets.getElementByID(((MapElement) MainEditor.list.getSelectedValue()).id).draw(g, u * 18 + x, i * 18 + y);
 					}
 				}
 			}
@@ -96,7 +96,7 @@ public class Map implements Cloneable {
 			}
 			scanner.close();
 		} catch (Exception e) {
-			System.out.println("Could not map read file!");
+			System.out.println("Could not read map file!");
 			e.printStackTrace();
 		}
 		

@@ -1,4 +1,4 @@
-package net.vediogames.archipelomapeditor;
+package net.hollowbit.archipeloeditor;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -62,14 +62,15 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import net.vediogames.archipelomapeditor.changes.*;
-import net.vediogames.archipelomapeditor.world.Assets;
-import net.vediogames.archipelomapeditor.world.Map;
-import net.vediogames.archipelomapeditor.world.MapElement;
-import net.vediogames.archipelomapeditor.world.MapTile;
+import net.hollowbit.archipeloeditor.changes.*;
+import net.hollowbit.archipeloeditor.world.Assets;
+import net.hollowbit.archipeloeditor.world.Map;
+import net.hollowbit.archipeloeditor.world.MapElement;
+import net.hollowbit.archipeloeditor.world.MapTile;
 
 public class MainEditor implements Runnable{
-	
+
+	public static final int TILE_SIZE = 16;
 	public static final String PATH = new File(".").getAbsolutePath();
 	
 	public static BufferedImage ICON;
@@ -854,7 +855,7 @@ public class MainEditor implements Runnable{
 					selectedLayer = 0;
 					ArrayList<MapTile> tiles = new ArrayList<MapTile>();
 					for(MapTile tile : Assets.TileList){
-						if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()) || tile.assetPack.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
+						if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
 							tiles.add(tile);
 					}
 					
@@ -910,7 +911,7 @@ public class MainEditor implements Runnable{
 					selectedLayer = 1;
 					ArrayList<MapElement> elements = new ArrayList<MapElement>();
 					for(MapElement element : Assets.ElementList){
-						if(element.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()) || element.assetPack.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
+						if(element.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
 							elements.add(element);
 					}
 					
@@ -943,7 +944,7 @@ public class MainEditor implements Runnable{
 				if(selectedLayer == 0){
 					ArrayList<MapTile> tiles = new ArrayList<MapTile>();
 					for(MapTile tile : Assets.TileList){
-						if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()) || tile.assetPack.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
+						if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
 							tiles.add(tile);
 					}
 					
@@ -955,7 +956,7 @@ public class MainEditor implements Runnable{
 				}else if(selectedLayer == 1){
 					ArrayList<MapElement> elements = new ArrayList<MapElement>();
 					for(MapElement element : Assets.ElementList){
-						if(element.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()) || element.assetPack.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
+						if(element.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
 							elements.add(element);
 					}
 					
@@ -972,7 +973,7 @@ public class MainEditor implements Runnable{
 				if(selectedLayer == 0){
 					ArrayList<MapTile> tiles = new ArrayList<MapTile>();
 					for(MapTile tile : Assets.TileList){
-						if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()) || tile.assetPack.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
+						if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
 							tiles.add(tile);
 					}
 					
@@ -984,7 +985,7 @@ public class MainEditor implements Runnable{
 				}else if(selectedLayer == 1){
 					ArrayList<MapElement> elements = new ArrayList<MapElement>();
 					for(MapElement element : Assets.ElementList){
-						if(element.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()) || element.assetPack.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
+						if(element.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
 							elements.add(element);
 					}
 					
@@ -1001,7 +1002,7 @@ public class MainEditor implements Runnable{
 				if(selectedLayer == 0){
 					ArrayList<MapTile> tiles = new ArrayList<MapTile>();
 					for(MapTile tile : Assets.TileList){
-						if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()) || tile.assetPack.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
+						if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
 							tiles.add(tile);
 					}
 					
@@ -1013,7 +1014,7 @@ public class MainEditor implements Runnable{
 				}else if(selectedLayer == 1){
 					ArrayList<MapElement> elements = new ArrayList<MapElement>();
 					for(MapElement element : Assets.ElementList){
-						if(element.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()) || element.assetPack.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
+						if(element.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
 							elements.add(element);
 					}
 					
@@ -1055,9 +1056,9 @@ public class MainEditor implements Runnable{
 		panel.add(lblTileName, gbc_lblTileName);
 		
 		Assets.initiate();
-		MapTile[] tiles = new MapTile[Assets.TileList.size()];
+		MapTile[] tiles = new MapTile[Assets.TileMap.size()];
 		for(int i = 0; i < tiles.length; i++)
-			tiles[i] = Assets.TileList.get(i);
+			tiles[i] = Assets.TileMap.get(i);
 		
 		list = new JList<Object>(tiles);
 		list.setVisibleRowCount(-1);
@@ -1067,9 +1068,9 @@ public class MainEditor implements Runnable{
 			public void valueChanged(ListSelectionEvent event) {
 				if(list.getSelectedValue() != null){
 					if(selectedLayer == 0)
-						lblTileName.setText(((MapTile) list.getSelectedValue()).name + " (" + ((MapTile) list.getSelectedValue()).assetPack.name + ")");
+						lblTileName.setText(((MapTile) list.getSelectedValue()).name);
 					else if(selectedLayer == 1)
-						lblTileName.setText(((MapElement) list.getSelectedValue()).name + " (" + ((MapElement) list.getSelectedValue()).assetPack.name + ")");
+						lblTileName.setText(((MapElement) list.getSelectedValue()).name);
 				}
 			}
 			
@@ -1086,35 +1087,40 @@ public class MainEditor implements Runnable{
 						if(selectedLayer == 0){
 							MapTile tile = (MapTile) model.getElementAt(index);
 							iconHoveredOver = tile;
-							list.setToolTipText("<html>"
+							String text = "<html>"
 						    		+ "ID: " + tile.id + "<br>"
 						    		+ "Name: " + tile.name + "<br>"
-						    		+ "AssetPack: " + tile.assetPack.name + " v." + tile.assetPack.version + "<br>"
-						    		+ "Collidable: " + tile.collidable + "<br>"
 						    		+ "Swimmable: " + tile.swimmable + "<br>"
 						    		+ "# of Animation Frames: " + tile.numberOfFrames + "<br>"
 						    		+ "Time(s) Between Frames: " + tile.animationSpeed + "<br>"
 						    		+ "Damage: " + tile.damage + "<br>"
 						    		+ "Time(s) Between damage: " + tile.damageSpeed + "<br>"
 						    		+ "Speed Multiplier: " + tile.speedMultiplier + "<br>"
-						    		+ "</html>");
+						    		+ "Collision Table:<br>";
+							for(int i = 0; i < tile.collisionTable.length; i++){
+								for(int u = 0; u < tile.collisionTable[0].length; u++){
+									text += tile.collisionTable[i][u];
+								}
+								text += "<br>";
+							}
+						    text += "</html>";
+							list.setToolTipText(text);
 						}else if(selectedLayer == 1){
 							MapElement element = (MapElement) model.getElementAt(index);
 							iconHoveredOver = element;
 							String text = "<html>"
 						    		+ "ID: " + element.id + "<br>"
 						    		+ "Name: " + element.name + "<br>"
-						    		+ "AssetPack: " + element.assetPack.name + " v." + element.assetPack.version + "<br>"
 						    		+ "Width: " + element.width + "<br>"
 						    		+ "Height: " + element.height + "<br>"
 						    		+ "OffsetX: " + element.offsetX + "<br>"
 						    		+ "OffsetY: " + element.offsetY + "<br>"
 						    		+ "# of Animation Frames: " + element.numberOfFrames + "<br>"
 						    		+ "Time(s) Between Frames: " + element.animationSpeed + "<br>"
-				    				+ "Collidable:<br>";
+				    				+ "Collision Table:<br>";
 							for(int i = 0; i < element.height; i++){
 								for(int u = 0; u < element.width; u++){
-									text += element.collidable[i][u];
+									text += element.collisionTable[i][u];
 								}
 								text += "<br>";
 							}
@@ -1178,9 +1184,9 @@ public class MainEditor implements Runnable{
 		Assets.TileList.removeAll(Assets.TileList);
 		Assets.initiate();
 		ArrayList<MapTile> tiles = new ArrayList<MapTile>();
-		for(int i = 0; i < Assets.TileList.size(); i++){
-			if(Assets.TileList.get(i).name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()) || Assets.TileList.get(i).assetPack.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
-				tiles.add(Assets.TileList.get(i));
+		for(int i = 0; i < Assets.TileMap.size(); i++){
+			if(Assets.TileMap.get(i).name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
+				tiles.add(Assets.TileMap.get(i));
 		}
 		
 		MapTile[] tilesArray = new MapTile[tiles.size()];

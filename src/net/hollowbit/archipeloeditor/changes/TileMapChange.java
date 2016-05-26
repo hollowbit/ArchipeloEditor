@@ -1,6 +1,6 @@
-package net.vediogames.archipelomapeditor.changes;
+package net.hollowbit.archipeloeditor.changes;
 
-import net.vediogames.archipelomapeditor.MainEditor;
+import net.hollowbit.archipeloeditor.MainEditor;
 
 public class TileMapChange extends Change {
 	

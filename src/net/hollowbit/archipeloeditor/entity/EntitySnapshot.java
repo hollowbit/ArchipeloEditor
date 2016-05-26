@@ -1,4 +1,4 @@
-package net.vediogames.archipelomapeditor.entity;
+package net.hollowbit.archipeloeditor.entity;
 
 import java.util.HashMap;
 

@@ -1,8 +1,8 @@
-package net.vediogames.archipelomapeditor.world;
+package net.hollowbit.archipeloeditor.world;
 
 import java.util.ArrayList;
 
-import net.vediogames.archipelomapeditor.entity.EntitySnapshot;
+import net.hollowbit.archipeloeditor.entity.EntitySnapshot;
 
 public class MapData {
 	
