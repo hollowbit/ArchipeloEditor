@@ -39,10 +39,10 @@ public class Map implements Cloneable {
 					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
 						if(tiles != null){
 							if(tiles[i][u] != null)
-								drawTileByCoords(g, u * 18 + x, i * 18 + y, u, i);
+								drawTileByCoords(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y, u, i);
 						}
 						if(i == MainEditor.tileX && u == MainEditor.tileY && MainEditor.list.getSelectedValue() != null && MainEditor.selectedLayer == 0)
-							Assets.getTileByID(((MapTile) MainEditor.list.getSelectedValue()).id).draw(g, u * 18 + x, i * 18 + y);
+							Assets.getTileByID(((MapTile) MainEditor.list.getSelectedValue()).id).draw(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y);
 					}
 				}
 			}
@@ -54,10 +54,10 @@ public class Map implements Cloneable {
 					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
 						if(elements != null){
 							if(elements[i][u] != null)
-								drawElementByCoords(g, u * 18 + x, i * 18 + y, u, i);
+								drawElementByCoords(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y, u, i);
 						}
 						if(i == MainEditor.tileX && u == MainEditor.tileY && MainEditor.list.getSelectedValue() != null && MainEditor.selectedLayer == 1)
-							Assets.getElementByID(((MapElement) MainEditor.list.getSelectedValue()).id).draw(g, u * 18 + x, i * 18 + y);
+							Assets.getElementByID(((MapElement) MainEditor.list.getSelectedValue()).id).draw(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y);
 					}
 				}
 			}
@@ -68,7 +68,7 @@ public class Map implements Cloneable {
 			for(int i = visibleY - 3; i < visibleY + visibleHeight + 3; i++){
 				for(int u = visibleX - 3; u < visibleX + visibleWidth + 3; u++){
 					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
-						g.drawImage(MainEditor.gridTile, u * 18 + x, i * 18 + y, null);
+						g.drawImage(MainEditor.gridTile, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y, null);
 					}
 				}
 			}
@@ -130,7 +130,7 @@ public class Map implements Cloneable {
 			}
 			Formatter formatter = new Formatter(file.getPath());
 			
-			formatter.format("%s", json.prettyPrint(mapFile));
+			formatter.format("%s", json.toJson(mapFile));
 			
 			formatter.flush();
 			formatter.close();
@@ -176,10 +176,10 @@ public class Map implements Cloneable {
 		for(int i = 0; i < height; i++){
 			for(int u = 0; u < tiles[0].length; u++){
 				if(u >= this.tiles[0].length || i >= tiles.length){
-					newTiles[i][u] = "-1";
+					newTiles[i][u] = "null";
 				}else{
 					if(tiles[i][u] == null)
-						newTiles[i][u] = "-1";
+						newTiles[i][u] = "null";
 					else
 						newTiles[i][u] = tiles[i][u];
 				}
@@ -190,10 +190,10 @@ public class Map implements Cloneable {
 		for(int i = 0; i < height; i++){
 			for(int u = 0; u < tiles[0].length; u++){
 				if(u >= this.tiles[0].length || i >= tiles.length){
-					newElements[i][u] = "0";
+					newElements[i][u] = "null";
 				}else{
 					if(elements[i][u] == null)
-						newElements[i][u] = "0";
+						newElements[i][u] = "null";
 					else
 						newElements[i][u] = elements[i][u];
 				}

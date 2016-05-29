@@ -331,7 +331,7 @@ public class MainEditor implements Runnable{
 			                		saveLocation = selectedFile.getPath();
 			                		lblMapPath.setText("         " + saveLocation);
 			                		map.load(selectedFile);
-			                		panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * 18, map.getHeight() * 18));
+			                		panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE));
 			                		panelMapPanel.revalidate();
 			                	}
 							}
@@ -345,7 +345,7 @@ public class MainEditor implements Runnable{
 			                saveLocation = selectedFile.getPath();
 			                lblMapPath.setText("         " + saveLocation);
 			                map.load(selectedFile);
-			                panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * 18, map.getHeight() * 18));
+			                panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE));
 			                panelMapPanel.revalidate();
 						}else
 							saved = true;
@@ -359,7 +359,7 @@ public class MainEditor implements Runnable{
 	                saveLocation = selectedFile.getPath();
 	                lblMapPath.setText("         " + saveLocation);
 	                map.load(selectedFile);
-	                panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * 18, map.getHeight() * 18));
+	                panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE));
 	                panelMapPanel.revalidate();
 				}
 				list.repaint();
@@ -642,17 +642,17 @@ public class MainEditor implements Runnable{
 			protected void paintComponent(Graphics g1) {
 				super.paintComponent(g1);
 				Graphics2D g = (Graphics2D) g1;
-				g.clearRect(0, 0, map.getWidth() * 18, map.getWidth() * 18);
-				x = (map.getWidth() * 18 <= scrollPane.getViewportBorderBounds().getWidth() ? (int) scrollPane.getViewportBorderBounds().getWidth() / 2 - (map.getWidth() * 18) / 2:0);
-				y = (map.getHeight() * 18 <= scrollPane.getViewportBorderBounds().getHeight() ? (int) scrollPane.getViewportBorderBounds().getHeight() / 2 - (map.getHeight() * 18) / 2:0);
-				map.draw(g, x, y, scrollPane.getHorizontalScrollBar().getValue() / 18, scrollPane.getVerticalScrollBar().getValue() / 18, scrollPane.getViewport().getWidth() / 18, scrollPane.getViewport().getHeight() / 18);
+				g.clearRect(0, 0, map.getWidth() * TILE_SIZE, map.getWidth() * TILE_SIZE);
+				x = (map.getWidth() * TILE_SIZE <= scrollPane.getViewportBorderBounds().getWidth() ? (int) scrollPane.getViewportBorderBounds().getWidth() / 2 - (map.getWidth() * TILE_SIZE) / 2:0);
+				y = (map.getHeight() * TILE_SIZE <= scrollPane.getViewportBorderBounds().getHeight() ? (int) scrollPane.getViewportBorderBounds().getHeight() / 2 - (map.getHeight() * TILE_SIZE) / 2:0);
+				map.draw(g, x, y, scrollPane.getHorizontalScrollBar().getValue() / TILE_SIZE, scrollPane.getVerticalScrollBar().getValue() / TILE_SIZE, scrollPane.getViewport().getWidth() / TILE_SIZE, scrollPane.getViewport().getHeight() / TILE_SIZE);
 				g.setColor(Color.BLACK);
 				g.drawString("X: " + tileY + " Y: " + (map.getHeight() - tileX - 1), scrollPane.getHorizontalScrollBar().getValue() + 5, scrollPane.getVerticalScrollBar().getValue() + 15);
 			}
 			
 			@Override
 			public Dimension getPreferredSize() {
-				return new Dimension(map.getWidth() * 18, map.getHeight() * 18);
+				return new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE);
 			}
 			
 		};
@@ -1194,7 +1194,7 @@ public class MainEditor implements Runnable{
 			tilesArray[i] = tiles.get(i);
 		list.clearSelection();
 		list.setListData(tilesArray);
-        panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * 18, map.getHeight() * 18));
+        panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE));
         panelMapPanel.revalidate();
 	}
 
@@ -1216,8 +1216,8 @@ public class MainEditor implements Runnable{
 			else
 				lblListTitle.setText("Elements:");
 			
-			tileX = mouseY / 18;
-			tileY = mouseX / 18;
+			tileX = mouseY / TILE_SIZE;
+			tileY = mouseX / TILE_SIZE;
 			
 			if(map.getHeight() > tileX && map.getWidth() > tileY  && tileX >= 0 && tileY >= 0 && map.getTiles() != null){
 				if(mouse1Pressed && !spacePressed){

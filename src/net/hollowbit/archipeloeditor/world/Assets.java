@@ -85,6 +85,7 @@ public class Assets {
 		}
 		
 		//Load elements now
+		fileData = "";
 		try {
 			scanner = new Scanner(new File(MainEditor.PATH + "/tilemaps/elements.json"));
 			while (scanner.hasNext()) {

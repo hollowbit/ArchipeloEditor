@@ -165,8 +165,8 @@ public class NewMapMenu extends JFrame {
 				MainEditor.map.resize((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue());
 				for(int i = 0; i < MainEditor.map.getHeight(); i++){
 					for(int u = 0; u < MainEditor.map.getWidth(); u++){
-						MainEditor.map.getTiles()[i][u] = "-1";
-						MainEditor.map.getElements()[i][u] = "0";
+						MainEditor.map.getTiles()[i][u] = "null";
+						MainEditor.map.getElements()[i][u] = "null";
 					}
 				}
 				Map.isMapOpen = true;
