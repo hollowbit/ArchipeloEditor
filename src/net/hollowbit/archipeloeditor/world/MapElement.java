@@ -17,6 +17,7 @@ public class MapElement implements Icon{
 	public int width = 1, height = 1;
 	public int offsetX = 0, offsetY = 0;
 	public boolean[][] collisionTable = new boolean[height][width];
+	public boolean animated = false;
 	public float animationSpeed = 0f;
 	public int numberOfFrames = 1;
 	public int rotation = 0;
@@ -31,6 +32,7 @@ public class MapElement implements Icon{
 		this.height = data.height;
 		this.offsetX = data.offsetX;
 		this.offsetY = data.offsetY;
+		this.animated = data.animated;
 		this.numberOfFrames = data.animationFrames;
 		this.animationSpeed = data.animationTime;
 		this.collisionTable = data.collisionTable;
@@ -44,7 +46,7 @@ public class MapElement implements Icon{
 	}
 	
 	public void draw(Graphics g, int x, int y){
-		g.drawImage(texture, x + offsetX, y + offsetY * 18 - (height - 1) * 18, null);
+		g.drawImage(texture, x + offsetX * MainEditor.TILE_SIZE / TileData.COLLISION_MAP_SCALE, y + offsetY * MainEditor.TILE_SIZE / TileData.COLLISION_MAP_SCALE - (height - 1) * MainEditor.TILE_SIZE, null);
 	}
 	
 	@Override

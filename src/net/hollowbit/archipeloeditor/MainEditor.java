@@ -62,8 +62,10 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import net.hollowbit.archipeloeditor.changes.*;
-import net.hollowbit.archipeloeditor.world.Assets;
+import net.hollowbit.archipeloeditor.changes.ChangeList;
+import net.hollowbit.archipeloeditor.changes.ElementMapChange;
+import net.hollowbit.archipeloeditor.changes.TileMapChange;
+import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloeditor.world.Map;
 import net.hollowbit.archipeloeditor.world.MapElement;
 import net.hollowbit.archipeloeditor.world.MapTile;
@@ -73,21 +75,27 @@ public class MainEditor implements Runnable{
 	public static final int TILE_SIZE = 16;
 	public static final String PATH = new File(".").getAbsolutePath();
 	
+	private static final int TILE_LAYER = 0;
+	private static final int ELEMENT_LAYER = 1;
+	
+	private static final int PENCIL_TOOL = 0;
+	private static final int BUCKET_TOOL = 1;
+	
 	public static BufferedImage ICON;
 	public static BufferedImage invalidTile;
 	public static BufferedImage gridTile;
 	public static Cursor CURSOR;
 	
-	public static boolean showTiles = true;
-	public static boolean showElements = true;
-	public static int selectedLayer = 0;//0 = tiles, 1 = elements
-	public static int selectedTool = 0;//0 = pencil, 1 = bucket	
-	public static String saveLocation = null;	
-	public static boolean showGrid = false;
+	private boolean showTiles = true;
+	private boolean showElements = true;
+	private int selectedLayer = 0;//0 = tiles, 1 = elements
+	private int selectedTool = 0;//0 = pencil, 1 = bucket	
+	private String saveLocation = null;	
+	private boolean showGrid = false;
 	
-	public static JList<Object> list;
+	private JList<Object> list;
 	JLabel lblMapPath;
-	public JPanel panelMapPanel;
+	private JPanel panelMapPanel;
 	JScrollPane scrollPane;
 	private JMenuItem mntmSave;
 	private JMenuItem mntmSaveAs;
@@ -114,13 +122,18 @@ public class MainEditor implements Runnable{
 	private boolean shiftPressed = false;
 	private boolean spacePressed = false;
 	
-	public static Map map;
+	private Map map;
 	
-	public static int tileX, tileY;
+	private int tileX, tileY;
+	
+	long startTime = 0;
 	
 	Icon iconHoveredOver = null;
 	
-	public static boolean justSaved = true;
+	private AssetManager assetManager;
+	private ChangeList changeList;
+	
+	public boolean justSaved = true;
 	
 	JCheckBoxMenuItem mntmToggleGrid;
 	JCheckBoxMenuItem mntmToggleTiles;
@@ -132,7 +145,6 @@ public class MainEditor implements Runnable{
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					map = new Map();
 					ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 					ICON = ImageIO.read(classLoader.getResourceAsStream("images/icon.png"));
 					invalidTile = ImageIO.read(classLoader.getResourceAsStream("images/invalid.png"));
@@ -148,7 +160,12 @@ public class MainEditor implements Runnable{
 	}
 
 	public MainEditor() {
+		changeList = new ChangeList(this);
+		assetManager = new AssetManager();
+		assetManager.load();
 		initialize();
+		
+		startTime = System.currentTimeMillis();
 		thread = new Thread(this);
 		thread.start();
 	}
@@ -208,19 +225,19 @@ public class MainEditor implements Runnable{
 					}
 					
 					if(e.getKeyCode() == KeyEvent.VK_Z && controlPressed && !shiftPressed)
-						ChangeList.undo();
+						changeList.undo();
 					
 					if(e.getKeyCode() == KeyEvent.VK_Y && controlPressed)
-						ChangeList.redo();
+						changeList.redo();
 					
 					if(e.getKeyCode() == KeyEvent.VK_S && controlPressed)
-						save();
+						showMapSaveDialog();
 					
 					if(e.getKeyCode() == KeyEvent.VK_Z && controlPressed && shiftPressed)
-						ChangeList.redo();
+						changeList.redo();
 					
 					if(e.getKeyCode() == KeyEvent.VK_F5)
-						reloadTiles();
+						reloadAssets();
 					
 				}else if(e.getID() == KeyEvent.KEY_RELEASED){
 					if(e.getKeyCode() == KeyEvent.VK_CONTROL)
@@ -246,23 +263,7 @@ public class MainEditor implements Runnable{
 				while(!saved){
 					int option = JOptionPane.showConfirmDialog(frame, "Would you like to save first?", "Map Close", JOptionPane.YES_NO_CANCEL_OPTION);
 					if(option == JOptionPane.YES_OPTION){
-						if(saveLocation == null){
-							JFileChooser saveFile = new JFileChooser();
-							saveFile.setFileFilter(new FileNameExtensionFilter("map", "map"));
-				               saveFile.showSaveDialog(null);
-				               File selectedFile = saveFile.getSelectedFile();
-				               if(selectedFile != null){
-				               	saveLocation = selectedFile.getPath();
-				               	saveLocation = saveLocation.replaceFirst("[.][^.]+$", "");
-				               	saveLocation = saveLocation + ".map";
-				               	lblMapPath.setText("         " + saveLocation);
-					               map.save(new File(saveLocation));
-					               saved = true;
-				               }
-						}else{
-							map.save(new File(saveLocation));
-							saved = true;
-						}
+						showMapSaveDialog();
 					}else
 						saved = true;
 				}
@@ -298,71 +299,25 @@ public class MainEditor implements Runnable{
 		mntmOpen.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if(Map.isMapOpen && !justSaved){
+				if(map != null && !justSaved){
 					boolean saved = false;
 					while(!saved){
 						int option = JOptionPane.showConfirmDialog(frame, "Would you like to save first?", "Map Close", JOptionPane.YES_NO_CANCEL_OPTION);
 						if(option == JOptionPane.YES_OPTION){
-							if(saveLocation == null){
-								JFileChooser saveFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-								saveFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
-				                saveFile.showSaveDialog(null);
-				                if(saveFile.getSelectedFile() == null) return;
-				                File selectedFile = saveFile.getSelectedFile();
-				                if(selectedFile != null){
-				                	saveLocation = selectedFile.getPath();
-				                	saveLocation = saveLocation.replaceFirst("[.][^.]+$", "");
-				                	saveLocation = saveLocation + ".map";
-				                	lblMapPath.setText("         " + saveLocation);
-					                map.save(new File(saveLocation));
-					                saved = true;
-				                }
-							}else{
-								map.save(new File(saveLocation));
-								saved = true;
-							}
+							saved = showMapSaveDialog();
+							
 							if(saved){
-								JFileChooser openFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-								openFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
-			                	openFile.showOpenDialog(null);
-				                if(openFile.getSelectedFile() == null) return;
-			                	File selectedFile = openFile.getSelectedFile();
-			                	if(selectedFile != null){
-			                		saveLocation = selectedFile.getPath();
-			                		lblMapPath.setText("         " + saveLocation);
-			                		map.load(selectedFile);
-			                		panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE));
-			                		panelMapPanel.revalidate();
-			                	}
+								showMapOpenDialog();
 							}
-						}else if(option == JOptionPane.NO_OPTION){
+						} else if (option == JOptionPane.NO_OPTION){
 			                saved = true;
-							JFileChooser openFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-							openFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
-			                openFile.showOpenDialog(null);
-			                if(openFile.getSelectedFile() == null) return;
-			                File selectedFile = openFile.getSelectedFile();
-			                saveLocation = selectedFile.getPath();
-			                lblMapPath.setText("         " + saveLocation);
-			                map.load(selectedFile);
-			                panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE));
-			                panelMapPanel.revalidate();
-						}else
-							saved = true;
+			                showMapOpenDialog();
+			            } else
+							return;
 					}
-				}else{
-					JFileChooser openFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-					openFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
-	                openFile.showOpenDialog(null);
-	                if(openFile.getSelectedFile() == null) return;
-	                File selectedFile = openFile.getSelectedFile();
-	                saveLocation = selectedFile.getPath();
-	                lblMapPath.setText("         " + saveLocation);
-	                map.load(selectedFile);
-	                panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE));
-	                panelMapPanel.revalidate();
+				} else {
+					showMapOpenDialog();
 				}
-				list.repaint();
 			}
 		});
 		
@@ -371,43 +326,23 @@ public class MainEditor implements Runnable{
 		mntmNew.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if(Map.isMapOpen && !justSaved){
+				if(map != null && !justSaved){
 					boolean saved = false;
 					while(!saved){
 						int option = JOptionPane.showConfirmDialog(frame, "Would you like to save first?", "Map Close", JOptionPane.YES_NO_CANCEL_OPTION);
-						if(option == JOptionPane.YES_OPTION){
-							if(saveLocation == null){
-								JFileChooser saveFile = new JFileChooser();
-								saveFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
-				                saveFile.showSaveDialog(null);
-				                if(saveFile.getSelectedFile() == null) return;
-				                File selectedFile = saveFile.getSelectedFile();
-				                if(selectedFile != null){
-				                	saveLocation = selectedFile.getPath();
-				                	saveLocation = saveLocation.replaceFirst("[.][^.]+$", "");
-				                	saveLocation = saveLocation + ".json";
-				                	lblMapPath.setText("         " + saveLocation);
-					                map.save(new File(saveLocation));
-					                saved = true;
-				                }
-							}else{
-								map.save(new File(saveLocation));
-								saved = true;
-							}
+						if (option == JOptionPane.YES_OPTION) {
+							saved = showMapSaveDialog();
+							
 							if(saved){
-								NewMapMenu newMapMenu = new NewMapMenu(mainEditor);
-								newMapMenu.setVisible(true);
+								showNewMapDialog();
 							}
-						}else if(option == JOptionPane.NO_OPTION){
-							saved = true;
-							NewMapMenu newMapMenu = new NewMapMenu(mainEditor);
-							newMapMenu.setVisible(true);
-						}else
-							saved = true;
+						} else if(option == JOptionPane.NO_OPTION) {
+							showNewMapDialog();
+						} else
+							return;
 					}
-				}else{
-					NewMapMenu newMapMenu = new NewMapMenu(mainEditor);
-					newMapMenu.setVisible(true);
+				} else {
+					showNewMapDialog();
 				}
 			}
 		});
@@ -420,22 +355,7 @@ public class MainEditor implements Runnable{
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if(mntmSave.isEnabled()){
-					if(saveLocation == null){
-						JFileChooser saveFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-						saveFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
-		                saveFile.showSaveDialog(null);
-		                if(saveFile.getSelectedFile() == null) return;
-		                File selectedFile = saveFile.getSelectedFile();
-		                if(selectedFile != null){
-		                	saveLocation = selectedFile.getPath();
-		                	saveLocation = saveLocation.replaceFirst("[.][^.]+$", "");
-		                	saveLocation = saveLocation + ".json";
-		                	lblMapPath.setText("         " + saveLocation);
-			                map.save(new File(saveLocation));
-		                }
-					}else
-						map.save(new File(saveLocation));
-					justSaved = true;
+					showMapSaveDialog();
 				}
 			}
 			
@@ -447,19 +367,7 @@ public class MainEditor implements Runnable{
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if(mntmSaveAs.isEnabled()){
-					JFileChooser saveFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-					saveFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
-	                saveFile.showSaveDialog(null);
-	                if(saveFile.getSelectedFile() == null) return;
-	                File selectedFile = saveFile.getSelectedFile();
-	                if(selectedFile != null){
-	                	saveLocation = selectedFile.getPath();
-	                	saveLocation = saveLocation.replaceFirst("[.][^.]+$", "");
-	                	saveLocation = saveLocation + ".json";
-	                	lblMapPath.setText("         " + saveLocation);
-		                map.save(new File(saveLocation));
-	                }
-					justSaved = true;
+					showMapSaveDialog();
 				}
 			}
 		});
@@ -470,37 +378,23 @@ public class MainEditor implements Runnable{
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if(justSaved){
-					map.close();
-					ChangeList.reset();
-					lblMapPath.setText("");
-					return;
+				if (!justSaved) {
+					boolean saved = false;
+					while (!saved) {
+						int option = JOptionPane.showConfirmDialog(frame, "Would you like to save first?", "Map Close", JOptionPane.YES_NO_CANCEL_OPTION);
+						if (option == JOptionPane.YES_OPTION) {
+							saved = showMapSaveDialog();
+						} else if (option == JOptionPane.NO_OPTION) {
+							saved = true;
+						} else if (option == JOptionPane.CANCEL_OPTION) {
+							return;
+						}
+					}
 				}
-				int option = JOptionPane.showConfirmDialog(frame, "Would you like to save first?", "Map Close", JOptionPane.YES_NO_CANCEL_OPTION);
-				if(option == JOptionPane.YES_OPTION){
-					if(saveLocation == null){
-						JFileChooser saveFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-						saveFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
-		                saveFile.showSaveDialog(null);
-		                if(saveFile.getSelectedFile() == null) return;
-		                File selectedFile = saveFile.getSelectedFile();
-		                if(selectedFile != null){
-		                	saveLocation = selectedFile.getPath();
-		                	saveLocation = saveLocation.replaceFirst("[.][^.]+$", "");
-		                	saveLocation = saveLocation + ".json";
-		                	lblMapPath.setText("         " + saveLocation);
-			                map.save(new File(saveLocation));
-		                }
-					}else
-						map.save(new File(saveLocation));
-					map.close();
-					ChangeList.reset();
-					lblMapPath.setText("");
-				}else if(option == JOptionPane.NO_OPTION){
-					map.close();
-					ChangeList.reset();
-					lblMapPath.setText("");
-				}
+				map.close();
+				map = null;
+				changeList.reset();
+				lblMapPath.setText("");
 			}
 			
 		});
@@ -514,7 +408,7 @@ public class MainEditor implements Runnable{
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				ChangeList.undo();
+				changeList.undo();
 			}
 			
 		});
@@ -525,7 +419,7 @@ public class MainEditor implements Runnable{
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				ChangeList.redo();
+				changeList.redo();
 			}
 			
 		});
@@ -539,7 +433,14 @@ public class MainEditor implements Runnable{
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if(mntmEdit.isEnabled()){
-					MapSettingsEditor mapDetailEditor = new MapSettingsEditor(mainEditor);
+					MapSettingsEditor mapDetailEditor = new MapSettingsEditor(mainEditor, new MapSettingsEditor.MapSettingsEditorListener() {
+						
+						@Override
+						public void mapSettingsChanged() {
+			                panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * MainEditor.TILE_SIZE, map.getHeight() * MainEditor.TILE_SIZE));
+			                panelMapPanel.revalidate();
+						}
+					});
 					mapDetailEditor.setVisible(true);
 				}
 			}
@@ -639,20 +540,27 @@ public class MainEditor implements Runnable{
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected void paintComponent(Graphics g1) {
-				super.paintComponent(g1);
-				Graphics2D g = (Graphics2D) g1;
-				g.clearRect(0, 0, map.getWidth() * TILE_SIZE, map.getWidth() * TILE_SIZE);
-				x = (map.getWidth() * TILE_SIZE <= scrollPane.getViewportBorderBounds().getWidth() ? (int) scrollPane.getViewportBorderBounds().getWidth() / 2 - (map.getWidth() * TILE_SIZE) / 2:0);
-				y = (map.getHeight() * TILE_SIZE <= scrollPane.getViewportBorderBounds().getHeight() ? (int) scrollPane.getViewportBorderBounds().getHeight() / 2 - (map.getHeight() * TILE_SIZE) / 2:0);
-				map.draw(g, x, y, scrollPane.getHorizontalScrollBar().getValue() / TILE_SIZE, scrollPane.getVerticalScrollBar().getValue() / TILE_SIZE, scrollPane.getViewport().getWidth() / TILE_SIZE, scrollPane.getViewport().getHeight() / TILE_SIZE);
-				g.setColor(Color.BLACK);
-				g.drawString("X: " + tileY + " Y: " + (map.getHeight() - tileX - 1), scrollPane.getHorizontalScrollBar().getValue() + 5, scrollPane.getVerticalScrollBar().getValue() + 15);
+			protected void paintComponent(Graphics g1d) {
+				super.paintComponent(g1d);
+				Graphics2D g = (Graphics2D) g1d;
+				
+				if (map != null) {
+					g.clearRect(0, 0, map.getWidth() * TILE_SIZE, map.getWidth() * TILE_SIZE);
+					x = (map.getWidth() * TILE_SIZE <= scrollPane.getViewportBorderBounds().getWidth() ? (int) scrollPane.getViewportBorderBounds().getWidth() / 2 - (map.getWidth() * TILE_SIZE) / 2:0);
+					y = (map.getHeight() * TILE_SIZE <= scrollPane.getViewportBorderBounds().getHeight() ? (int) scrollPane.getViewportBorderBounds().getHeight() / 2 - (map.getHeight() * TILE_SIZE) / 2:0);
+					map.draw(assetManager, showTiles, showElements, showGrid, tileY, tileX, selectedLayer, list.getSelectedValue(), g, x, y, scrollPane.getHorizontalScrollBar().getValue() / TILE_SIZE, scrollPane.getVerticalScrollBar().getValue() / TILE_SIZE, scrollPane.getViewport().getWidth() / TILE_SIZE, scrollPane.getViewport().getHeight() / TILE_SIZE);
+
+					g.setColor(Color.BLACK);
+					g.drawString("X: " + tileY + " Y: " + (map.getHeight() - tileX - 1), scrollPane.getHorizontalScrollBar().getValue() + 5, scrollPane.getVerticalScrollBar().getValue() + 15);
+				}
 			}
 			
 			@Override
 			public Dimension getPreferredSize() {
-				return new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE);
+				if (map != null)
+					return new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE);
+				else
+					return new Dimension(0, 0);
 			}
 			
 		};
@@ -663,10 +571,14 @@ public class MainEditor implements Runnable{
 				if(e.getButton() == MouseEvent.BUTTON1){
 					if(spacePressed)
 						origin = new Point(e.getPoint());
-					else if(selectedLayer == 0)
-						ChangeList.addChanges(new TileMapChange());
-					else if(selectedLayer == 1)
-						ChangeList.addChanges(new ElementMapChange());
+					else if(selectedLayer == 0) {
+						changeList.addChanges(new TileMapChange(map));
+						justSaved = false;
+					} else if (selectedLayer == 1) {
+						changeList.addChanges(new ElementMapChange(map));
+						justSaved = false;
+					}
+						
 					mouse1Pressed = true;
 				}
 				if(e.getButton() == MouseEvent.BUTTON3)
@@ -846,25 +758,11 @@ public class MainEditor implements Runnable{
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if(selectedLayer == 0){
-					rdbtnElements.setSelected(false);
-					rdbtnTiles.setSelected(true);
-				}else{
-					rdbtnElements.setSelected(false);
-					rdbtnTiles.setSelected(true);
+				if (selectedLayer != 0) {
 					selectedLayer = 0;
-					ArrayList<MapTile> tiles = new ArrayList<MapTile>();
-					for(MapTile tile : Assets.TileList){
-						if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
-							tiles.add(tile);
-					}
-					
-					MapTile[] tilesArray = new MapTile[tiles.size()];
-					for(int i = 0; i < tilesArray.length; i++)
-						tilesArray[i] = tiles.get(i);
-					lblTileName.setText("");
-					list.clearSelection();
-					list.setListData(tilesArray);
+					rdbtnElements.setSelected(false);
+					rdbtnTiles.setSelected(true);
+					reloadLists();
 				}
 			}
 		});
@@ -902,25 +800,11 @@ public class MainEditor implements Runnable{
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if(selectedLayer == 1){
-					rdbtnTiles.setSelected(false);
-					rdbtnElements.setSelected(true);
-				}else{
-					rdbtnTiles.setSelected(false);
-					rdbtnElements.setSelected(true);
+				if (selectedLayer != 1) {
 					selectedLayer = 1;
-					ArrayList<MapElement> elements = new ArrayList<MapElement>();
-					for(MapElement element : Assets.ElementList){
-						if(element.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
-							elements.add(element);
-					}
-					
-					MapElement[] elementsArray = new MapElement[elements.size()];
-					for(int i = 0; i < elementsArray.length; i++)
-						elementsArray[i] = elements.get(i);
-					lblTileName.setText("");
-					list.clearSelection();
-					list.setListData(elementsArray);
+					rdbtnTiles.setSelected(false);
+					rdbtnElements.setSelected(true);
+					reloadLists();
 				}
 			}
 			
@@ -941,89 +825,17 @@ public class MainEditor implements Runnable{
 			
 			@Override
 			public void removeUpdate(DocumentEvent e) {
-				if(selectedLayer == 0){
-					ArrayList<MapTile> tiles = new ArrayList<MapTile>();
-					for(MapTile tile : Assets.TileList){
-						if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
-							tiles.add(tile);
-					}
-					
-					MapTile[] tilesArray = new MapTile[tiles.size()];
-					for(int i = 0; i < tilesArray.length; i++)
-						tilesArray[i] = tiles.get(i);
-					list.clearSelection();
-					list.setListData(tilesArray);
-				}else if(selectedLayer == 1){
-					ArrayList<MapElement> elements = new ArrayList<MapElement>();
-					for(MapElement element : Assets.ElementList){
-						if(element.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
-							elements.add(element);
-					}
-					
-					MapElement[] elementsArray = new MapElement[elements.size()];
-					for(int i = 0; i < elementsArray.length; i++)
-						elementsArray[i] = elements.get(i);
-					list.clearSelection();
-					list.setListData(elementsArray);
-				}
+				reloadLists();
 			}
 			
 			@Override
 			public void insertUpdate(DocumentEvent e) {
-				if(selectedLayer == 0){
-					ArrayList<MapTile> tiles = new ArrayList<MapTile>();
-					for(MapTile tile : Assets.TileList){
-						if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
-							tiles.add(tile);
-					}
-					
-					MapTile[] tilesArray = new MapTile[tiles.size()];
-					for(int i = 0; i < tilesArray.length; i++)
-						tilesArray[i] = tiles.get(i);
-					list.clearSelection();
-					list.setListData(tilesArray);
-				}else if(selectedLayer == 1){
-					ArrayList<MapElement> elements = new ArrayList<MapElement>();
-					for(MapElement element : Assets.ElementList){
-						if(element.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
-							elements.add(element);
-					}
-					
-					MapElement[] elementsArray = new MapElement[elements.size()];
-					for(int i = 0; i < elementsArray.length; i++)
-						elementsArray[i] = elements.get(i);
-					list.clearSelection();
-					list.setListData(elementsArray);
-				}
+				reloadLists();
 			}
 			
 			@Override
 			public void changedUpdate(DocumentEvent e) {
-				if(selectedLayer == 0){
-					ArrayList<MapTile> tiles = new ArrayList<MapTile>();
-					for(MapTile tile : Assets.TileList){
-						if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
-							tiles.add(tile);
-					}
-					
-					MapTile[] tilesArray = new MapTile[tiles.size()];
-					for(int i = 0; i < tilesArray.length; i++)
-						tilesArray[i] = tiles.get(i);
-					list.clearSelection();
-					list.setListData(tilesArray);
-				}else if(selectedLayer == 1){
-					ArrayList<MapElement> elements = new ArrayList<MapElement>();
-					for(MapElement element : Assets.ElementList){
-						if(element.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
-							elements.add(element);
-					}
-					
-					MapElement[] elementsArray = new MapElement[elements.size()];
-					for(int i = 0; i < elementsArray.length; i++)
-						elementsArray[i] = elements.get(i);
-					list.clearSelection();
-					list.setListData(elementsArray);
-				}
+				reloadLists();
 			}
 		});
 		GridBagConstraints gbc_textFieldSearch = new GridBagConstraints();
@@ -1055,12 +867,7 @@ public class MainEditor implements Runnable{
 		gbc_lblTileName.gridy = 8;
 		panel.add(lblTileName, gbc_lblTileName);
 		
-		Assets.initiate();
-		MapTile[] tiles = new MapTile[Assets.TileMap.size()];
-		for(int i = 0; i < tiles.length; i++)
-			tiles[i] = Assets.TileMap.get(i);
-		
-		list = new JList<Object>(tiles);
+		list = new JList<Object>(assetManager.getMapTiles().toArray());
 		list.setVisibleRowCount(-1);
 		list.addListSelectionListener(new ListSelectionListener(){
 
@@ -1075,6 +882,7 @@ public class MainEditor implements Runnable{
 			}
 			
 		});
+		
 		list.addMouseListener(new MouseListener(){
 
 			@Override
@@ -1091,15 +899,18 @@ public class MainEditor implements Runnable{
 						    		+ "ID: " + tile.id + "<br>"
 						    		+ "Name: " + tile.name + "<br>"
 						    		+ "Swimmable: " + tile.swimmable + "<br>"
-						    		+ "# of Animation Frames: " + tile.numberOfFrames + "<br>"
-						    		+ "Time(s) Between Frames: " + tile.animationSpeed + "<br>"
 						    		+ "Damage: " + tile.damage + "<br>"
 						    		+ "Time(s) Between damage: " + tile.damageSpeed + "<br>"
 						    		+ "Speed Multiplier: " + tile.speedMultiplier + "<br>"
 						    		+ "Collision Table:<br>";
+							if (tile.animated) {
+								text += "# of Animation Frames: " + tile.numberOfFrames + "<br>"
+									    + "Time(s) Between Frames: " + tile.animationSpeed + "<br>";
+							}
+							
 							for(int i = 0; i < tile.collisionTable.length; i++){
 								for(int u = 0; u < tile.collisionTable[0].length; u++){
-									text += tile.collisionTable[i][u];
+									text += tile.collisionTable[i][u] ? 1 : 0;
 								}
 								text += "<br>";
 							}
@@ -1115,12 +926,15 @@ public class MainEditor implements Runnable{
 						    		+ "Height: " + element.height + "<br>"
 						    		+ "OffsetX: " + element.offsetX + "<br>"
 						    		+ "OffsetY: " + element.offsetY + "<br>"
-						    		+ "# of Animation Frames: " + element.numberOfFrames + "<br>"
-						    		+ "Time(s) Between Frames: " + element.animationSpeed + "<br>"
 				    				+ "Collision Table:<br>";
+							if (element.animated) {
+								text += "# of Animation Frames: " + element.numberOfFrames + "<br>"
+									    + "Time(s) Between Frames: " + element.animationSpeed + "<br>";
+							}
+							
 							for(int i = 0; i < element.height; i++){
 								for(int u = 0; u < element.width; u++){
-									text += element.collisionTable[i][u];
+									text +=  element.collisionTable[i][u] ? 1 : 0;
 								}
 								text += "<br>";
 							}
@@ -1134,38 +948,30 @@ public class MainEditor implements Runnable{
 			}
 
 			@Override
-			public void mouseEntered(MouseEvent arg0) {
-				
-			}
+			public void mouseEntered(MouseEvent arg0) {}
 
 			@Override
-			public void mouseExited(MouseEvent arg0) {
-				
-			}
+			public void mouseExited(MouseEvent arg0) {}
 
 			@Override
-			public void mousePressed(MouseEvent e) {
-				
-			}
+			public void mousePressed(MouseEvent e) {}
 
 			@Override
-			public void mouseReleased(MouseEvent arg0) {
-				
-			}
+			public void mouseReleased(MouseEvent arg0) {}
 			
 		});
 		
 		list.addMouseMotionListener(new MouseMotionListener(){
 
 			@Override
-			public void mouseDragged(MouseEvent e) {
-				
-			}
+			public void mouseDragged(MouseEvent e) {}
 
 			@Override
 			public void mouseMoved(MouseEvent e) {
-				if(list.getModel().getElementAt(list.locationToIndex(e.getPoint())) != iconHoveredOver)
+				if(list.getModel().getElementAt(list.locationToIndex(e.getPoint())) != iconHoveredOver) {
 					list.setToolTipText(null);
+					iconHoveredOver = null;
+				}
 			}
 			
 		});
@@ -1180,20 +986,11 @@ public class MainEditor implements Runnable{
 		panel.add(list, gbc_list);
 	}
 	
-	public void reloadTiles(){
-		Assets.TileList.removeAll(Assets.TileList);
-		Assets.initiate();
-		ArrayList<MapTile> tiles = new ArrayList<MapTile>();
-		for(int i = 0; i < Assets.TileMap.size(); i++){
-			if(Assets.TileMap.get(i).name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
-				tiles.add(Assets.TileMap.get(i));
-		}
+	public void reloadAssets(){
+		assetManager.clear();
+		assetManager.load();
+		reloadLists();
 		
-		MapTile[] tilesArray = new MapTile[tiles.size()];
-		for(int i = 0; i < tilesArray.length; i++)
-			tilesArray[i] = tiles.get(i);
-		list.clearSelection();
-		list.setListData(tilesArray);
         panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE));
         panelMapPanel.revalidate();
 	}
@@ -1201,15 +998,24 @@ public class MainEditor implements Runnable{
 	@Override
 	public void run() {
 		
-		while(running){
+		while (running) {
+			long delta = System.currentTimeMillis() - startTime;
+			long timeToSleep = (1000 / 60) - delta;
+			try {
+				Thread.sleep(timeToSleep > 0 ? timeToSleep : 0);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			startTime = System.currentTimeMillis();
+			
 			panelMapPanel.repaint();
-			ChangeList.update();
-			mntmSave.setEnabled(Map.isMapOpen);
-			mntmSaveAs.setEnabled(Map.isMapOpen);
-			mntmClose.setEnabled(Map.isMapOpen);
-			mntmEdit.setEnabled(Map.isMapOpen);
-			mntmGenerate.setEnabled(Map.isMapOpen);
-			mntmReset.setEnabled(Map.isMapOpen);
+			changeList.update();
+			mntmSave.setEnabled(map != null);
+			mntmSaveAs.setEnabled(map != null);
+			mntmClose.setEnabled(map != null);
+			mntmEdit.setEnabled(map != null);
+			mntmGenerate.setEnabled(map != null);
+			mntmReset.setEnabled(map != null);
 			
 			if(selectedLayer == 0)
 				lblListTitle.setText("Tiles:");
@@ -1218,34 +1024,51 @@ public class MainEditor implements Runnable{
 			
 			tileX = mouseY / TILE_SIZE;
 			tileY = mouseX / TILE_SIZE;
-			
-			if(map.getHeight() > tileX && map.getWidth() > tileY  && tileX >= 0 && tileY >= 0 && map.getTiles() != null){
-				if(mouse1Pressed && !spacePressed){
-					if(selectedLayer == 0){
-						if(selectedTool == 0){
-							if(list.getSelectedValue() != null)
-								map.getTiles()[tileX][tileY] = ((MapTile) list.getSelectedValue()).id;
-						}else if(selectedTool == 1){
-							boolean[][] filledTiles = new boolean[map.getHeight()][map.getWidth()];
-							String replaceTile = map.getTiles()[tileX][tileY];
-							bucketFillTiles(replaceTile, filledTiles, tileX, tileY);
-						}
-					}else{
-						if(selectedTool == 0){
-							if(list.getSelectedValue() != null)
-								map.getElements()[tileX][tileY] = ((MapElement) list.getSelectedValue()).id;
-						}else if(selectedTool == 1){
-							boolean[][] filledTiles = new boolean[map.getHeight()][map.getWidth()];
-							String replaceTile = map.getElements()[tileX][tileY];
-							bucketFillElements(replaceTile, filledTiles, tileX, tileY);
+
+			if (map != null) {
+				if (tileX < map.getHeight() && tileY < map.getWidth()  && tileX >= 0 && tileY >= 0 && map.getTiles() != null) {
+					if (mouse1Pressed && !spacePressed) {
+						switch (selectedLayer) {
+						case TILE_LAYER:
+							switch (selectedTool) {
+							case PENCIL_TOOL:
+								if(list.getSelectedValue() != null) {
+									map.getTiles()[tileX][tileY] = ((MapTile) list.getSelectedValue()).id;
+								}
+								break;
+							case BUCKET_TOOL:
+								boolean[][] filledTiles = new boolean[map.getHeight()][map.getWidth()];
+								String replaceTile = map.getTiles()[tileX][tileY];
+								bucketFillTiles(replaceTile, filledTiles, tileX, tileY);
+								break;
+							}
+							break;
+						case ELEMENT_LAYER:
+							switch (selectedTool) {
+							case PENCIL_TOOL:
+								if (list.getSelectedValue() != null) {
+									map.getElements()[tileX][tileY] = ((MapElement) list.getSelectedValue()).id;
+								}
+								break;
+							case BUCKET_TOOL:
+								boolean[][] filledTiles = new boolean[map.getHeight()][map.getWidth()];
+								String replaceTile = map.getElements()[tileX][tileY];
+								bucketFillElements(replaceTile, filledTiles, tileX, tileY);
+								break;
+							}
+							break;
 						}
 					}
-				}
-				if(mouse2Pressed){
-					if(selectedLayer == 0){
-						list.setSelectedValue(Assets.getTileByID(map.getTiles()[tileX][tileY]), true);
-					}else{
-						list.setSelectedValue(Assets.getElementByID(map.getElements()[tileX][tileY]), true);
+					
+					if (mouse2Pressed) {
+						switch (selectedLayer) {
+						case TILE_LAYER:
+							list.setSelectedValue(assetManager.getTileByID(map.getTiles()[tileX][tileY]), true);
+							break;
+						case ELEMENT_LAYER:
+							list.setSelectedValue(assetManager.getElementByID(map.getElements()[tileX][tileY]), true);
+							break;
+						}
 					}
 				}
 			}
@@ -1289,23 +1112,94 @@ public class MainEditor implements Runnable{
 		bucketFillElements(replaceTile, filledTiles, tileX, tileY - 1);
 	}
 	
-	public void save(){
-		if(saveLocation == null){
+	public void showNewMapDialog () {
+		NewMapMenu newMapMenu = new NewMapMenu(new NewMapMenu.NewMapMenuListener() {
+			
+			@Override
+			public void newMapCreated (Map map_) {
+				map = map_;
+				
+                panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE));
+                panelMapPanel.revalidate();
+				saveLocation = null;
+				lblMapPath.setText("");
+			}
+		});
+		newMapMenu.setVisible(true);
+	}
+	
+	public boolean showMapOpenDialog () {
+		JFileChooser openFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
+		openFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
+    	openFile.showOpenDialog(null);
+    	File selectedFile = openFile.getSelectedFile();
+    	
+    	if (selectedFile == null) 
+    		return false;
+    	else {
+    		saveLocation = selectedFile.getPath();
+    		lblMapPath.setText("         " + saveLocation);
+    		map = new Map();
+    		map.load(selectedFile);
+    		panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE));
+    		panelMapPanel.revalidate();
+    		return true;
+    	}
+	}
+	
+	public boolean showMapSaveDialog () {
+		if (saveLocation == null) {
 			JFileChooser saveFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-			saveFile.setFileFilter(new FileNameExtensionFilter("map", "map"));
+			saveFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
             saveFile.showSaveDialog(null);
-            if(saveFile.getSelectedFile() == null) return;
             File selectedFile = saveFile.getSelectedFile();
-            if(selectedFile != null){
+            
+            if (selectedFile == null)
+            	return false;
+            else {
             	saveLocation = selectedFile.getPath();
             	saveLocation = saveLocation.replaceFirst("[.][^.]+$", "");
-            	saveLocation = saveLocation + ".map";
+            	saveLocation = saveLocation + ".json";
             	lblMapPath.setText("         " + saveLocation);
                 map.save(new File(saveLocation));
+                return true;
             }
-		}else
+		} else {
 			map.save(new File(saveLocation));
-		justSaved = true;
+			justSaved = true;
+			return true;
+		}
+	}
+	
+	public void reloadLists () {
+		ArrayList<Icon> iconList = new ArrayList<Icon>();
+		switch (selectedLayer) {
+		case 0:
+
+			for (MapTile tile : assetManager.getMapTiles()){
+				if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
+					iconList.add(tile);
+			}
+			break;
+		case 1:
+			for (MapElement element : assetManager.getMapElements()){
+				if (element.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
+					iconList.add(element);
+			}
+			break;
+		}
+
+		lblTileName.setText("");
+		list.clearSelection();
+		list.setListData(iconList.toArray());
+	}
+	
+	public Map getMap () {
+		return map;
+	}
+	
+	public ChangeList getChangeList () {
+		return changeList;
 	}
 	
 }

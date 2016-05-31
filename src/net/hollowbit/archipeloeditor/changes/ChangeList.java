@@ -6,51 +6,55 @@ import net.hollowbit.archipeloeditor.MainEditor;
 
 public class ChangeList {
 	
-	public static ArrayList<Change[]> ChangeList = new ArrayList<Change[]>();
+	private ArrayList<Change[]> changeList = new ArrayList<Change[]>();
 	
-	private static int index = -1;
+	private int index = -1;
+	private MainEditor editor;
 	
-	public static void addChanges(Change... changes){
-		if(MainEditor.map == null) return;
-		MainEditor.justSaved = false;
-		if(index < 0)
-			ChangeList.removeAll(ChangeList);
-		if(index == 0){
-			Change[] change = ChangeList.get(0);
-			ChangeList.removeAll(ChangeList);
-			ChangeList.add(change);
-		}else if(index < ChangeList.size() - 1)
-			ChangeList = new ArrayList<Change[]>(ChangeList.subList(0, index));
-		index++;
-		ChangeList.add(changes);
+	public ChangeList (MainEditor editor) {
+		this.editor = editor;
+		index = -1;
+		changeList = new ArrayList<Change[]>();
 	}
 	
-	public static void undo(){
+	public void addChanges (Change... changes) {
+		if (editor.getMap() == null) return;
+		if(index < 0)
+			changeList.removeAll(changeList);
+		if(index == 0){
+			Change[] change = changeList.get(0);
+			changeList.removeAll(changeList);
+			changeList.add(change);
+		}else if(index < changeList.size() - 1)
+			changeList = new ArrayList<Change[]>(changeList.subList(0, index));
+		index++;
+		changeList.add(changes);
+	}
+	
+	public void undo () {
 		if(index < 0) return;
-		for(Change change : ChangeList.get(index)){
+		for(Change change : changeList.get(index)){
 			change.undoChange();
-			if(change instanceof SettingsChange)
-				MainEditor.list.repaint();
 		}
 		if(index > -1)
 			index--;
 	}
 	
-	public static void redo(){
-		if(index >= ChangeList.size() - 1) return;
+	public void redo () {
+		if(index >= changeList.size() - 1) return;
 		index++;
-		for(Change change : ChangeList.get(index))
+		for(Change change : changeList.get(index))
 			change.redoChanges();
 	}
 	
-	public static void reset(){
-		ChangeList.removeAll(ChangeList);
+	public void reset () {
+		changeList.removeAll(changeList);
 		index = -1;
 	}
 	
-	public static void update(){
-		if(index >= ChangeList.size())
-			index = ChangeList.size() - 1;
+	public void update () {
+		if(index >= changeList.size())
+			index = changeList.size() - 1;
 		if(index < -1)
 			index = -1;
 	}

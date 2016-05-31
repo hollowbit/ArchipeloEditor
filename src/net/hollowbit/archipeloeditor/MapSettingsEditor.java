@@ -1,6 +1,5 @@
 package net.hollowbit.archipeloeditor;
 
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -14,35 +13,19 @@ import javax.swing.JLabel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 
-import net.hollowbit.archipeloeditor.changes.ChangeList;
+import net.hollowbit.archipeloeditor.changes.Change;
 import net.hollowbit.archipeloeditor.changes.ResizeChange;
 import net.hollowbit.archipeloeditor.changes.SettingsChange;
 
 
 public class MapSettingsEditor extends JFrame {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private JTextField textFieldName;
 	private JTextField textFieldMusic;
-	
-	private MainEditor editor;
-	
-	/**
-	 * Create the application.
-	 */
-	public MapSettingsEditor(MainEditor editor) {
-		this.editor = editor;
-		setAlwaysOnTop(true);
-		initialize();
-	}
 
-	/**
-	 * Initialize the contents of the frame.
-	 */
-	private void initialize() {
+	public MapSettingsEditor (MainEditor editor, MapSettingsEditorListener listener) {
+		setAlwaysOnTop(true);
 		setResizable(false);
 		setTitle("Map Settings");
 		setBounds(100, 100, 450, 300);
@@ -70,7 +53,7 @@ public class MapSettingsEditor extends JFrame {
 		getContentPane().add(lblName);
 		
 		textFieldName = new JTextField();
-		textFieldName.setText(new String(MainEditor.map.getName()));
+		textFieldName.setText(new String(editor.getMap().getName()));
 		textFieldName.setBounds(10, 36, 198, 20);
 		getContentPane().add(textFieldName);
 		textFieldName.setColumns(10);
@@ -81,7 +64,7 @@ public class MapSettingsEditor extends JFrame {
 		comboBoxClimate.addItem("Grassy - 0");
 		comboBoxClimate.addItem("Sandy - 1");
 		comboBoxClimate.addItem("Snowy - 2");
-		comboBoxClimate.setSelectedIndex(new Integer(MainEditor.map.getClimat()));
+		comboBoxClimate.setSelectedIndex(new Integer(editor.getMap().getClimat()));
 		getContentPane().add(comboBoxClimate);
 		
 		JLabel lblClimate = new JLabel("Climate:");
@@ -100,7 +83,7 @@ public class MapSettingsEditor extends JFrame {
 		comboBoxType.addItem("House - 2");
 		comboBoxType.addItem("Shop - 3");
 		comboBoxType.addItem("Cave - 4");
-		comboBoxType.setSelectedIndex(new Integer(MainEditor.map.getType()));
+		comboBoxType.setSelectedIndex(new Integer(editor.getMap().getType()));
 		getContentPane().add(comboBoxType);
 		
 		JLabel lblNaturalLighting = new JLabel("Natural Lighting:");
@@ -129,12 +112,12 @@ public class MapSettingsEditor extends JFrame {
 		textFieldMusic.setColumns(10);
 		
 		final JSpinner spinnerWidth = new JSpinner();
-		spinnerWidth.setValue(new Integer(MainEditor.map.getWidth()));
+		spinnerWidth.setValue(new Integer(editor.getMap().getWidth()));
 		spinnerWidth.setBounds(345, 78, 89, 20);
 		getContentPane().add(spinnerWidth);
 		
 		final JSpinner spinnerHeight = new JSpinner();
-		spinnerHeight.setValue(new Integer(MainEditor.map.getHeight()));
+		spinnerHeight.setValue(new Integer(editor.getMap().getHeight()));
 		spinnerHeight.setBounds(345, 110, 89, 20);
 		getContentPane().add(spinnerHeight);
 		
@@ -143,14 +126,23 @@ public class MapSettingsEditor extends JFrame {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				ChangeList.addChanges(new SettingsChange(), new ResizeChange());
-				MainEditor.map.setName(textFieldName.getText());
-				MainEditor.map.setType((byte) comboBoxType.getSelectedIndex());
-				MainEditor.map.setClimat((byte) comboBoxClimate.getSelectedIndex());
-				MainEditor.map.resize((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue());
-                editor.panelMapPanel.setPreferredSize(new Dimension(MainEditor.map.getWidth() * 18, MainEditor.map.getHeight() * 18));
-                editor.panelMapPanel.revalidate();
-                MainEditor.list.repaint();
+				Change[] changes;
+				
+				if ((int) spinnerWidth.getValue() != editor.getMap().getWidth() || (int) spinnerHeight.getValue() != editor.getMap().getHeight()) {
+					changes = new Change[2];
+					changes[1] = new ResizeChange(editor.getMap());
+				} else
+					changes = new Change[1];
+				
+				changes[0] = new SettingsChange(editor.getMap());
+				
+				editor.getChangeList().addChanges(changes);
+				editor.getMap().setName(textFieldName.getText());
+				editor.getMap().setType((byte) comboBoxType.getSelectedIndex());
+				editor.getMap().setClimat((byte) comboBoxClimate.getSelectedIndex());
+				editor.getMap().resize((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue());
+				
+				listener.mapSettingsChanged();
 				setVisible(false);
 				dispose();
 			}
@@ -158,6 +150,12 @@ public class MapSettingsEditor extends JFrame {
 		btnSave.setBounds(246, 238, 89, 23);
 		getContentPane().add(btnSave);
 		getRootPane().setDefaultButton(btnSave);
+	}
+	
+	public interface MapSettingsEditorListener {
+		
+		public void mapSettingsChanged ();
 		
 	}
+	
 }

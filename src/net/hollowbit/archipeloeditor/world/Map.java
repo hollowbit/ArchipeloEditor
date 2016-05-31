@@ -18,11 +18,9 @@ public class Map implements Cloneable {
 	public static final int TYPE_HOUSE = 2;
 	public static final int TYPE_SHOP = 2;
 	
-	public static final int CLIMATE_GRASSY = 0;
-	public static final int CLIMATE_SANDY = 1;
-	public static final int CLIMATE_SNOWY = 2;
-	
-	public static boolean isMapOpen = false;
+	public static final int CLIMAT_GRASSY = 0;
+	public static final int CLIMAT_SANDY = 1;
+	public static final int CLIMAT_SNOWY = 2;
 	
 	private String displayName = "";
 	private int type;
@@ -32,39 +30,66 @@ public class Map implements Cloneable {
 	private String[][] elements;
 	private ArrayList<EntitySnapshot> entitySnapshots;
 	
-	public void draw(Graphics2D g, int x, int y, int visibleX, int visibleY, int visibleWidth, int visibleHeight){
-		if(MainEditor.showTiles && tiles != null){
+	public Map () {
+		entitySnapshots = new ArrayList<EntitySnapshot>();
+	}
+	
+	public Map (String name, String displayName, int type, int climat, int width, int height) {
+		this.name = name;
+		this.displayName = displayName;
+		this.type = type;
+		this.climat = climat;
+		
+		entitySnapshots = new ArrayList<EntitySnapshot>();
+		
+		tiles = new String[height][width];
+		for (int r = 0; r < height; r++) {
+			for (int c = 0; c < width; c++) {
+				tiles[r][c] = "null";
+			}
+		}
+		
+		elements = new String[height][width];
+		for (int r = 0; r < height; r++) {
+			for (int c = 0; c < width; c++) {
+				elements[r][c] = "null";
+			}
+		}
+	}
+	
+	public void draw (AssetManager assetManager, boolean showTiles, boolean showElements, boolean showGrid, int tileY, int tileX, int selectedLayer, Object selectedListValue, Graphics2D g, int x, int y, int visibleX, int visibleY, int visibleWidth, int visibleHeight ){
+		if (showTiles && tiles != null) {
 			for(int i = visibleY - 3; i < visibleY + visibleHeight + 3; i++){
 				for(int u = visibleX - 3; u < visibleX + visibleWidth + 3; u++){
 					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
 						if(tiles != null){
 							if(tiles[i][u] != null)
-								drawTileByCoords(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y, u, i);
+								assetManager.drawTileByID(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y, tiles[i][u]);
 						}
-						if(i == MainEditor.tileX && u == MainEditor.tileY && MainEditor.list.getSelectedValue() != null && MainEditor.selectedLayer == 0)
-							Assets.getTileByID(((MapTile) MainEditor.list.getSelectedValue()).id).draw(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y);
+						if(i == tileX && u == tileY && selectedListValue != null && selectedLayer == 0)
+							assetManager.getTileByID(((MapTile) selectedListValue).id).draw(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y);
 					}
 				}
 			}
 		}
 
-		if(MainEditor.showElements && elements != null){
+		if (showElements && elements != null) {
 			for(int i = visibleY - 3; i < visibleY + visibleHeight + 3; i++){
 				for(int u = visibleX - 3; u < visibleX + visibleWidth + 3; u++){
 					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
 						if(elements != null){
 							if(elements[i][u] != null)
-								drawElementByCoords(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y, u, i);
+								assetManager.drawElementByID(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y, elements[i][u]);
 						}
-						if(i == MainEditor.tileX && u == MainEditor.tileY && MainEditor.list.getSelectedValue() != null && MainEditor.selectedLayer == 1)
-							Assets.getElementByID(((MapElement) MainEditor.list.getSelectedValue()).id).draw(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y);
+						if(i == tileX && u == tileY && selectedListValue != null && selectedLayer == 1)
+							assetManager.getElementByID(((MapElement) selectedListValue).id).draw(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y);
 					}
 				}
 			}
 		}
 
 		//Draw Grid
-		if(MainEditor.showGrid){			
+		if (showGrid) {			
 			for(int i = visibleY - 3; i < visibleY + visibleHeight + 3; i++){
 				for(int u = visibleX - 3; u < visibleX + visibleWidth + 3; u++){
 					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
@@ -75,14 +100,6 @@ public class Map implements Cloneable {
 
 		}
 		
-	}
-	
-	private void drawTileByCoords(Graphics2D g, int drawX, int drawY, int x, int y){
-		Assets.drawTileByID(g, drawX, drawY, climat, tiles[y][x]);
-	}
-	
-	private void drawElementByCoords(Graphics2D g, int drawX, int drawY, int x, int y){
-		Assets.drawElementByID(g, drawX, drawY, climat, elements[y][x]);
 	}
 	
 	public void load(File file){
@@ -109,8 +126,6 @@ public class Map implements Cloneable {
 		tiles = mapFile.tileData;
 		elements = mapFile.elementData;
 		entitySnapshots = mapFile.entitySnapshots;
-		
-		isMapOpen = true;
 	}
 	
 	public void save(File file){
@@ -140,7 +155,6 @@ public class Map implements Cloneable {
 	}
 	
 	public void close(){
-		isMapOpen = false;
 		displayName = "";
 		type = 0;
 		climat = 0;
@@ -186,6 +200,7 @@ public class Map implements Cloneable {
 			}
 		}
 		tiles = newTiles;
+		
 		String[][] newElements = new String[height][tiles[0].length];
 		for(int i = 0; i < height; i++){
 			for(int u = 0; u < tiles[0].length; u++){

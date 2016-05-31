@@ -14,31 +14,35 @@ import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloeditor.MainEditor;
 
-public class Assets {
+public class AssetManager {
 
-	public static HashMap<String, MapTile> TileMap = new HashMap<String, MapTile>();
-	public static ArrayList<MapTile> TileList = new ArrayList<MapTile>();
-	public static HashMap<String, MapElement> ElementMap = new HashMap<String, MapElement>();
-	public static ArrayList<MapElement> ElementList = new ArrayList<MapElement>();
+	private HashMap<String, MapTile> tileMap;
+	private ArrayList<MapTile> tileList;
+	private HashMap<String, MapElement> elementMap;
+	private ArrayList<MapElement> elementList;
 	
-	public static MapTile getTileByID(String id){
-		return TileMap.get(id);
+	public AssetManager () {
+		clear();
 	}
 	
-	public static void drawTileByID(Graphics2D g, int x, int y, int climate, String id){
-		MapTile tile = TileMap.get(id);
+	public MapTile getTileByID(String id){
+		return tileMap.get(id);
+	}
+	
+	public void drawTileByID(Graphics2D g, int x, int y, String id){
+		MapTile tile = tileMap.get(id);
 		if (tile != null)
 			tile.draw(g, x, y);
 		else
 			g.drawImage(MainEditor.invalidTile, x, y, null);
 	}
 	
-	public static MapElement getElementByID(String id){
-		return ElementMap.get(id);
+	public MapElement getElementByID(String id){
+		return elementMap.get(id);
 	}
 	
-	public static void drawElementByID(Graphics2D g, int x, int y, int climate, String id){
-		MapElement element = ElementMap.get(id);
+	public void drawElementByID(Graphics2D g, int x, int y, String id){
+		MapElement element = elementMap.get(id);
 		if (element != null)
 			element.draw(g, x, y);
 		else {
@@ -47,10 +51,25 @@ public class Assets {
 		}
 	}
 	
+	public void clear () {
+		tileMap = new HashMap<String, MapTile>();
+		tileList = new ArrayList<MapTile>();
+		elementMap = new HashMap<String, MapElement>();
+		elementList = new ArrayList<MapElement>();
+	}
+	
+	public ArrayList<MapTile> getMapTiles () {
+		return tileList;
+	}
+	
+	public ArrayList<MapElement> getMapElements () {
+		return elementList;
+	}
+	
 	//////////////////////////
-	/*Initiates all Tiles!!!*/
+	/*Initiates all Elements!!!*/
 	//////////////////////////
-	public static void initiate(){
+	public void load () {
 		Json json = new Json();
 		Scanner scanner = null;
 		String fileData = "";
@@ -67,9 +86,9 @@ public class Assets {
 			e.printStackTrace();
 		}
 		
-		BufferedImage tileMap = null;
+		BufferedImage tileMapImage = null;
 		try {
-			tileMap = ImageIO.read(new File(MainEditor.PATH + "/tilemaps/tiles.png"));
+			tileMapImage = ImageIO.read(new File(MainEditor.PATH + "/tilemaps/tiles.png"));
 		} catch (IOException e) {
 			System.out.println("Could not load tile map image.");
 			e.printStackTrace();
@@ -78,10 +97,10 @@ public class Assets {
 		
 		//Load each individual tile
 		for (TileData data : tileDatas) {
-			BufferedImage texture = tileMap.getSubimage(data.x * MainEditor.TILE_SIZE, data.y * MainEditor.TILE_SIZE, MainEditor.TILE_SIZE, MainEditor.TILE_SIZE);
+			BufferedImage texture = tileMapImage.getSubimage(data.x * MainEditor.TILE_SIZE, data.y * MainEditor.TILE_SIZE, MainEditor.TILE_SIZE, MainEditor.TILE_SIZE);
 			MapTile tile = new MapTile(data, texture);
-			TileMap.put(data.id, tile);
-			TileList.add(tile);
+			tileMap.put(data.id, tile);
+			tileList.add(tile);
 		}
 		
 		//Load elements now
@@ -97,9 +116,9 @@ public class Assets {
 			e.printStackTrace();
 		}
 				
-		BufferedImage elementMap = null;
+		BufferedImage elementMapImage = null;
 		try {
-			elementMap = ImageIO.read(new File(MainEditor.PATH + "/tilemaps/elements.png"));
+			elementMapImage = ImageIO.read(new File(MainEditor.PATH + "/tilemaps/elements.png"));
 		} catch (IOException e) {
 			System.out.println("Could not load tile map image.");
 			e.printStackTrace();
@@ -108,10 +127,10 @@ public class Assets {
 		
 		//Load each individual element
 		for (ElementData data : elementDatas) {
-			BufferedImage texture = elementMap.getSubimage(data.x * MainEditor.TILE_SIZE, data.y * MainEditor.TILE_SIZE, MainEditor.TILE_SIZE * data.width, MainEditor.TILE_SIZE * data.height);
+			BufferedImage texture = elementMapImage.getSubimage(data.x * MainEditor.TILE_SIZE, data.y * MainEditor.TILE_SIZE, MainEditor.TILE_SIZE * data.width, MainEditor.TILE_SIZE * data.height);
 			MapElement element = new MapElement(data, texture);
-			ElementMap.put(data.id, element);
-			ElementList.add(element);
+			elementMap.put(data.id, element);
+			elementList.add(element);
 		}
 	}
 	

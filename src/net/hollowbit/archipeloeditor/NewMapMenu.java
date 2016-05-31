@@ -1,6 +1,5 @@
 package net.hollowbit.archipeloeditor;
 
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -15,8 +14,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 
 import net.hollowbit.archipeloeditor.world.Map;
 
@@ -25,18 +22,14 @@ public class NewMapMenu extends JFrame {
 	private static final long serialVersionUID = 1L;
 
 	private JTextField textFieldName;
+	private JTextField textFieldDisplayName;
 	private JTextField textFieldMusic;
-	
-	private boolean nameEmpty = true;
-	
-	MainEditor editor;
 
-	public NewMapMenu(final MainEditor editor) {
+	public NewMapMenu (NewMapMenuListener listener) {
 		setAlwaysOnTop(true);
-		this.editor = editor;
 		setResizable(false);
 		setTitle("New Map");
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 450, 350);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setIconImage(MainEditor.ICON);
 		setLocationRelativeTo(null);
@@ -53,7 +46,7 @@ public class NewMapMenu extends JFrame {
 			}
 			
 		});
-		btnCancel.setBounds(345, 238, 89, 23);
+		btnCancel.setBounds(345, 288, 89, 23);
 		getContentPane().add(btnCancel);
 		
 		JLabel lblName = new JLabel("Name:");
@@ -61,50 +54,38 @@ public class NewMapMenu extends JFrame {
 		getContentPane().add(lblName);
 		
 		textFieldName = new JTextField();
-		textFieldName.getDocument().addDocumentListener(new DocumentListener() {
-			  public void changedUpdate(DocumentEvent e) {
-			    changed();
-			  }
-			  public void removeUpdate(DocumentEvent e) {
-			    changed();
-			  }
-			  public void insertUpdate(DocumentEvent e) {
-			    changed();
-			  }
-
-			  public void changed() {
-			     if (textFieldName.getText().equals("")){
-			       nameEmpty = true;
-			     }
-			     else {
-			       nameEmpty = false;
-			    }
-
-			  }
-			});
 		textFieldName.setBounds(10, 36, 198, 20);
-		getContentPane().add(textFieldName);
 		textFieldName.setColumns(10);
+		getContentPane().add(textFieldName);
 		
-		final JComboBox<String> comboBoxClimate = new JComboBox<String>();
-		comboBoxClimate.setMaximumRowCount(3);
-		comboBoxClimate.setBounds(162, 107, 86, 20);
-		comboBoxClimate.addItem("Grassy - 0");
-		comboBoxClimate.addItem("Sandy - 1");
-		comboBoxClimate.addItem("Snowy - 2");
-		getContentPane().add(comboBoxClimate);
+		JLabel lblDisplayName = new JLabel("Display Name:");
+		lblDisplayName.setBounds(10, 70, 198, 14);
+		getContentPane().add(lblDisplayName);
 		
-		JLabel lblClimate = new JLabel("Climate:");
-		lblClimate.setBounds(162, 81, 46, 14);
-		getContentPane().add(lblClimate);
+		textFieldDisplayName = new JTextField();
+		textFieldDisplayName.setBounds(10, 90, 198, 20);
+		textFieldDisplayName.setColumns(10);
+		getContentPane().add(textFieldDisplayName);
+		
+		final JComboBox<String> comboBoxClimat = new JComboBox<String>();
+		comboBoxClimat.setMaximumRowCount(3);
+		comboBoxClimat.setBounds(162, 157, 86, 20);
+		comboBoxClimat.addItem("Grassy - 0");
+		comboBoxClimat.addItem("Sandy - 1");
+		comboBoxClimat.addItem("Snowy - 2");
+		getContentPane().add(comboBoxClimat);
+		
+		JLabel lblClimat = new JLabel("Climat:");
+		lblClimat.setBounds(162, 141, 46, 14);
+		getContentPane().add(lblClimat);
 		
 		JLabel lblType = new JLabel("Type:");
-		lblType.setBounds(10, 81, 46, 14);
+		lblType.setBounds(10, 141, 46, 14);
 		getContentPane().add(lblType);
 		
 		final JComboBox<String> comboBoxType = new JComboBox<String>();
 		comboBoxType.setMaximumRowCount(4);
-		comboBoxType.setBounds(10, 107, 86, 20);
+		comboBoxType.setBounds(10, 157, 86, 20);
 		comboBoxType.addItem("Island - 0");
 		comboBoxType.addItem("Dungeon - 1");
 		comboBoxType.addItem("House - 2");
@@ -113,38 +94,38 @@ public class NewMapMenu extends JFrame {
 		getContentPane().add(comboBoxType);
 		
 		JLabel lblNaturalLighting = new JLabel("Natural Lighting:");
-		lblNaturalLighting.setBounds(10, 153, 86, 14);
+		lblNaturalLighting.setBounds(10, 213, 110, 14);
 		getContentPane().add(lblNaturalLighting);
 		
 		JCheckBox chckbxYesno = new JCheckBox("Yes/No");
-		chckbxYesno.setBounds(6, 174, 97, 23);
+		chckbxYesno.setBounds(6, 224, 97, 23);
 		getContentPane().add(chckbxYesno);
 		
 		JLabel lblWidth = new JLabel("Width:");
-		lblWidth.setBounds(278, 81, 46, 14);
+		lblWidth.setBounds(278, 131, 46, 14);
 		getContentPane().add(lblWidth);
 		
 		JLabel lblHeight = new JLabel("Height:");
-		lblHeight.setBounds(278, 110, 46, 14);
+		lblHeight.setBounds(278, 160, 46, 14);
 		getContentPane().add(lblHeight);
 		
 		JLabel lblMusic = new JLabel("Music:");
-		lblMusic.setBounds(162, 153, 46, 14);
+		lblMusic.setBounds(162, 203, 46, 14);
 		getContentPane().add(lblMusic);
 		
 		textFieldMusic = new JTextField();
-		textFieldMusic.setBounds(162, 175, 162, 20);
+		textFieldMusic.setBounds(162, 225, 162, 20);
 		getContentPane().add(textFieldMusic);
 		textFieldMusic.setColumns(10);
 		
 		SpinnerNumberModel sizeSpinnerModelWidth = new SpinnerNumberModel(50, 0, Integer.MAX_VALUE, 1);
 		final JSpinner spinnerWidth = new JSpinner(sizeSpinnerModelWidth);
-		spinnerWidth.setBounds(345, 78, 89, 20);
+		spinnerWidth.setBounds(345, 128, 89, 20);
 		getContentPane().add(spinnerWidth);
 		
 		SpinnerNumberModel sizeSpinnerModelHeight = new SpinnerNumberModel(50, 0, Integer.MAX_VALUE, 1);
 		final JSpinner spinnerHeight = new JSpinner(sizeSpinnerModelHeight);
-		spinnerHeight.setBounds(345, 110, 89, 20);
+		spinnerHeight.setBounds(345, 160, 89, 20);
 		getContentPane().add(spinnerHeight);
 		
 		JButton btnSave = new JButton("Create");
@@ -153,36 +134,28 @@ public class NewMapMenu extends JFrame {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(nameEmpty || (int) spinnerWidth.getValue() <= 0 || (int) spinnerHeight.getValue() <= 0){
-					JOptionPane.showMessageDialog(frame, "A field must be empty or less than or equal to 0. Required fields are: Name, width & height.", "Error", JOptionPane.WARNING_MESSAGE);
+				if(textFieldName.getText().equals("") || textFieldDisplayName.getText().equals("") || (int) spinnerWidth.getValue() <= 0 || (int) spinnerHeight.getValue() <= 0){
+					JOptionPane.showMessageDialog(frame, "A field must be empty or less than or equal to 0. Required fields are: Name, display name, width & height.", "Error", JOptionPane.WARNING_MESSAGE);
 					return;
 				}
-				MainEditor.map.setName(textFieldName.getText());
-				MainEditor.map.setType((byte) comboBoxType.getSelectedIndex());
-				MainEditor.map.setClimat((byte) comboBoxClimate.getSelectedIndex());
-				MainEditor.map.setTiles(new String[(int) spinnerHeight.getValue()][(int) spinnerWidth.getValue()]);
-				MainEditor.map.setElements(new String[(int) spinnerHeight.getValue()][(int) spinnerWidth.getValue()]);
-				MainEditor.map.resize((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue());
-				for(int i = 0; i < MainEditor.map.getHeight(); i++){
-					for(int u = 0; u < MainEditor.map.getWidth(); u++){
-						MainEditor.map.getTiles()[i][u] = "null";
-						MainEditor.map.getElements()[i][u] = "null";
-					}
-				}
-				Map.isMapOpen = true;
-                editor.panelMapPanel.setPreferredSize(new Dimension(MainEditor.map.getWidth() * 18, MainEditor.map.getHeight() * 18));
-                editor.panelMapPanel.revalidate();
-                MainEditor.list.repaint();
-				MainEditor.saveLocation = null;
-				editor.lblMapPath.setText("");
+				
+				Map map = new Map(textFieldName.getText(), textFieldDisplayName.getText(), comboBoxType.getSelectedIndex(), comboBoxClimat.getSelectedIndex(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue());
+				listener.newMapCreated(map);
+				
 				setVisible(false);
 				dispose();
 			}
 		});
 		
-		btnSave.setBounds(246, 238, 89, 23);
+		btnSave.setBounds(246, 288, 89, 23);
 		getContentPane().add(btnSave);
 		getRootPane().setDefaultButton(btnSave);
 	}
 
+	public interface NewMapMenuListener {
+		
+		public void newMapCreated (Map map);
+		
+	}
+	
 }

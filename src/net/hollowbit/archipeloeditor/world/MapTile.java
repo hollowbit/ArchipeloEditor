@@ -34,6 +34,7 @@ public class MapTile implements Icon{
 	public MapTile(TileData data, BufferedImage texture){
 		this.id = data.id;
 		this.name = data.name;
+		this.animated = data.animated;
 		this.numberOfFrames = data.animationFrames;
 		this.animationSpeed = data.animationTime;
 		this.collisionTable = data.collisionTable;
