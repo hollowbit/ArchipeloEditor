@@ -1,8 +1,13 @@
 {
 "elementList": [
 	{
+		"id": "null",
+		"name": "Blank"
+	},
+	{
 		"id": "bush",
 		"name": "Bush",
+		"x": 1,
 		"width": 2,
 		"collisionTable": [[false, false, false, false],
 							[false, true, true, false]]

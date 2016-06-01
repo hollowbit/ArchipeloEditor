@@ -26,6 +26,7 @@ public class MapElement implements Icon{
 	public BufferedImage texture = null;
 	
 	public MapElement(ElementData data, BufferedImage texture){
+		//Apply data from file
 		this.id = data.id;
 		this.name = data.name;
 		this.width = data.width;
@@ -46,7 +47,7 @@ public class MapElement implements Icon{
 	}
 	
 	public void draw(Graphics g, int x, int y){
-		g.drawImage(texture, x + offsetX * MainEditor.TILE_SIZE / TileData.COLLISION_MAP_SCALE, y + offsetY * MainEditor.TILE_SIZE / TileData.COLLISION_MAP_SCALE - (height - 1) * MainEditor.TILE_SIZE, null);
+		g.drawImage(texture, x + offsetX * MainEditor.TILE_SIZE / TileData.COLLISION_MAP_SCALE, y - offsetY * MainEditor.TILE_SIZE / TileData.COLLISION_MAP_SCALE - (height - 1) * MainEditor.TILE_SIZE, null);
 	}
 	
 	@Override

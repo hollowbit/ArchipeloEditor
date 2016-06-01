@@ -16,6 +16,9 @@ public class ResizeChange extends Change {
 	
 	Map map;
 	
+	//Allows for undoing changes to map size
+	
+	//Creates a state of the map
 	public ResizeChange(Map map) {
 		this.map = map;
 		tilemap = new String[map.getHeight()][map.getWidth()];
@@ -32,6 +35,7 @@ public class ResizeChange extends Change {
 		height = new Integer(map.getHeight());
 	}
 	
+	//Undoes changes but also saves already made changes in case of needing to redo
 	@Override
 	public void undoChange() {
 		redoTilemap = new String[map.getHeight()][map.getWidth()];
@@ -64,6 +68,7 @@ public class ResizeChange extends Change {
 		System.out.println("Resize Undone!");
 	}
 	
+	//Reapplies undone changes
 	@Override
 	public void redoChanges() {
 		map.resize(redoWidth, redoHeight);

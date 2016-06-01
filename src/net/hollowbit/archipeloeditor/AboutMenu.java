@@ -10,7 +10,9 @@ public class AboutMenu extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
-
+	
+	//Basic menu with some information about the program
+	
 	public AboutMenu() {
 		setAlwaysOnTop(true);
 		setResizable(false);
@@ -29,9 +31,9 @@ public class AboutMenu extends JFrame {
 		contentPane.add(lblAbout);
 		
 		JLabel lblMadeByVedioboy = new JLabel("<html>Made by vedioboy for his game called Archipelo. This map editor is made as a utility tool "
-				+ "for players of Archipelo or developers of the game. For more details on the game, please visit <a href=\"http://archipelo.ve"
-				+ "diogames.net\">http://archipelo.vediogames.net</a><br><br>This is open-source software. It may be used for any purpose you "
-				+ "may want and is not restricted to use for the game Archipelo.<br><br>Additional Tips:<ul><li>Pressing F5 will reload all tilepacks</li><li>Holding Space and dragging Mouse will move map</li></ul></html>");
+				+ "for players of Archipelo or developers of the game. For more details on the game, please visit <a href=\"http://hollowbit.net"
+				+ "/archipelo\">http://hollowbit.net/archipelo</a><br><br>This is open-source software. It may be used for any purpose you "
+				+ "may want and is not restricted to use for the game Archipelo.<br><br>Additional Tips:<ul><li>Pressing F5 will reload all tiles and elements</li><li>Holding Space and dragging Mouse will move map</li></ul></html>");
 		lblMadeByVedioboy.setVerticalAlignment(SwingConstants.TOP);
 		lblMadeByVedioboy.setBounds(10, 36, 424, 211);
 		contentPane.add(lblMadeByVedioboy);

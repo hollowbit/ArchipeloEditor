@@ -94,9 +94,9 @@ public class MainEditor implements Runnable{
 	private boolean showGrid = false;
 	
 	private JList<Object> list;
-	JLabel lblMapPath;
+	private JLabel lblMapPath;
 	private JPanel panelMapPanel;
-	JScrollPane scrollPane;
+	private JScrollPane scrollPane;
 	private JMenuItem mntmSave;
 	private JMenuItem mntmSaveAs;
 	private JMenuItem mntmClose;
@@ -145,6 +145,7 @@ public class MainEditor implements Runnable{
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					//Load basic images for editor
 					ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 					ICON = ImageIO.read(classLoader.getResourceAsStream("images/icon.png"));
 					invalidTile = ImageIO.read(classLoader.getResourceAsStream("images/invalid.png"));
@@ -160,6 +161,7 @@ public class MainEditor implements Runnable{
 	}
 
 	public MainEditor() {
+		//Initialize
 		changeList = new ChangeList(this);
 		assetManager = new AssetManager();
 		assetManager.load();
@@ -169,7 +171,8 @@ public class MainEditor implements Runnable{
 		thread = new Thread(this);
 		thread.start();
 	}
-
+	
+	//Method to initialize all components, keeps the constructor clean
 	private void initialize() {
 		frame = new JFrame("Archipelo Map Editor v1.0");
 		frame.setBounds(100, 100, 1280, 720);
@@ -182,15 +185,16 @@ public class MainEditor implements Runnable{
 
 			@Override
 			public boolean dispatchKeyEvent(KeyEvent e) {
-				if(e.getID() == KeyEvent.KEY_PRESSED){
-					if(e.getKeyCode() == KeyEvent.VK_CONTROL)
+				//Check for hotkey presses
+				if (e.getID() == KeyEvent.KEY_PRESSED) {
+					if (e.getKeyCode() == KeyEvent.VK_CONTROL)
 						controlPressed = true;
-					if(e.getKeyCode() == KeyEvent.VK_SHIFT)
+					if (e.getKeyCode() == KeyEvent.VK_SHIFT)
 						shiftPressed = true;
-					if(e.getKeyCode() == KeyEvent.VK_SPACE)
+					if (e.getKeyCode() == KeyEvent.VK_SPACE)
 						spacePressed = true;
 					
-					if(e.getKeyCode() == KeyEvent.VK_G && controlPressed){
+					if (e.getKeyCode() == KeyEvent.VK_G && controlPressed ){//Toggle show grid
 						if(!showGrid){
 							mntmToggleGrid.setSelected(true);
 							showGrid = true;
@@ -200,51 +204,51 @@ public class MainEditor implements Runnable{
 						}
 					}
 					
-					if(e.getKeyCode() == KeyEvent.VK_T && controlPressed){
-						if(!showTiles){
+					if (e.getKeyCode() == KeyEvent.VK_T && controlPressed) {//Toggle show tiles
+						if (!showTiles){
 							mntmToggleTiles.setSelected(true);
 							checkBoxTilesVisible.setSelected(true);
 							showTiles = true;
-						}else{
+						} else {
 							mntmToggleTiles.setSelected(false);
 							checkBoxTilesVisible.setSelected(false);
 							showTiles = false;
 						}
 					}
 					
-					if(e.getKeyCode() == KeyEvent.VK_E && controlPressed){
-						if(!showElements){
+					if (e.getKeyCode() == KeyEvent.VK_E && controlPressed) {//Toggle show elements
+						if (!showElements) {
 							mntmToggleElements.setSelected(true);
 							checkBoxElementsVisible.setSelected(true);
 							showElements = true;
-						}else{
+						} else {
 							mntmToggleElements.setSelected(false);
 							checkBoxElementsVisible.setSelected(false);
 							showElements = false;
 						}
 					}
 					
-					if(e.getKeyCode() == KeyEvent.VK_Z && controlPressed && !shiftPressed)
+					if (e.getKeyCode() == KeyEvent.VK_Z && controlPressed && !shiftPressed)//Undo
 						changeList.undo();
 					
-					if(e.getKeyCode() == KeyEvent.VK_Y && controlPressed)
+					if (e.getKeyCode() == KeyEvent.VK_Y && controlPressed)//Redo
 						changeList.redo();
 					
-					if(e.getKeyCode() == KeyEvent.VK_S && controlPressed)
-						showMapSaveDialog();
+					if (e.getKeyCode() == KeyEvent.VK_S && controlPressed)//Save
+						showMapSaveDialog(false);
 					
-					if(e.getKeyCode() == KeyEvent.VK_Z && controlPressed && shiftPressed)
+					if (e.getKeyCode() == KeyEvent.VK_Z && controlPressed && shiftPressed)//Another kind of redo
 						changeList.redo();
 					
-					if(e.getKeyCode() == KeyEvent.VK_F5)
+					if (e.getKeyCode() == KeyEvent.VK_F5)//Reload assets
 						reloadAssets();
 					
-				}else if(e.getID() == KeyEvent.KEY_RELEASED){
-					if(e.getKeyCode() == KeyEvent.VK_CONTROL)
+				} else if (e.getID() == KeyEvent.KEY_RELEASED) {
+					if (e.getKeyCode() == KeyEvent.VK_CONTROL)
 						controlPressed = false;
-					if(e.getKeyCode() == KeyEvent.VK_SHIFT)
+					if (e.getKeyCode() == KeyEvent.VK_SHIFT)
 						shiftPressed = false;
-					if(e.getKeyCode() == KeyEvent.VK_SPACE)
+					if (e.getKeyCode() == KeyEvent.VK_SPACE)
 						spacePressed = false;
 				}
 				return false;
@@ -254,17 +258,19 @@ public class MainEditor implements Runnable{
 		
 		frame.addWindowListener(new WindowListener() {
 			
+			//Event for window close, make sure user saved first before exiting
 			@Override
 			public void windowClosing(WindowEvent e) {
-				if(justSaved){
+				if (justSaved) {
 					return;
 				}
+				
 				boolean saved = false;
 				while(!saved){
 					int option = JOptionPane.showConfirmDialog(frame, "Would you like to save first?", "Map Close", JOptionPane.YES_NO_CANCEL_OPTION);
-					if(option == JOptionPane.YES_OPTION){
-						showMapSaveDialog();
-					}else
+					if (option == JOptionPane.YES_OPTION) {
+						showMapSaveDialog(false);
+					} else
 						saved = true;
 				}
 			}
@@ -298,15 +304,15 @@ public class MainEditor implements Runnable{
 		JMenuItem mntmOpen = new JMenuItem("Open...");
 		mntmOpen.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseReleased(MouseEvent e) {
-				if(map != null && !justSaved){
+			public void mouseReleased(MouseEvent e) {//Show open map dialog, make sure user saved current map (if there is one) first
+				if (map != null && !justSaved) {
 					boolean saved = false;
 					while(!saved){
 						int option = JOptionPane.showConfirmDialog(frame, "Would you like to save first?", "Map Close", JOptionPane.YES_NO_CANCEL_OPTION);
-						if(option == JOptionPane.YES_OPTION){
-							saved = showMapSaveDialog();
+						if (option == JOptionPane.YES_OPTION) {
+							saved = showMapSaveDialog(false);
 							
-							if(saved){
+							if (saved) {
 								showMapOpenDialog();
 							}
 						} else if (option == JOptionPane.NO_OPTION){
@@ -323,7 +329,7 @@ public class MainEditor implements Runnable{
 		
 		JMenuItem mntmNew = new JMenuItem("New...");
 		final MainEditor mainEditor = this;
-		mntmNew.addMouseListener(new MouseAdapter() {
+		mntmNew.addMouseListener(new MouseAdapter() {//Open new map dialog, make sure they saved current map
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if(map != null && !justSaved){
@@ -331,9 +337,9 @@ public class MainEditor implements Runnable{
 					while(!saved){
 						int option = JOptionPane.showConfirmDialog(frame, "Would you like to save first?", "Map Close", JOptionPane.YES_NO_CANCEL_OPTION);
 						if (option == JOptionPane.YES_OPTION) {
-							saved = showMapSaveDialog();
+							saved = showMapSaveDialog(false);
 							
-							if(saved){
+							if (saved) {
 								showNewMapDialog();
 							}
 						} else if(option == JOptionPane.NO_OPTION) {
@@ -353,9 +359,9 @@ public class MainEditor implements Runnable{
 		mntmSave.addMouseListener(new MouseAdapter(){
 			
 			@Override
-			public void mouseReleased(MouseEvent e) {
+			public void mouseReleased(MouseEvent e) {//Open save dialog
 				if(mntmSave.isEnabled()){
-					showMapSaveDialog();
+					showMapSaveDialog(false);
 				}
 			}
 			
@@ -363,18 +369,18 @@ public class MainEditor implements Runnable{
 		mnFile.add(mntmSave);
 		
 		mntmSaveAs = new JMenuItem("Save As...");
-		mntmSaveAs.addMouseListener(new MouseAdapter() {
+		mntmSaveAs.addMouseListener(new MouseAdapter() {//Same as save but forces saving in a new location
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if(mntmSaveAs.isEnabled()){
-					showMapSaveDialog();
+					showMapSaveDialog(true);
 				}
 			}
 		});
 		mnFile.add(mntmSaveAs);
 		
 		mntmClose = new JMenuItem("Close");
-		mntmClose.addMouseListener(new MouseAdapter(){
+		mntmClose.addMouseListener(new MouseAdapter(){//Closes map but makes sure it is saved
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
@@ -383,7 +389,7 @@ public class MainEditor implements Runnable{
 					while (!saved) {
 						int option = JOptionPane.showConfirmDialog(frame, "Would you like to save first?", "Map Close", JOptionPane.YES_NO_CANCEL_OPTION);
 						if (option == JOptionPane.YES_OPTION) {
-							saved = showMapSaveDialog();
+							saved = showMapSaveDialog(false);
 						} else if (option == JOptionPane.NO_OPTION) {
 							saved = true;
 						} else if (option == JOptionPane.CANCEL_OPTION) {
@@ -404,7 +410,7 @@ public class MainEditor implements Runnable{
 		menuBar.add(mnEdit);
 		
 		JMenuItem mntmUndo = new JMenuItem("Undo (Ctrl + Z)");
-		mntmUndo.addMouseListener(new MouseAdapter(){
+		mntmUndo.addMouseListener(new MouseAdapter(){//undo, but within menu
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
@@ -415,7 +421,7 @@ public class MainEditor implements Runnable{
 		mnEdit.add(mntmUndo);
 		
 		JMenuItem mntmRedo = new JMenuItem("Redo (Ctrl + Y)");
-		mntmRedo.addMouseListener(new MouseAdapter(){
+		mntmRedo.addMouseListener(new MouseAdapter(){//redo, but within menu
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
@@ -429,7 +435,7 @@ public class MainEditor implements Runnable{
 		menuBar.add(mnMap);
 		
 		mntmEdit = new JMenuItem("Edit...");
-		mntmEdit.addMouseListener(new MouseAdapter() {
+		mntmEdit.addMouseListener(new MouseAdapter() {//Open map settings editor
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if(mntmEdit.isEnabled()){
@@ -448,7 +454,7 @@ public class MainEditor implements Runnable{
 		mnMap.add(mntmEdit);
 		
 		mntmGenerate = new JMenuItem("Generate...");
-		mntmGenerate.addMouseListener(new MouseAdapter() {
+		mntmGenerate.addMouseListener(new MouseAdapter() {//Open map generator menu
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if(mntmEdit.isEnabled())
@@ -458,7 +464,7 @@ public class MainEditor implements Runnable{
 		mnMap.add(mntmGenerate);
 		
 		mntmReset = new JMenuItem("Reset");
-		mntmReset.addMouseListener(new MouseAdapter(){
+		mntmReset.addMouseListener(new MouseAdapter(){//Resets the map, makes sure user really wants to do that
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
@@ -467,8 +473,8 @@ public class MainEditor implements Runnable{
 					if(option == JOptionPane.YES_OPTION){
 						for(int i = 0; i < map.getHeight(); i++){
 							for(int u = 0; u < map.getWidth(); u++){
-								map.getTiles()[i][u] = "-1";
-								map.getElements()[i][u] = "0";
+								map.getTiles()[i][u] = "null";
+								map.getElements()[i][u] = "null";
 							}
 						}
 					}
@@ -481,7 +487,7 @@ public class MainEditor implements Runnable{
 		JMenu mnView = new JMenu("View");
 		menuBar.add(mnView);
 		
-		mntmToggleGrid = new JCheckBoxMenuItem("Show Grid (Ctrl + G)");
+		mntmToggleGrid = new JCheckBoxMenuItem("Show Grid (Ctrl + G)");//Control grid showing
 		mntmToggleGrid.addChangeListener(new ChangeListener(){
 
 			@Override
@@ -492,7 +498,7 @@ public class MainEditor implements Runnable{
 		});
 		mnView.add(mntmToggleGrid);
 		
-		mntmToggleTiles = new JCheckBoxMenuItem("Show Tiles (Ctrl + T)");
+		mntmToggleTiles = new JCheckBoxMenuItem("Show Tiles (Ctrl + T)");//Control tile showing
 		mntmToggleTiles.addChangeListener(new ChangeListener(){
 
 			@Override
@@ -504,7 +510,7 @@ public class MainEditor implements Runnable{
 		});
 		mnView.add(mntmToggleTiles);
 		
-		mntmToggleElements = new JCheckBoxMenuItem("Show Elements (Ctrl + E)");
+		mntmToggleElements = new JCheckBoxMenuItem("Show Elements (Ctrl + E)");//Control element showing
 		mntmToggleElements.addChangeListener(new ChangeListener(){
 
 			@Override
@@ -517,7 +523,7 @@ public class MainEditor implements Runnable{
 		mnView.add(mntmToggleElements);
 		
 		JMenu mnAbout = new JMenu("About");
-		mnAbout.addMouseListener(new MouseAdapter() {
+		mnAbout.addMouseListener(new MouseAdapter() {//Opens about menu, with some info on this program
 			@Override
 			public void mousePressed(MouseEvent e) {
 				AboutMenu aboutMenu = new AboutMenu();
@@ -530,6 +536,7 @@ public class MainEditor implements Runnable{
 		lblMapPath.setHorizontalAlignment(SwingConstants.RIGHT);
 		menuBar.add(lblMapPath);
 		
+		//Divider to split tools from map
 		JSplitPane splitPane = new JSplitPane();
 		splitPane.setEnabled(false);
 		splitPane.setDividerLocation(282);
@@ -540,16 +547,21 @@ public class MainEditor implements Runnable{
 			private static final long serialVersionUID = 1L;
 
 			@Override
-			protected void paintComponent(Graphics g1d) {
+			protected void paintComponent(Graphics g1d) {//Renders map, if one is loaded
 				super.paintComponent(g1d);
 				Graphics2D g = (Graphics2D) g1d;
 				
 				if (map != null) {
 					g.clearRect(0, 0, map.getWidth() * TILE_SIZE, map.getWidth() * TILE_SIZE);
+					
+					//Calculates the visible area, this is good for big maps so that they don't take too much computing power.
 					x = (map.getWidth() * TILE_SIZE <= scrollPane.getViewportBorderBounds().getWidth() ? (int) scrollPane.getViewportBorderBounds().getWidth() / 2 - (map.getWidth() * TILE_SIZE) / 2:0);
 					y = (map.getHeight() * TILE_SIZE <= scrollPane.getViewportBorderBounds().getHeight() ? (int) scrollPane.getViewportBorderBounds().getHeight() / 2 - (map.getHeight() * TILE_SIZE) / 2:0);
+					
+					//Draws the map
 					map.draw(assetManager, showTiles, showElements, showGrid, tileY, tileX, selectedLayer, list.getSelectedValue(), g, x, y, scrollPane.getHorizontalScrollBar().getValue() / TILE_SIZE, scrollPane.getVerticalScrollBar().getValue() / TILE_SIZE, scrollPane.getViewport().getWidth() / TILE_SIZE, scrollPane.getViewport().getHeight() / TILE_SIZE);
-
+					
+					//Draws coordinates of cursor on map
 					g.setColor(Color.BLACK);
 					g.drawString("X: " + tileY + " Y: " + (map.getHeight() - tileX - 1), scrollPane.getHorizontalScrollBar().getValue() + 5, scrollPane.getVerticalScrollBar().getValue() + 15);
 				}
@@ -564,14 +576,15 @@ public class MainEditor implements Runnable{
 			}
 			
 		};
+		
 		panelMapPanel.setAutoscrolls(true);
-		panelMapPanel.addMouseListener(new MouseAdapter(){
+		panelMapPanel.addMouseListener(new MouseAdapter(){//Determines if a tool was sued
 			@Override
 			public void mousePressed(MouseEvent e) {
-				if(e.getButton() == MouseEvent.BUTTON1){
-					if(spacePressed)
+				if (e.getButton() == MouseEvent.BUTTON1) {
+					if( spacePressed)
 						origin = new Point(e.getPoint());
-					else if(selectedLayer == 0) {
+					else if (selectedLayer == 0) {
 						changeList.addChanges(new TileMapChange(map));
 						justSaved = false;
 					} else if (selectedLayer == 1) {
@@ -585,13 +598,14 @@ public class MainEditor implements Runnable{
 					mouse2Pressed = true;
 			}
 			
+			//Determines if a tools was stopped being used
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if(e.getButton() == MouseEvent.BUTTON1){
+				if (e.getButton() == MouseEvent.BUTTON1) {
 					mouse1Pressed = false;
 					origin = null;
 				}
-				if(e.getButton() == MouseEvent.BUTTON3)
+				if (e.getButton() == MouseEvent.BUTTON3)
 					mouse2Pressed = false;
 			}
 			
@@ -609,6 +623,7 @@ public class MainEditor implements Runnable{
 		
 		panelMapPanel.addMouseMotionListener(new MouseMotionListener(){
 
+			//Move map if space is pressed
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				mouseX = e.getX() - x;
@@ -618,12 +633,14 @@ public class MainEditor implements Runnable{
 				if(viewPort == null) return;
 				int deltaX = origin.x - e.getX();
 				int deltaY = origin.y - e.getY();
-				if(spacePressed){
+				
+				if (spacePressed) {
 					scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getValue() + deltaY);
 					scrollPane.getHorizontalScrollBar().setValue(scrollPane.getHorizontalScrollBar().getValue() + deltaX);
 				}
 			}
 
+			//Keeps track of the mouse's location
 			@Override
 			public void mouseMoved(MouseEvent e) {
 				mouseX = e.getX() - x;
@@ -637,17 +654,17 @@ public class MainEditor implements Runnable{
 		panelMapPanel.addMouseWheelListener(new MouseWheelListener() {
 			
 			@Override
-			public void mouseWheelMoved(MouseWheelEvent e) {
-				if(controlPressed){
-					if(shiftPressed){
+			public void mouseWheelMoved(MouseWheelEvent e) {//Handles scrolling to move map
+				if (controlPressed) {
+					if (shiftPressed) {
 						scrollPane.getHorizontalScrollBar().setValue(scrollPane.getHorizontalScrollBar().getValue() + e.getWheelRotation() * 100);
-					}else{
+					} else {
 						scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getValue() + e.getWheelRotation() * 100);
 					}
-				}else{
-					if(list.getSelectedValue() != null)
+				} else {
+					if (list.getSelectedValue() != null)
 						list.setSelectedIndex(list.getSelectedIndex() + e.getWheelRotation());
-					else{
+					else {
 						list.setSelectedIndex(0);
 						list.setSelectedIndex(list.getSelectedIndex() + e.getWheelRotation());
 					}
@@ -681,7 +698,7 @@ public class MainEditor implements Runnable{
 		gbc_lblTools.gridy = 0;
 		panel.add(lblTools, gbc_lblTools);
 		
-		
+		//Load tool images
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		BufferedImage pencilIcon = null;
 		BufferedImage bucketIcon = null;
@@ -766,6 +783,7 @@ public class MainEditor implements Runnable{
 				}
 			}
 		});
+		
 		rdbtnTiles.setSelected(true);
 		GridBagConstraints gbc_rdbtnTiles = new GridBagConstraints();
 		gbc_rdbtnTiles.gridwidth = 4;
@@ -782,6 +800,7 @@ public class MainEditor implements Runnable{
 				mntmToggleElements.setSelected(checkBoxElementsVisible.isSelected());
 			}
 		});
+		
 		checkBoxElementsVisible.setSelected(true);
 		GridBagConstraints gbc_checkBoxElementsVisible = new GridBagConstraints();
 		gbc_checkBoxElementsVisible.insets = new Insets(0, 0, 5, 5);
@@ -821,7 +840,7 @@ public class MainEditor implements Runnable{
 		panel.add(lblSearch, gbc_lblSearch);
 		
 		textFieldSearch = new JTextField();
-		textFieldSearch.getDocument().addDocumentListener(new DocumentListener() {
+		textFieldSearch.getDocument().addDocumentListener(new DocumentListener() {//If search field is changed, update list accordingly
 			
 			@Override
 			public void removeUpdate(DocumentEvent e) {
@@ -838,6 +857,7 @@ public class MainEditor implements Runnable{
 				reloadLists();
 			}
 		});
+		
 		GridBagConstraints gbc_textFieldSearch = new GridBagConstraints();
 		gbc_textFieldSearch.gridwidth = 5;
 		gbc_textFieldSearch.insets = new Insets(0, 0, 5, 0);
@@ -867,6 +887,7 @@ public class MainEditor implements Runnable{
 		gbc_lblTileName.gridy = 8;
 		panel.add(lblTileName, gbc_lblTileName);
 		
+		//Load items to list
 		list = new JList<Object>(assetManager.getMapTiles().toArray());
 		list.setVisibleRowCount(-1);
 		list.addListSelectionListener(new ListSelectionListener(){
@@ -883,6 +904,7 @@ public class MainEditor implements Runnable{
 			
 		});
 		
+		//Display tile/element info when right-clicked
 		list.addMouseListener(new MouseListener(){
 
 			@Override
@@ -892,7 +914,7 @@ public class MainEditor implements Runnable{
 					int index = list.locationToIndex(e.getPoint());
 					if (index > -1) {
 						list.setToolTipText(null);
-						if(selectedLayer == 0){
+						if (selectedLayer == 0) {
 							MapTile tile = (MapTile) model.getElementAt(index);
 							iconHoveredOver = tile;
 							String text = "<html>"
@@ -916,7 +938,7 @@ public class MainEditor implements Runnable{
 							}
 						    text += "</html>";
 							list.setToolTipText(text);
-						}else if(selectedLayer == 1){
+						} else if(selectedLayer == 1) {
 							MapElement element = (MapElement) model.getElementAt(index);
 							iconHoveredOver = element;
 							String text = "<html>"
@@ -967,8 +989,8 @@ public class MainEditor implements Runnable{
 			public void mouseDragged(MouseEvent e) {}
 
 			@Override
-			public void mouseMoved(MouseEvent e) {
-				if(list.getModel().getElementAt(list.locationToIndex(e.getPoint())) != iconHoveredOver) {
+			public void mouseMoved(MouseEvent e) {//Remove info if no longer hover on tile/element
+				if (list.getModel().getElementAt(list.locationToIndex(e.getPoint())) != iconHoveredOver) {
 					list.setToolTipText(null);
 					iconHoveredOver = null;
 				}
@@ -986,6 +1008,7 @@ public class MainEditor implements Runnable{
 		panel.add(list, gbc_list);
 	}
 	
+	//Method to reload assets
 	public void reloadAssets(){
 		assetManager.clear();
 		assetManager.load();
@@ -994,11 +1017,13 @@ public class MainEditor implements Runnable{
         panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE));
         panelMapPanel.revalidate();
 	}
-
+	
+	//Thread to edit map and keep track of things
 	@Override
 	public void run() {
 		
 		while (running) {
+			//Limits app to running at 60fps, great for optimization
 			long delta = System.currentTimeMillis() - startTime;
 			long timeToSleep = (1000 / 60) - delta;
 			try {
@@ -1008,7 +1033,10 @@ public class MainEditor implements Runnable{
 			}
 			startTime = System.currentTimeMillis();
 			
+			//Repaint map
 			panelMapPanel.repaint();
+
+			//Makes sure everything is properly set
 			changeList.update();
 			mntmSave.setEnabled(map != null);
 			mntmSaveAs.setEnabled(map != null);
@@ -1022,9 +1050,11 @@ public class MainEditor implements Runnable{
 			else
 				lblListTitle.setText("Elements:");
 			
+			//Updates tilex/y
 			tileX = mouseY / TILE_SIZE;
 			tileY = mouseX / TILE_SIZE;
-
+			
+			//If a map is loaded and buttons are being pressed, edit the map
 			if (map != null) {
 				if (tileX < map.getHeight() && tileY < map.getWidth()  && tileX >= 0 && tileY >= 0 && map.getTiles() != null) {
 					if (mouse1Pressed && !spacePressed) {
@@ -1075,7 +1105,8 @@ public class MainEditor implements Runnable{
 		}
 		
 	}
-	
+
+	//Recursion bucket fill algorithm for tiles
 	public void bucketFillTiles(String replaceTile, boolean[][] filledTiles, int tileX, int tileY){
 		if(tileX >= map.getHeight()) return;
 		if(tileY >= map.getWidth()) return;
@@ -1093,7 +1124,8 @@ public class MainEditor implements Runnable{
 		bucketFillTiles(replaceTile, filledTiles, tileX, tileY + 1);
 		bucketFillTiles(replaceTile, filledTiles, tileX, tileY - 1);
 	}
-	
+
+	//Recursion bucket fill algorithm for elements
 	public void bucketFillElements(String replaceTile, boolean[][] filledTiles, int tileX, int tileY){
 		if(tileX >= map.getHeight()) return;
 		if(tileY >= map.getWidth()) return;
@@ -1112,6 +1144,7 @@ public class MainEditor implements Runnable{
 		bucketFillElements(replaceTile, filledTiles, tileX, tileY - 1);
 	}
 	
+	//Shows new map dialog
 	public void showNewMapDialog () {
 		NewMapMenu newMapMenu = new NewMapMenu(new NewMapMenu.NewMapMenuListener() {
 			
@@ -1128,6 +1161,7 @@ public class MainEditor implements Runnable{
 		newMapMenu.setVisible(true);
 	}
 	
+	//Shows map open dialog
 	public boolean showMapOpenDialog () {
 		JFileChooser openFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
 		openFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
@@ -1147,8 +1181,9 @@ public class MainEditor implements Runnable{
     	}
 	}
 	
-	public boolean showMapSaveDialog () {
-		if (saveLocation == null) {
+	//shows map save dialog
+	public boolean showMapSaveDialog (boolean forceNewLocation) {
+		if (saveLocation == null || forceNewLocation) {
 			JFileChooser saveFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
 			saveFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
             saveFile.showSaveDialog(null);
@@ -1162,15 +1197,19 @@ public class MainEditor implements Runnable{
             	saveLocation = saveLocation + ".json";
             	lblMapPath.setText("         " + saveLocation);
                 map.save(new File(saveLocation));
+                justSaved = true;
+                JOptionPane.showMessageDialog(frame, "You map was successfully saved!", "Saved!", JOptionPane.INFORMATION_MESSAGE);
                 return true;
             }
 		} else {
 			map.save(new File(saveLocation));
 			justSaved = true;
+            JOptionPane.showMessageDialog(frame, "You map was successfully saved!", "Saved!", JOptionPane.INFORMATION_MESSAGE);
 			return true;
 		}
 	}
 	
+	//Reloads the lists depending on the seleted layer
 	public void reloadLists () {
 		ArrayList<Icon> iconList = new ArrayList<Icon>();
 		switch (selectedLayer) {

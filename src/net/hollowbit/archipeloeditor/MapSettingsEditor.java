@@ -22,13 +22,15 @@ public class MapSettingsEditor extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	private JTextField textFieldName;
+	private JTextField textFieldDisplayName;
 	private JTextField textFieldMusic;
-
+	
+	//Editor for changing map settings
 	public MapSettingsEditor (MainEditor editor, MapSettingsEditorListener listener) {
 		setAlwaysOnTop(true);
 		setResizable(false);
 		setTitle("Map Settings");
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 450, 350);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setIconImage(MainEditor.ICON);
 		setLocationRelativeTo(null);
@@ -36,7 +38,7 @@ public class MapSettingsEditor extends JFrame {
 		
 		
 		JButton btnCancel = new JButton("Cancel");
-		btnCancel.addMouseListener(new MouseAdapter(){
+		btnCancel.addMouseListener(new MouseAdapter(){//Close dialog without saving
 
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
@@ -45,7 +47,7 @@ public class MapSettingsEditor extends JFrame {
 			}
 			
 		});
-		btnCancel.setBounds(345, 238, 89, 23);
+		btnCancel.setBounds(345, 288, 89, 23);
 		getContentPane().add(btnCancel);
 		
 		JLabel lblName = new JLabel("Name:");
@@ -58,26 +60,36 @@ public class MapSettingsEditor extends JFrame {
 		getContentPane().add(textFieldName);
 		textFieldName.setColumns(10);
 		
+		JLabel lblDisplayName = new JLabel("Display Name:");
+		lblDisplayName.setBounds(10, 70, 198, 14);
+		getContentPane().add(lblDisplayName);
+		
+		textFieldDisplayName = new JTextField();
+		textFieldDisplayName.setText(new String(editor.getMap().getDisplayName()));
+		textFieldDisplayName.setBounds(10, 90, 198, 20);
+		textFieldDisplayName.setColumns(10);
+		getContentPane().add(textFieldDisplayName);
+		
 		final JComboBox<String> comboBoxClimate = new JComboBox<String>();
 		comboBoxClimate.setMaximumRowCount(3);
-		comboBoxClimate.setBounds(162, 107, 86, 20);
+		comboBoxClimate.setBounds(162, 157, 86, 20);
 		comboBoxClimate.addItem("Grassy - 0");
 		comboBoxClimate.addItem("Sandy - 1");
 		comboBoxClimate.addItem("Snowy - 2");
 		comboBoxClimate.setSelectedIndex(new Integer(editor.getMap().getClimat()));
 		getContentPane().add(comboBoxClimate);
 		
-		JLabel lblClimate = new JLabel("Climate:");
-		lblClimate.setBounds(162, 81, 46, 14);
-		getContentPane().add(lblClimate);
+		JLabel lblClimat = new JLabel("Climat:");
+		lblClimat.setBounds(162, 141, 46, 14);
+		getContentPane().add(lblClimat);
 		
 		JLabel lblType = new JLabel("Type:");
-		lblType.setBounds(10, 81, 46, 14);
+		lblType.setBounds(10, 141, 46, 14);
 		getContentPane().add(lblType);
 		
 		final JComboBox<String> comboBoxType = new JComboBox<String>();
 		comboBoxType.setMaximumRowCount(4);
-		comboBoxType.setBounds(10, 107, 86, 20);
+		comboBoxType.setBounds(10, 157, 86, 20);
 		comboBoxType.addItem("Island - 0");
 		comboBoxType.addItem("Dungeon - 1");
 		comboBoxType.addItem("House - 2");
@@ -87,67 +99,70 @@ public class MapSettingsEditor extends JFrame {
 		getContentPane().add(comboBoxType);
 		
 		JLabel lblNaturalLighting = new JLabel("Natural Lighting:");
-		lblNaturalLighting.setBounds(10, 153, 86, 14);
+		lblNaturalLighting.setBounds(10, 213, 86, 14);
 		getContentPane().add(lblNaturalLighting);
 		
 		JCheckBox chckbxYesno = new JCheckBox("Yes/No");
-		chckbxYesno.setBounds(6, 174, 97, 23);
+		chckbxYesno.setBounds(6, 224, 97, 23);
 		getContentPane().add(chckbxYesno);
 		
 		JLabel lblWidth = new JLabel("Width:");
-		lblWidth.setBounds(278, 81, 46, 14);
+		lblWidth.setBounds(278, 813, 46, 14);
 		getContentPane().add(lblWidth);
 		
 		JLabel lblHeight = new JLabel("Height:");
-		lblHeight.setBounds(278, 110, 46, 14);
+		lblHeight.setBounds(278, 160, 46, 14);
 		getContentPane().add(lblHeight);
 		
 		JLabel lblMusic = new JLabel("Music:");
-		lblMusic.setBounds(162, 153, 46, 14);
+		lblMusic.setBounds(162, 203, 46, 14);
 		getContentPane().add(lblMusic);
 		
 		textFieldMusic = new JTextField();
-		textFieldMusic.setBounds(162, 175, 162, 20);
+		textFieldMusic.setBounds(162, 225, 162, 20);
 		getContentPane().add(textFieldMusic);
 		textFieldMusic.setColumns(10);
 		
 		final JSpinner spinnerWidth = new JSpinner();
 		spinnerWidth.setValue(new Integer(editor.getMap().getWidth()));
-		spinnerWidth.setBounds(345, 78, 89, 20);
+		spinnerWidth.setBounds(345, 128, 89, 20);
 		getContentPane().add(spinnerWidth);
 		
 		final JSpinner spinnerHeight = new JSpinner();
 		spinnerHeight.setValue(new Integer(editor.getMap().getHeight()));
-		spinnerHeight.setBounds(345, 110, 89, 20);
+		spinnerHeight.setBounds(345, 160, 89, 20);
 		getContentPane().add(spinnerHeight);
 		
 		JButton btnSave = new JButton("Save");
-		btnSave.addActionListener(new ActionListener() {
+		btnSave.addActionListener(new ActionListener() {//Save changes to map
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				Change[] changes;
 				
+				//Makes sure to only resize the map if the width and height are different
 				if ((int) spinnerWidth.getValue() != editor.getMap().getWidth() || (int) spinnerHeight.getValue() != editor.getMap().getHeight()) {
 					changes = new Change[2];
 					changes[1] = new ResizeChange(editor.getMap());
+					editor.getMap().resize((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue());
 				} else
 					changes = new Change[1];
 				
 				changes[0] = new SettingsChange(editor.getMap());
 				
+				//Applies settings to map
 				editor.getChangeList().addChanges(changes);
 				editor.getMap().setName(textFieldName.getText());
-				editor.getMap().setType((byte) comboBoxType.getSelectedIndex());
-				editor.getMap().setClimat((byte) comboBoxClimate.getSelectedIndex());
-				editor.getMap().resize((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue());
+				editor.getMap().setDisplayName(textFieldDisplayName.getText());
+				editor.getMap().setType(comboBoxType.getSelectedIndex());
+				editor.getMap().setClimat(comboBoxClimate.getSelectedIndex());
 				
 				listener.mapSettingsChanged();
 				setVisible(false);
 				dispose();
 			}
 		});
-		btnSave.setBounds(246, 238, 89, 23);
+		btnSave.setBounds(246, 288, 89, 23);
 		getContentPane().add(btnSave);
 		getRootPane().setDefaultButton(btnSave);
 	}

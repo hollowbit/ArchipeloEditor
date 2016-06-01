@@ -9,6 +9,8 @@ public class EntitySnapshot {
 	public int style = 0;
 	public HashMap<String, String> properties;
 	
+	//Snapshot of data required to "hard" load an entity into game
+	
 	public EntitySnapshot () {
 		properties = new HashMap<String, String>();
 	}

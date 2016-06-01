@@ -21,15 +21,17 @@ public class AssetManager {
 	private HashMap<String, MapElement> elementMap;
 	private ArrayList<MapElement> elementList;
 	
-	public AssetManager () {
+	//Manages tiles and elements
+	
+	public AssetManager() {
 		clear();
 	}
 	
-	public MapTile getTileByID(String id){
+	public MapTile getTileByID(String id) {
 		return tileMap.get(id);
 	}
 	
-	public void drawTileByID(Graphics2D g, int x, int y, String id){
+	public void drawTileByID(Graphics2D g, int x, int y, String id) {
 		MapTile tile = tileMap.get(id);
 		if (tile != null)
 			tile.draw(g, x, y);
@@ -37,11 +39,11 @@ public class AssetManager {
 			g.drawImage(MainEditor.invalidTile, x, y, null);
 	}
 	
-	public MapElement getElementByID(String id){
+	public MapElement getElementByID(String id) {
 		return elementMap.get(id);
 	}
 	
-	public void drawElementByID(Graphics2D g, int x, int y, String id){
+	public void drawElementByID(Graphics2D g, int x, int y, String id) {
 		MapElement element = elementMap.get(id);
 		if (element != null)
 			element.draw(g, x, y);
@@ -51,18 +53,18 @@ public class AssetManager {
 		}
 	}
 	
-	public void clear () {
+	public void clear() {
 		tileMap = new HashMap<String, MapTile>();
 		tileList = new ArrayList<MapTile>();
 		elementMap = new HashMap<String, MapElement>();
 		elementList = new ArrayList<MapElement>();
 	}
 	
-	public ArrayList<MapTile> getMapTiles () {
+	public ArrayList<MapTile> getMapTiles() {
 		return tileList;
 	}
 	
-	public ArrayList<MapElement> getMapElements () {
+	public ArrayList<MapElement> getMapElements() {
 		return elementList;
 	}
 	

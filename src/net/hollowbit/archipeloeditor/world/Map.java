@@ -30,11 +30,12 @@ public class Map implements Cloneable {
 	private String[][] elements;
 	private ArrayList<EntitySnapshot> entitySnapshots;
 	
-	public Map () {
+	public Map() {
 		entitySnapshots = new ArrayList<EntitySnapshot>();
 	}
 	
-	public Map (String name, String displayName, int type, int climat, int width, int height) {
+	//Create map from editor
+	public Map(String name, String displayName, int type, int climat, int width, int height) {
 		this.name = name;
 		this.displayName = displayName;
 		this.type = type;
@@ -58,6 +59,7 @@ public class Map implements Cloneable {
 	}
 	
 	public void draw (AssetManager assetManager, boolean showTiles, boolean showElements, boolean showGrid, int tileY, int tileX, int selectedLayer, Object selectedListValue, Graphics2D g, int x, int y, int visibleX, int visibleY, int visibleWidth, int visibleHeight ){
+		//If show tiles and tiles exist, draw them
 		if (showTiles && tiles != null) {
 			for(int i = visibleY - 3; i < visibleY + visibleHeight + 3; i++){
 				for(int u = visibleX - 3; u < visibleX + visibleWidth + 3; u++){
@@ -66,13 +68,16 @@ public class Map implements Cloneable {
 							if(tiles[i][u] != null)
 								assetManager.drawTileByID(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y, tiles[i][u]);
 						}
+						
+						//Draw hover tile for user to see where is will go if placed
 						if(i == tileX && u == tileY && selectedListValue != null && selectedLayer == 0)
 							assetManager.getTileByID(((MapTile) selectedListValue).id).draw(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y);
 					}
 				}
 			}
 		}
-
+		
+		//If show elements and elements exist, draw them
 		if (showElements && elements != null) {
 			for(int i = visibleY - 3; i < visibleY + visibleHeight + 3; i++){
 				for(int u = visibleX - 3; u < visibleX + visibleWidth + 3; u++){
@@ -81,6 +86,8 @@ public class Map implements Cloneable {
 							if(elements[i][u] != null)
 								assetManager.drawElementByID(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y, elements[i][u]);
 						}
+						
+						//Draw hover element for user to see where is will go if placed
 						if(i == tileX && u == tileY && selectedListValue != null && selectedLayer == 1)
 							assetManager.getElementByID(((MapElement) selectedListValue).id).draw(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y);
 					}
@@ -102,7 +109,7 @@ public class Map implements Cloneable {
 		
 	}
 	
-	public void load(File file){
+	public void load(File file) {
 		//Load file
 		Scanner scanner = null;
 		String fileData = "";
@@ -117,8 +124,11 @@ public class Map implements Cloneable {
 			e.printStackTrace();
 		}
 		
+		//Parse json
 		Json json = new Json();
 		MapData mapFile = json.fromJson(MapData.class, fileData);
+		
+		//Apply map data
 		name = file.getName().replaceFirst("[.][^.]+$", "");
 		displayName = mapFile.displayName;
 		type = mapFile.type;
@@ -128,7 +138,8 @@ public class Map implements Cloneable {
 		entitySnapshots = mapFile.entitySnapshots;
 	}
 	
-	public void save(File file){
+	//Serialize map with json and save it
+	public void save(File file) {
 		Json json = new Json();
 		MapData mapFile = new MapData();
 		mapFile.displayName = displayName;
@@ -154,6 +165,7 @@ public class Map implements Cloneable {
 		}
 	}
 	
+	//Close map
 	public void close(){
 		displayName = "";
 		type = 0;
@@ -185,6 +197,8 @@ public class Map implements Cloneable {
 			return tiles.length;
 	}
 	
+	//Resize map while keeping current tiles/elements in place.
+	//this method will soo be upgraded to allow for centering
 	public  void resize(int width, int height){
 		String[][] newTiles = new String[height][tiles[0].length];
 		for(int i = 0; i < height; i++){

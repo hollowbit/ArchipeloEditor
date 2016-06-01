@@ -24,7 +24,8 @@ public class NewMapMenu extends JFrame {
 	private JTextField textFieldName;
 	private JTextField textFieldDisplayName;
 	private JTextField textFieldMusic;
-
+	
+	//Dialog to create a new map
 	public NewMapMenu (NewMapMenuListener listener) {
 		setAlwaysOnTop(true);
 		setResizable(false);
@@ -134,11 +135,13 @@ public class NewMapMenu extends JFrame {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(textFieldName.getText().equals("") || textFieldDisplayName.getText().equals("") || (int) spinnerWidth.getValue() <= 0 || (int) spinnerHeight.getValue() <= 0){
+				//Makes sure that required fields aren't empty
+				if (textFieldName.getText().equals("") || textFieldDisplayName.getText().equals("") || (int) spinnerWidth.getValue() <= 0 || (int) spinnerHeight.getValue() <= 0) {
 					JOptionPane.showMessageDialog(frame, "A field must be empty or less than or equal to 0. Required fields are: Name, display name, width & height.", "Error", JOptionPane.WARNING_MESSAGE);
 					return;
 				}
 				
+				//If it all checks out, create a new map
 				Map map = new Map(textFieldName.getText(), textFieldDisplayName.getText(), comboBoxType.getSelectedIndex(), comboBoxClimat.getSelectedIndex(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue());
 				listener.newMapCreated(map);
 				

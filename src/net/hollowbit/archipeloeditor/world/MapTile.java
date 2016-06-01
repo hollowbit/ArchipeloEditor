@@ -32,6 +32,7 @@ public class MapTile implements Icon{
 	public BufferedImage texture = null;
 	
 	public MapTile(TileData data, BufferedImage texture){
+		//Apply data from file
 		this.id = data.id;
 		this.name = data.name;
 		this.animated = data.animated;
