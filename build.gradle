@@ -1,6 +1,6 @@
 apply plugin: "java"
 
-mainClassName = 'net.hollowbit.archipeloeditor.MainEditor'
+//mainClassName = 'net.hollowbit.archipeloeditor.MainEditor'
 
 sourceCompatibility = 1.6
 version = '1.0'
