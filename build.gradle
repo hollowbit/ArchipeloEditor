@@ -1,6 +1,7 @@
 apply plugin: "java"
 
 //mainClassName = 'net.hollowbit.archipeloeditor.MainEditor'
+sourceSets.main.java.srcDirs = [ "src/" ]
 
 sourceCompatibility = 1.6
 version = '1.0'
@@ -21,7 +22,7 @@ test {
 }
 
 dependencies {
-		compile 'com.badlogicgames.gdx:gdx-backend-headless:1.9.1'
+		compile 'com.badlogicgames.gdx:gdx-backend-headless:1.9.3'
 }
 
 uploadArchives {
