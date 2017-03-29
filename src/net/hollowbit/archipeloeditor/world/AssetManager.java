@@ -2,17 +2,20 @@ package net.hollowbit.archipeloeditor.world;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Scanner;
 
 import javax.imageio.ImageIO;
 
 import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloeditor.tools.FileReader;
+import net.hollowbit.archipeloshared.ElementData;
+import net.hollowbit.archipeloshared.ElementList;
+import net.hollowbit.archipeloshared.TileData;
+import net.hollowbit.archipeloshared.TileList;
 
 public class AssetManager {
 
@@ -73,24 +76,14 @@ public class AssetManager {
 	//////////////////////////
 	public void load () {
 		Json json = new Json();
-		Scanner scanner = null;
 		String fileData = "";
 		
 		//Load tiles first
-		try {
-			scanner = new Scanner(new File(MainEditor.PATH + "/tilemaps/tiles.json"));
-			while (scanner.hasNext()) {
-				fileData += scanner.next();
-			}
-			scanner.close();
-		} catch (Exception e) {
-			System.out.println("Could not read map tile file!");
-			e.printStackTrace();
-		}
+		fileData = FileReader.readFileIntoString("/shared/map-elements/tiles.json");
 		
 		BufferedImage tileMapImage = null;
 		try {
-			tileMapImage = ImageIO.read(new File(MainEditor.PATH + "/tilemaps/tiles.png"));
+			tileMapImage = ImageIO.read(getClass().getResourceAsStream("/tiles.png"));
 		} catch (IOException e) {
 			System.out.println("Could not load tile map image.");
 			e.printStackTrace();
@@ -106,21 +99,11 @@ public class AssetManager {
 		}
 		
 		//Load elements now
-		fileData = "";
-		try {
-			scanner = new Scanner(new File(MainEditor.PATH + "/tilemaps/elements.json"));
-			while (scanner.hasNext()) {
-				fileData += scanner.next();
-			}
-			scanner.close();
-		} catch (Exception e) {
-			System.out.println("Could not read map element file!");
-			e.printStackTrace();
-		}
+		fileData = FileReader.readFileIntoString("/shared/map-elements/elements.json");
 				
 		BufferedImage elementMapImage = null;
 		try {
-			elementMapImage = ImageIO.read(new File(MainEditor.PATH + "/tilemaps/elements.png"));
+			elementMapImage = ImageIO.read(getClass().getResourceAsStream("/map_elements.png"));
 		} catch (IOException e) {
 			System.out.println("Could not load tile map image.");
 			e.printStackTrace();

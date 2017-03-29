@@ -30,7 +30,7 @@ public class MapSettingsEditor extends JFrame {
 		setAlwaysOnTop(true);
 		setResizable(false);
 		setTitle("Map Settings");
-		setBounds(100, 100, 450, 350);
+		setBounds(100, 100, 450, 375);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setIconImage(MainEditor.ICON);
 		setLocationRelativeTo(null);

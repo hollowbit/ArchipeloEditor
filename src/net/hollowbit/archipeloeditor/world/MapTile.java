@@ -10,6 +10,7 @@ import java.awt.image.BufferedImage;
 import javax.swing.Icon;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloshared.TileData;
 
 public class MapTile implements Icon{
 

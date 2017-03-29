@@ -1,9 +1,10 @@
 apply plugin: "java"
+apply plugin: 'eclipse'
 
 //mainClassName = 'net.hollowbit.archipeloeditor.MainEditor'
 sourceSets.main.java.srcDirs = [ "src/" ]
 
-sourceCompatibility = 1.6
+sourceCompatibility = 1.8
 version = '1.0'
 
 jar {
@@ -15,6 +16,13 @@ jar {
 
 repositories {
     mavenCentral()
+}
+
+eclipse {
+	project {
+        linkedResource name: 'assets', type: '2', location: 'PARENT-1-PROJECT_LOC/ArchipeloClient/core/assets/'
+        linkedResource name: 'src-shared', type: '2', location: 'PARENT-1-PROJECT_LOC/ArchipeloClient/src-shared/'
+    }
 }
 
 test {
@@ -36,6 +44,8 @@ uploadArchives {
 task afterEclipseImport(description: "Post processing after project generation", group: "IDE") {
   doLast {
     def classpath = new XmlParser().parse(file(".classpath"))
+    new Node(classpath, "classpathentry", [ kind: 'src', path: 'src-shared' ]);
+    new Node(classpath, "classpathentry", [ kind: 'src', path: 'assets' ]);
     def writer = new FileWriter(file(".classpath"))
     def printer = new XmlNodePrinter(new PrintWriter(writer))
     printer.setPreserveWhitespace(true)
