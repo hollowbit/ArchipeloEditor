@@ -702,22 +702,27 @@ public class MainEditor implements Runnable{
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		BufferedImage pencilIcon = null;
 		BufferedImage bucketIcon = null;
+		BufferedImage entityIcon = null;
 		try {
 			pencilIcon = ImageIO.read(classLoader.getResourceAsStream("images/icons/pencil.png"));
 			bucketIcon = ImageIO.read(classLoader.getResourceAsStream("images/icons/bucket.png"));
+			entityIcon = ImageIO.read(classLoader.getResourceAsStream("images/icons/entity.png"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
 		btnBucketTool = new JToggleButton(new ImageIcon(bucketIcon));
+		final JToggleButton btnEntityTool = new JToggleButton(new ImageIcon(entityIcon));
 		
+		//Pencil
 		final JToggleButton btnPencilTool = new JToggleButton(new ImageIcon(pencilIcon));
 		btnPencilTool.setSelected(true);
 		btnPencilTool.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
-				btnBucketTool.setSelected(!btnPencilTool.isSelected());
-				selectedTool = (btnPencilTool.isSelected() ? 0:selectedTool);
+				btnBucketTool.setSelected(false);
+				btnEntityTool.setSelected(false);
+				selectedTool = 0;
 			}
 		});
 		GridBagConstraints gbc_btnPencilTool = new GridBagConstraints();
@@ -725,12 +730,14 @@ public class MainEditor implements Runnable{
 		gbc_btnPencilTool.gridx = 0;
 		gbc_btnPencilTool.gridy = 1;
 		panel.add(btnPencilTool, gbc_btnPencilTool);
-
+		
+		//Bucket
 		btnBucketTool.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
-				btnPencilTool.setSelected(!btnBucketTool.isSelected());
-				selectedTool = (btnBucketTool.isSelected() ? 1:selectedTool);
+				btnPencilTool.setSelected(false);
+				btnEntityTool.setSelected(false);
+				selectedTool = 1;
 			}
 		});
 		GridBagConstraints gbc_btnBucketTool = new GridBagConstraints();
@@ -738,6 +745,21 @@ public class MainEditor implements Runnable{
 		gbc_btnBucketTool.gridx = 1;
 		gbc_btnBucketTool.gridy = 1;
 		panel.add(btnBucketTool, gbc_btnBucketTool);
+		
+		//Entity
+		btnEntityTool.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+				btnPencilTool.setSelected(false);
+				btnBucketTool.setSelected(false);
+				selectedTool = 2;
+			}
+		});
+		GridBagConstraints gbc_btnEntityTool = new GridBagConstraints();
+		gbc_btnEntityTool.insets = new Insets(0, 0, 5, 5);
+		gbc_btnEntityTool.gridx = 2;
+		gbc_btnEntityTool.gridy = 1;
+		panel.add(btnEntityTool, gbc_btnEntityTool);
 		
 		JLabel lblVisibility = new JLabel("Visibility:");
 		GridBagConstraints gbc_lblVisibility = new GridBagConstraints();

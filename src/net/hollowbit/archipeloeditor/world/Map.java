@@ -9,7 +9,8 @@ import java.util.Scanner;
 import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloeditor.MainEditor;
-import net.hollowbit.archipeloeditor.entity.EntitySnapshot;
+import net.hollowbit.archipeloshared.EntitySnapshot;
+import net.hollowbit.archipeloshared.MapData;
 
 public class Map implements Cloneable {
 	
