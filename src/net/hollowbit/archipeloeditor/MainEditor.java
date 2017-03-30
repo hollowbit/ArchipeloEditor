@@ -80,6 +80,7 @@ public class MainEditor implements Runnable{
 	
 	private static final int PENCIL_TOOL = 0;
 	private static final int BUCKET_TOOL = 1;
+	private static final int ENTITY_TOOL = 2;
 	
 	public static BufferedImage ICON;
 	public static BufferedImage invalidTile;
@@ -1093,6 +1094,10 @@ public class MainEditor implements Runnable{
 								String replaceTile = map.getTiles()[tileX][tileY];
 								bucketFillTiles(replaceTile, filledTiles, tileX, tileY);
 								break;
+							case ENTITY_TOOL:
+								EntityAdder entityAdder = new EntityAdder(this);
+								entityAdder.setVisible(true);
+								break;
 							}
 							break;
 						case ELEMENT_LAYER:
@@ -1106,6 +1111,10 @@ public class MainEditor implements Runnable{
 								boolean[][] filledTiles = new boolean[map.getHeight()][map.getWidth()];
 								String replaceTile = map.getElements()[tileX][tileY];
 								bucketFillElements(replaceTile, filledTiles, tileX, tileY);
+								break;
+							case ENTITY_TOOL:
+								EntityAdder entityAdder = new EntityAdder(this);
+								entityAdder.setVisible(true);
 								break;
 							}
 							break;
