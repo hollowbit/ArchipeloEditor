@@ -27,6 +27,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.imageio.ImageIO;
 import javax.swing.Icon;
@@ -142,6 +143,8 @@ public class MainEditor implements Runnable{
 	JCheckBox checkBoxTilesVisible;
 	JCheckBox checkBoxElementsVisible;
 	
+	private HashMap<String, Boolean> openWindows;
+	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -164,6 +167,7 @@ public class MainEditor implements Runnable{
 	public MainEditor() {
 		//Initialize
 		changeList = new ChangeList(this);
+		openWindows = new HashMap<String, Boolean>();
 		assetManager = new AssetManager();
 		assetManager.load();
 		initialize();
@@ -179,7 +183,7 @@ public class MainEditor implements Runnable{
 		frame.setBounds(100, 100, 1280, 720);
 		frame.setLocationRelativeTo(null);
 		frame.setIconImage(ICON);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		
 		KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		manager.addKeyEventDispatcher(new KeyEventDispatcher(){
@@ -263,6 +267,7 @@ public class MainEditor implements Runnable{
 			@Override
 			public void windowClosing(WindowEvent e) {
 				if (justSaved) {
+					System.exit(0);
 					return;
 				}
 				
@@ -271,8 +276,11 @@ public class MainEditor implements Runnable{
 					int option = JOptionPane.showConfirmDialog(frame, "Would you like to save first?", "Map Close", JOptionPane.YES_NO_CANCEL_OPTION);
 					if (option == JOptionPane.YES_OPTION) {
 						showMapSaveDialog(false);
-					} else
+					} else if (option == JOptionPane.NO_OPTION) {
 						saved = true;
+						System.exit(0);
+					} else
+						break;
 				}
 			}
 
@@ -585,10 +593,10 @@ public class MainEditor implements Runnable{
 				if (e.getButton() == MouseEvent.BUTTON1) {
 					if( spacePressed)
 						origin = new Point(e.getPoint());
-					else if (selectedLayer == 0) {
+					else if (selectedLayer == 0 && map != null) {
 						changeList.addChanges(new TileMapChange(map));
 						justSaved = false;
-					} else if (selectedLayer == 1) {
+					} else if (selectedLayer == 1 && map != null) {
 						changeList.addChanges(new ElementMapChange(map));
 						justSaved = false;
 					}
@@ -1095,8 +1103,11 @@ public class MainEditor implements Runnable{
 								bucketFillTiles(replaceTile, filledTiles, tileX, tileY);
 								break;
 							case ENTITY_TOOL:
-								EntityAdder entityAdder = new EntityAdder(this);
-								entityAdder.setVisible(true);
+								if (!isWindowOpen("entity-adder")) {
+									addOpenWindow("entity-adder");
+									EntityAdder entityAdder = new EntityAdder(this, tileX, tileY);
+									entityAdder.setVisible(true);
+								}
 								break;
 							}
 							break;
@@ -1113,8 +1124,11 @@ public class MainEditor implements Runnable{
 								bucketFillElements(replaceTile, filledTiles, tileX, tileY);
 								break;
 							case ENTITY_TOOL:
-								EntityAdder entityAdder = new EntityAdder(this);
-								entityAdder.setVisible(true);
+								if (!isWindowOpen("entity-adder")) {
+									addOpenWindow("entity-adder");
+									EntityAdder entityAdder = new EntityAdder(this, tileX, tileY);
+									entityAdder.setVisible(true);
+								}
 								break;
 							}
 							break;
@@ -1270,6 +1284,21 @@ public class MainEditor implements Runnable{
 	
 	public ChangeList getChangeList () {
 		return changeList;
+	}
+	
+	public void addOpenWindow(String type) {
+		openWindows.put(type, true);
+	}
+	
+	public void removeOpenWindow(String type) {
+		openWindows.put(type, false);
+	}
+	
+	public boolean isWindowOpen(String type) {
+		if (openWindows.containsKey(type))
+			return openWindows.get(type).booleanValue();
+		else
+			return false;
 	}
 	
 }

@@ -16,11 +16,11 @@ public class EntityAdder extends JFrame {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public EntityAdder (MainEditor editor) {
+	public EntityAdder (MainEditor editor, int tileX, int tileY) {
 		setAlwaysOnTop(true);
 		setResizable(false);
 		setTitle("Entity Adder");
-		setBounds(100, 100, 200, 125);
+		setBounds(100, 100, 300, 140);
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setIconImage(MainEditor.ICON);
 		setLocationRelativeTo(null);
@@ -29,7 +29,7 @@ public class EntityAdder extends JFrame {
 		JComboBox<EntityType> entityType = new JComboBox<EntityType>();
 		for (EntityType type : EntityType.values())//Add all entity types
 			entityType.addItem(type);
-		entityType.setBounds(30, 30, 100, 30);
+		entityType.setBounds(15, 15, 250, 30);
 		getContentPane().add(entityType);
 		
 		JButton confirm = new JButton("Add");
@@ -37,12 +37,18 @@ public class EntityAdder extends JFrame {
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				//TODO Open entity definer
+				EntityDefiner entityDefiner = new EntityDefiner(editor, (EntityType) entityType.getSelectedItem(), tileX * MainEditor.TILE_SIZE, tileY * MainEditor.TILE_SIZE);
+				entityDefiner.setVisible(true);
+				
+				//Remove
+				editor.removeOpenWindow("entity-adder");
+				setVisible(false);
+				dispose();
 				super.mouseReleased(e);
 			}
 			
 		});
-		confirm.setBounds(70, 75, 50, 30);
+		confirm.setBounds(175, 65, 100, 30);
 		getContentPane().add(confirm);
 	}
 	
