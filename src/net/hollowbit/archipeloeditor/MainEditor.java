@@ -1105,7 +1105,7 @@ public class MainEditor implements Runnable{
 							case ENTITY_TOOL:
 								if (!isWindowOpen("entity-adder")) {
 									addOpenWindow("entity-adder");
-									EntityAdder entityAdder = new EntityAdder(this, tileX, tileY);
+									EntityAdder entityAdder = new EntityAdder(this, x, y);
 									entityAdder.setVisible(true);
 								}
 								break;
@@ -1126,7 +1126,7 @@ public class MainEditor implements Runnable{
 							case ENTITY_TOOL:
 								if (!isWindowOpen("entity-adder")) {
 									addOpenWindow("entity-adder");
-									EntityAdder entityAdder = new EntityAdder(this, tileX, tileY);
+									EntityAdder entityAdder = new EntityAdder(this, x, y);
 									entityAdder.setVisible(true);
 								}
 								break;

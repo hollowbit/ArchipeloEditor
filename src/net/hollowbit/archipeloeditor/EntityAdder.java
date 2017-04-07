@@ -16,7 +16,7 @@ public class EntityAdder extends JFrame {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public EntityAdder (MainEditor editor, int tileX, int tileY) {
+	public EntityAdder (MainEditor editor, int x, int y) {
 		setAlwaysOnTop(true);
 		setResizable(false);
 		setTitle("Entity Adder");
@@ -37,7 +37,7 @@ public class EntityAdder extends JFrame {
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				EntityDefiner entityDefiner = new EntityDefiner(editor, (EntityType) entityType.getSelectedItem(), tileX * MainEditor.TILE_SIZE, tileY * MainEditor.TILE_SIZE);
+				EntityDefiner entityDefiner = new EntityDefiner(editor, (EntityType) entityType.getSelectedItem(), x, y);
 				entityDefiner.setVisible(true);
 				
 				//Remove

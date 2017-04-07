@@ -1,8 +1,11 @@
 package net.hollowbit.archipeloeditor;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
@@ -16,6 +19,7 @@ import javax.swing.text.NumberFormatter;
 
 import net.hollowbit.archipeloeditor.entity.EntityType;
 import net.hollowbit.archipeloshared.Direction;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.PropertyDefinition;
 
 public class EntityDefiner extends JFrame {
@@ -75,8 +79,11 @@ public class EntityDefiner extends JFrame {
 			definitions.add(def);
 		definitions.addAll(entityType.getData().properties);
 		
+		final ArrayList<SnapshotModifier> modifiers = new ArrayList<SnapshotModifier>();
+		
 		for (int i = 0; i < definitions.size(); i++) {
 			PropertyDefinition propertyDefinition = definitions.get(i);
+			final String name = propertyDefinition.name;
 			JLabel label = new JLabel(propertyDefinition.name + (propertyDefinition.required ? "*": "") + ":");
 			label.setBounds(10, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
 			getContentPane().add(label);
@@ -87,6 +94,13 @@ public class EntityDefiner extends JFrame {
 				JSpinner spinner = new JSpinner(model);
 				spinner.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
 				getContentPane().add(spinner);
+				
+				modifiers.add(new SnapshotModifier() {
+					@Override
+					public void modify(EntitySnapshot snapshot) {
+						snapshot.putInt(name, (Integer) spinner.getValue());
+					}
+				});
 				break;
 			case FLOAT:
 				NumberFormat format = NumberFormat.getInstance();
@@ -99,6 +113,13 @@ public class EntityDefiner extends JFrame {
 				JFormattedTextField field = new JFormattedTextField(formatter);
 				field.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
 				getContentPane().add(field);
+				
+				modifiers.add(new SnapshotModifier() {
+					@Override
+					public void modify(EntitySnapshot snapshot) {
+						snapshot.putFloat(name, (Float) field.getValue());
+					}
+				});
 				break;
 			case DOUBLE:
 				NumberFormat format2 = NumberFormat.getInstance();
@@ -111,15 +132,43 @@ public class EntityDefiner extends JFrame {
 				JFormattedTextField field2 = new JFormattedTextField(formatter2);
 				field2.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
 				getContentPane().add(field2);
+				
+				modifiers.add(new SnapshotModifier() {
+					@Override
+					public void modify(EntitySnapshot snapshot) {
+						snapshot.putString(name, "" + (Double) field2.getValue()); 
+					}
+				});
 				break;
 			case POINT:
+				String json4 = "";
 				
+				modifiers.add(new SnapshotModifier() {
+					@Override
+					public void modify(EntitySnapshot snapshot) {
+						snapshot.putString(name, json4); 
+					}
+				});
 				break;
 			case LOCATION:
+				String json5 = "";
 				
+				modifiers.add(new SnapshotModifier() {
+					@Override
+					public void modify(EntitySnapshot snapshot) {
+						snapshot.putString(name, json5); 
+					}
+				});
 				break;
 			case RECTANGLE:
+				String json3 = "";
 				
+				modifiers.add(new SnapshotModifier() {
+					@Override
+					public void modify(EntitySnapshot snapshot) {
+						snapshot.putString(name, json3); 
+					}
+				});
 				break;
 			case DIRECTION:
 				JComboBox<Direction> comboBox = new JComboBox<Direction>();
@@ -128,19 +177,47 @@ public class EntityDefiner extends JFrame {
 				comboBox.setSelectedIndex(0);
 				comboBox.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
 				getContentPane().add(comboBox);
+				
+				modifiers.add(new SnapshotModifier() {
+					@Override
+					public void modify(EntitySnapshot snapshot) {
+						snapshot.putInt(name, ((Direction) comboBox.getSelectedItem()).ordinal()); 
+					}
+				});
 				break;
 			case STRING:
 				JTextField field3 = new JTextField();
 				field3.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
 				getContentPane().add(field3);
+				
+				modifiers.add(new SnapshotModifier() {
+					@Override
+					public void modify(EntitySnapshot snapshot) {
+						snapshot.putString(name, field3.getText()); 
+					}
+				});
 				break;
 			case BOOLEAN:
 				JCheckBox checkBox = new JCheckBox();
 				checkBox.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
 				getContentPane().add(checkBox);
+				
+				modifiers.add(new SnapshotModifier() {
+					@Override
+					public void modify(EntitySnapshot snapshot) {
+						snapshot.putBoolean(name, checkBox.isSelected()); 
+					}
+				});
 				break;
 			case JSON:
+				String json = "";
 				
+				modifiers.add(new SnapshotModifier() {
+					@Override
+					public void modify(EntitySnapshot snapshot) {
+						snapshot.putString(name, json); 
+					}
+				});
 				break;
 			case STYLE:
 				JComboBox<Integer> comboBox2 = new JComboBox<Integer>();
@@ -149,12 +226,48 @@ public class EntityDefiner extends JFrame {
 				comboBox2.setSelectedIndex(0);
 				comboBox2.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
 				getContentPane().add(comboBox2);
+				
+				modifiers.add(new SnapshotModifier() {
+					@Override
+					public void modify(EntitySnapshot snapshot) {
+						snapshot.putInt(name, comboBox2.getSelectedIndex()); 
+					}
+				});
 				break;
 			case ITEM:
+				String json2 = "";
 				
+				modifiers.add(new SnapshotModifier() {
+					@Override
+					public void modify(EntitySnapshot snapshot) {
+						snapshot.putString(name, json2);
+					}
+				});
 				break;
 			}
 		}
+		
+		JButton confirm = new JButton("Create");
+		confirm.setBounds(this.getBounds().width - 10 - 80, this.getBounds().height - 10 - 20, 80, 20);
+		confirm.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				EntitySnapshot snapshot = new EntitySnapshot();
+				snapshot.name = idField.getText();
+				snapshot.anim = animField.getText();
+				
+				for (SnapshotModifier mod : modifiers)
+					mod.modify(snapshot);
+			}
+		});
+		getContentPane().add(confirm);
+		
+	}
+	
+	private interface SnapshotModifier {
+		
+		public abstract void modify(EntitySnapshot snapshot);
 		
 	}
 
