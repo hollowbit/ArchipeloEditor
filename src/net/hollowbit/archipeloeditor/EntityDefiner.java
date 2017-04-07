@@ -150,6 +150,9 @@ public class EntityDefiner extends JFrame {
 				comboBox2.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
 				getContentPane().add(comboBox2);
 				break;
+			case ITEM:
+				
+				break;
 			}
 		}
 		
