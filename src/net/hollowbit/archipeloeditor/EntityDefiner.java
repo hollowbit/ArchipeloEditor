@@ -244,6 +244,10 @@ public class EntityDefiner extends JFrame {
 					}
 				});
 				break;
+			case ENTITY_SNAPSHOT:
+				break;
+			default:
+				break;
 			}
 		}
 		
