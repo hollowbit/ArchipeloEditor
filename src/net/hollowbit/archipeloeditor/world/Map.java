@@ -1,11 +1,11 @@
 package net.hollowbit.archipeloeditor.world;
 
-import java.awt.Graphics2D;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.Scanner;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloeditor.MainEditor;
@@ -59,7 +59,7 @@ public class Map implements Cloneable {
 		}
 	}
 	
-	public void draw (AssetManager assetManager, boolean showTiles, boolean showElements, boolean showGrid, int tileY, int tileX, int selectedLayer, Object selectedListValue, Graphics2D g, int x, int y, int visibleX, int visibleY, int visibleWidth, int visibleHeight ){
+	public void draw (AssetManager assetManager, boolean showTiles, boolean showElements, boolean showGrid, int tileY, int tileX, int selectedLayer, Object selectedListValue, SpriteBatch batch, int visibleX, int visibleY, int visibleWidth, int visibleHeight ){
 		//If show tiles and tiles exist, draw them
 		if (showTiles && tiles != null) {
 			for(int i = visibleY - 3; i < visibleY + visibleHeight + 3; i++){
@@ -67,12 +67,17 @@ public class Map implements Cloneable {
 					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
 						if(tiles != null){
 							if(tiles[i][u] != null)
-								assetManager.drawTileByID(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y, tiles[i][u]);
+								assetManager.drawTileByID(batch, u * MainEditor.TILE_SIZE, i * MainEditor.TILE_SIZE, tiles[i][u]);
+							else {
+								batch.setColor(0, 0, 0, 1);
+								batch.draw(assetManager.getBlank(), u * MainEditor.TILE_SIZE, i * MainEditor.TILE_SIZE);
+								batch.setColor(1, 1, 1, 1);
+							}
 						}
 						
 						//Draw hover tile for user to see where is will go if placed
 						if(i == tileX && u == tileY && selectedListValue != null && selectedLayer == 0)
-							assetManager.getTileByID(((MapTile) selectedListValue).id).draw(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y);
+							assetManager.getTileByID(((MapTile) selectedListValue).id).draw(batch, u * MainEditor.TILE_SIZE, i * MainEditor.TILE_SIZE);
 					}
 				}
 			}
@@ -85,12 +90,12 @@ public class Map implements Cloneable {
 					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
 						if(elements != null){
 							if(elements[i][u] != null)
-								assetManager.drawElementByID(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y, elements[i][u]);
+								assetManager.drawElementByID(batch, u * MainEditor.TILE_SIZE, i * MainEditor.TILE_SIZE, elements[i][u]);
 						}
 						
 						//Draw hover element for user to see where is will go if placed
 						if(i == tileX && u == tileY && selectedListValue != null && selectedLayer == 1)
-							assetManager.getElementByID(((MapElement) selectedListValue).id).draw(g, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y);
+							assetManager.getElementByID(((MapElement) selectedListValue).id).draw(batch, u * MainEditor.TILE_SIZE, i * MainEditor.TILE_SIZE);
 					}
 				}
 			}
@@ -101,7 +106,7 @@ public class Map implements Cloneable {
 			for(int i = visibleY - 3; i < visibleY + visibleHeight + 3; i++){
 				for(int u = visibleX - 3; u < visibleX + visibleWidth + 3; u++){
 					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
-						g.drawImage(MainEditor.gridTile, u * MainEditor.TILE_SIZE + x, i * MainEditor.TILE_SIZE + y, null);
+						batch.draw(assetManager.getGridTexture(), u * MainEditor.TILE_SIZE, i * MainEditor.TILE_SIZE - 2);
 					}
 				}
 			}

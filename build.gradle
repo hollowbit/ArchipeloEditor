@@ -3,6 +3,7 @@ apply plugin: 'eclipse'
 
 //mainClassName = 'net.hollowbit.archipeloeditor.MainEditor'
 sourceSets.main.java.srcDirs = [ "src/" ]
+project.ext.assetsDir = new File("../../core/assets");
 
 sourceCompatibility = 1.8
 version = '1.0'
@@ -30,7 +31,9 @@ test {
 }
 
 dependencies {
-		compile 'com.badlogicgames.gdx:gdx-backend-headless:1.9.3'
+        compile "com.badlogicgames.gdx:gdx-backend-lwjgl:1.9.4"
+        compile "com.badlogicgames.gdx:gdx-platform:1.9.4:natives-desktop"
+        compile "com.badlogicgames.gdx:gdx:1.9.4"
 }
 
 uploadArchives {

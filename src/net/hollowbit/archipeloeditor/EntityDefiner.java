@@ -259,7 +259,7 @@ public class EntityDefiner extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				EntitySnapshot snapshot = new EntitySnapshot();
 				snapshot.name = idField.getText();
-				snapshot.anim = animField.getText();
+				snapshot.putString("anim", animField.getText());
 				
 				for (SnapshotModifier mod : modifiers)
 					mod.modify(snapshot);

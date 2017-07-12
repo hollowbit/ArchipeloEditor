@@ -1,26 +1,20 @@
 package net.hollowbit.archipeloeditor;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.KeyEventDispatcher;
-import java.awt.KeyboardFocusManager;
 import java.awt.Point;
 import java.awt.Toolkit;
-import java.awt.event.KeyEvent;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
@@ -44,15 +38,11 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
-import javax.swing.JViewport;
 import javax.swing.ListModel;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
@@ -63,29 +53,29 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
+import com.badlogic.gdx.backends.lwjgl.LwjglCanvas;
+
 import net.hollowbit.archipeloeditor.changes.ChangeList;
-import net.hollowbit.archipeloeditor.changes.ElementMapChange;
-import net.hollowbit.archipeloeditor.changes.TileMapChange;
 import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloeditor.world.Map;
 import net.hollowbit.archipeloeditor.world.MapElement;
 import net.hollowbit.archipeloeditor.world.MapTile;
+import net.hollowbit.archipeloeditor.world.worldrenderer.WorldRenderer;
 
-public class MainEditor implements Runnable{
+public class MainEditor implements Runnable {
 
 	public static final int TILE_SIZE = 16;
 	public static final String PATH = new File(".").getAbsolutePath();
 	
-	private static final int TILE_LAYER = 0;
-	private static final int ELEMENT_LAYER = 1;
+	public static final int TILE_LAYER = 0;
+	public static final int ELEMENT_LAYER = 1;
 	
-	private static final int PENCIL_TOOL = 0;
-	private static final int BUCKET_TOOL = 1;
-	private static final int ENTITY_TOOL = 2;
+	public static final int PENCIL_TOOL = 0;
+	public static final int BUCKET_TOOL = 1;
+	public static final int ENTITY_TOOL = 2;
 	
 	public static BufferedImage ICON;
-	public static BufferedImage invalidTile;
-	public static BufferedImage gridTile;
 	public static Cursor CURSOR;
 	
 	private boolean showTiles = true;
@@ -97,10 +87,11 @@ public class MainEditor implements Runnable{
 	
 	private JList<Object> list;
 	private JLabel lblMapPath;
-	private JPanel panelMapPanel;
-	private JScrollPane scrollPane;
+	private WorldRenderer worldRenderer;
+	private LwjglCanvas lwjglCanvas;
 	private JMenuItem mntmSave;
 	private JMenuItem mntmSaveAs;
+	private JMenuItem mntmReload;
 	private JMenuItem mntmClose;
 	private JMenuItem mntmEdit;
 	private JMenuItem mntmGenerate;
@@ -115,18 +106,7 @@ public class MainEditor implements Runnable{
 	private Thread thread;
 	private boolean running = true;
 	
-	private Point origin;
-	private int x, y;
-	private int mouseX, mouseY;
-	private boolean mouse1Pressed = false;
-	private boolean mouse2Pressed = false;
-	private boolean controlPressed = false;
-	private boolean shiftPressed = false;
-	private boolean spacePressed = false;
-	
 	private Map map;
-	
-	private int tileX, tileY;
 	
 	long startTime = 0;
 	
@@ -152,8 +132,6 @@ public class MainEditor implements Runnable{
 					//Load basic images for editor
 					ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 					ICON = ImageIO.read(classLoader.getResourceAsStream("images/icon.png"));
-					invalidTile = ImageIO.read(classLoader.getResourceAsStream("images/invalid.png"));
-					gridTile = ImageIO.read(classLoader.getResourceAsStream("images/grid.png"));
 					CURSOR = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(classLoader.getResourceAsStream("images/cursor.png")), new Point(16, 16), "blank");
 					MainEditor window = new MainEditor();
 					window.frame.setVisible(true);
@@ -165,11 +143,16 @@ public class MainEditor implements Runnable{
 	}
 
 	public MainEditor() {
+		assetManager = new AssetManager();
+		//Map renderer
+		worldRenderer = new WorldRenderer(this, assetManager);
+		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
+		lwjglCanvas = new LwjglCanvas(worldRenderer, config);
+		lwjglCanvas.setCursor(CURSOR);
+		
 		//Initialize
 		changeList = new ChangeList(this);
 		openWindows = new HashMap<String, Boolean>();
-		assetManager = new AssetManager();
-		assetManager.load();
 		initialize();
 		
 		startTime = System.currentTimeMillis();
@@ -185,89 +168,20 @@ public class MainEditor implements Runnable{
 		frame.setIconImage(ICON);
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		
-		KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-		manager.addKeyEventDispatcher(new KeyEventDispatcher(){
-
-			@Override
-			public boolean dispatchKeyEvent(KeyEvent e) {
-				//Check for hotkey presses
-				if (e.getID() == KeyEvent.KEY_PRESSED) {
-					if (e.getKeyCode() == KeyEvent.VK_CONTROL)
-						controlPressed = true;
-					if (e.getKeyCode() == KeyEvent.VK_SHIFT)
-						shiftPressed = true;
-					if (e.getKeyCode() == KeyEvent.VK_SPACE)
-						spacePressed = true;
-					
-					if (e.getKeyCode() == KeyEvent.VK_G && controlPressed ){//Toggle show grid
-						if(!showGrid){
-							mntmToggleGrid.setSelected(true);
-							showGrid = true;
-						}else{
-							mntmToggleGrid.setSelected(false);
-							showGrid = false;
-						}
-					}
-					
-					if (e.getKeyCode() == KeyEvent.VK_T && controlPressed) {//Toggle show tiles
-						if (!showTiles){
-							mntmToggleTiles.setSelected(true);
-							checkBoxTilesVisible.setSelected(true);
-							showTiles = true;
-						} else {
-							mntmToggleTiles.setSelected(false);
-							checkBoxTilesVisible.setSelected(false);
-							showTiles = false;
-						}
-					}
-					
-					if (e.getKeyCode() == KeyEvent.VK_E && controlPressed) {//Toggle show elements
-						if (!showElements) {
-							mntmToggleElements.setSelected(true);
-							checkBoxElementsVisible.setSelected(true);
-							showElements = true;
-						} else {
-							mntmToggleElements.setSelected(false);
-							checkBoxElementsVisible.setSelected(false);
-							showElements = false;
-						}
-					}
-					
-					if (e.getKeyCode() == KeyEvent.VK_Z && controlPressed && !shiftPressed)//Undo
-						changeList.undo();
-					
-					if (e.getKeyCode() == KeyEvent.VK_Y && controlPressed)//Redo
-						changeList.redo();
-					
-					if (e.getKeyCode() == KeyEvent.VK_S && controlPressed)//Save
-						showMapSaveDialog(false);
-					
-					if (e.getKeyCode() == KeyEvent.VK_Z && controlPressed && shiftPressed)//Another kind of redo
-						changeList.redo();
-					
-					if (e.getKeyCode() == KeyEvent.VK_F5)//Reload assets
-						reloadAssets();
-					
-				} else if (e.getID() == KeyEvent.KEY_RELEASED) {
-					if (e.getKeyCode() == KeyEvent.VK_CONTROL)
-						controlPressed = false;
-					if (e.getKeyCode() == KeyEvent.VK_SHIFT)
-						shiftPressed = false;
-					if (e.getKeyCode() == KeyEvent.VK_SPACE)
-						spacePressed = false;
-				}
-				return false;
-			}
-			
-		});
-		
 		frame.addWindowListener(new WindowListener() {
 			
 			//Event for window close, make sure user saved first before exiting
 			@Override
 			public void windowClosing(WindowEvent e) {
 				if (justSaved) {
-					System.exit(0);
+					try {
+						running = false;
+						thread.join();
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
+					lwjglCanvas.exit();
+					frame.dispose();
 					return;
 				}
 				
@@ -278,7 +192,14 @@ public class MainEditor implements Runnable{
 						showMapSaveDialog(false);
 					} else if (option == JOptionPane.NO_OPTION) {
 						saved = true;
-						System.exit(0);
+						try {
+							running = false;
+							thread.join();
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
+						lwjglCanvas.exit();
+						frame.dispose();
 					} else
 						break;
 				}
@@ -388,6 +309,15 @@ public class MainEditor implements Runnable{
 		});
 		mnFile.add(mntmSaveAs);
 		
+		mntmReload = new JMenuItem("Reload Assets (F5)");
+		mntmReload.addMouseListener(new MouseAdapter() {//Same as save but forces saving in a new location
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				worldRenderer.reloadAssets();
+			}
+		});
+		mnFile.add(mntmReload);
+		
 		mntmClose = new JMenuItem("Close");
 		mntmClose.addMouseListener(new MouseAdapter(){//Closes map but makes sure it is saved
 			
@@ -452,8 +382,8 @@ public class MainEditor implements Runnable{
 						
 						@Override
 						public void mapSettingsChanged() {
-			                panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * MainEditor.TILE_SIZE, map.getHeight() * MainEditor.TILE_SIZE));
-			                panelMapPanel.revalidate();
+			                /*panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * MainEditor.TILE_SIZE, map.getHeight() * MainEditor.TILE_SIZE));
+			                panelMapPanel.revalidate();*/
 						}
 					});
 					mapDetailEditor.setVisible(true);
@@ -551,141 +481,26 @@ public class MainEditor implements Runnable{
 		splitPane.setDividerLocation(282);
 		frame.getContentPane().add(splitPane, BorderLayout.CENTER);
 		
-		panelMapPanel = new JPanel(){
-
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			protected void paintComponent(Graphics g1d) {//Renders map, if one is loaded
-				super.paintComponent(g1d);
-				Graphics2D g = (Graphics2D) g1d;
-				
-				if (map != null) {
-					g.clearRect(0, 0, map.getWidth() * TILE_SIZE, map.getWidth() * TILE_SIZE);
-					
-					//Calculates the visible area, this is good for big maps so that they don't take too much computing power.
-					x = (map.getWidth() * TILE_SIZE <= scrollPane.getViewportBorderBounds().getWidth() ? (int) scrollPane.getViewportBorderBounds().getWidth() / 2 - (map.getWidth() * TILE_SIZE) / 2:0);
-					y = (map.getHeight() * TILE_SIZE <= scrollPane.getViewportBorderBounds().getHeight() ? (int) scrollPane.getViewportBorderBounds().getHeight() / 2 - (map.getHeight() * TILE_SIZE) / 2:0);
-					
-					//Draws the map
-					map.draw(assetManager, showTiles, showElements, showGrid, tileY, tileX, selectedLayer, list.getSelectedValue(), g, x, y, scrollPane.getHorizontalScrollBar().getValue() / TILE_SIZE, scrollPane.getVerticalScrollBar().getValue() / TILE_SIZE, scrollPane.getViewport().getWidth() / TILE_SIZE, scrollPane.getViewport().getHeight() / TILE_SIZE);
-					
-					//Draws coordinates of cursor on map
-					g.setColor(Color.BLACK);
-					g.drawString("X: " + tileY + " Y: " + (map.getHeight() - tileX - 1), scrollPane.getHorizontalScrollBar().getValue() + 5, scrollPane.getVerticalScrollBar().getValue() + 15);
-				}
-			}
+		JPanel panel2 = new JPanel();
+		panel2.add(lwjglCanvas.getCanvas());
+		panel2.addComponentListener(new ComponentListener() {
 			
 			@Override
-			public Dimension getPreferredSize() {
-				if (map != null)
-					return new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE);
-				else
-					return new Dimension(0, 0);
-			}
-			
-		};
-		
-		panelMapPanel.setAutoscrolls(true);
-		panelMapPanel.addMouseListener(new MouseAdapter(){//Determines if a tool was sued
-			@Override
-			public void mousePressed(MouseEvent e) {
-				if (e.getButton() == MouseEvent.BUTTON1) {
-					if( spacePressed)
-						origin = new Point(e.getPoint());
-					else if (selectedLayer == 0 && map != null) {
-						changeList.addChanges(new TileMapChange(map));
-						justSaved = false;
-					} else if (selectedLayer == 1 && map != null) {
-						changeList.addChanges(new ElementMapChange(map));
-						justSaved = false;
-					}
-						
-					mouse1Pressed = true;
-				}
-				if(e.getButton() == MouseEvent.BUTTON3)
-					mouse2Pressed = true;
-			}
-			
-			//Determines if a tools was stopped being used
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				if (e.getButton() == MouseEvent.BUTTON1) {
-					mouse1Pressed = false;
-					origin = null;
-				}
-				if (e.getButton() == MouseEvent.BUTTON3)
-					mouse2Pressed = false;
-			}
+			public void componentShown(ComponentEvent e) {}
 			
 			@Override
-			public void mouseEntered(MouseEvent e) {
-				frame.setCursor(CURSOR);
+			public void componentResized(ComponentEvent e) {
+				lwjglCanvas.getCanvas().setBounds(0, 0, e.getComponent().getSize().width, e.getComponent().getSize().height);
+				lwjglCanvas.getCanvas().revalidate();
 			}
+			 
+			@Override
+			public void componentMoved(ComponentEvent e) {}
 			
 			@Override
-			public void mouseExited(MouseEvent e) {
-				frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-			}
-			
+			public void componentHidden(ComponentEvent e) {}
 		});
-		
-		panelMapPanel.addMouseMotionListener(new MouseMotionListener(){
-
-			//Move map if space is pressed
-			@Override
-			public void mouseDragged(MouseEvent e) {
-				mouseX = e.getX() - x;
-				mouseY = e.getY() - y;
-				if(origin == null) return;
-				JViewport viewPort = (JViewport) SwingUtilities.getAncestorOfClass(JViewport.class, panelMapPanel);
-				if(viewPort == null) return;
-				int deltaX = origin.x - e.getX();
-				int deltaY = origin.y - e.getY();
-				
-				if (spacePressed) {
-					scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getValue() + deltaY);
-					scrollPane.getHorizontalScrollBar().setValue(scrollPane.getHorizontalScrollBar().getValue() + deltaX);
-				}
-			}
-
-			//Keeps track of the mouse's location
-			@Override
-			public void mouseMoved(MouseEvent e) {
-				mouseX = e.getX() - x;
-				mouseY = e.getY() - y;
-			}
-			
-			
-		});
-		
-		panelMapPanel.setBackground(Color.WHITE);
-		panelMapPanel.addMouseWheelListener(new MouseWheelListener() {
-			
-			@Override
-			public void mouseWheelMoved(MouseWheelEvent e) {//Handles scrolling to move map
-				if (controlPressed) {
-					if (shiftPressed) {
-						scrollPane.getHorizontalScrollBar().setValue(scrollPane.getHorizontalScrollBar().getValue() + e.getWheelRotation() * 100);
-					} else {
-						scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getValue() + e.getWheelRotation() * 100);
-					}
-				} else {
-					if (list.getSelectedValue() != null)
-						list.setSelectedIndex(list.getSelectedIndex() + e.getWheelRotation());
-					else {
-						list.setSelectedIndex(0);
-						list.setSelectedIndex(list.getSelectedIndex() + e.getWheelRotation());
-					}
-				}	
-			}
-		});
-		
-		scrollPane = new JScrollPane();
-		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-		splitPane.setRightComponent(scrollPane);
-		scrollPane.setViewportView(panelMapPanel);
+		splitPane.setRightComponent(panel2);
 		
 		JPanel panel = new JPanel();
 		panel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -1021,9 +836,11 @@ public class MainEditor implements Runnable{
 
 			@Override
 			public void mouseMoved(MouseEvent e) {//Remove info if no longer hover on tile/element
-				if (list.getModel().getElementAt(list.locationToIndex(e.getPoint())) != iconHoveredOver) {
-					list.setToolTipText(null);
-					iconHoveredOver = null;
+				if (list.locationToIndex(e.getPoint()) != -1) {
+					if (list.getModel().getElementAt(list.locationToIndex(e.getPoint())) != iconHoveredOver) {
+						list.setToolTipText(null);
+						iconHoveredOver = null;
+					}
 				}
 			}
 			
@@ -1037,16 +854,6 @@ public class MainEditor implements Runnable{
 		gbc_list.gridx = 0;
 		gbc_list.gridy = 9;
 		panel.add(list, gbc_list);
-	}
-	
-	//Method to reload assets
-	public void reloadAssets(){
-		assetManager.clear();
-		assetManager.load();
-		reloadLists();
-		
-        panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE));
-        panelMapPanel.revalidate();
 	}
 	
 	//Thread to edit map and keep track of things
@@ -1063,9 +870,6 @@ public class MainEditor implements Runnable{
 				e.printStackTrace();
 			}
 			startTime = System.currentTimeMillis();
-			
-			//Repaint map
-			panelMapPanel.repaint();
 
 			//Makes sure everything is properly set
 			changeList.update();
@@ -1080,113 +884,8 @@ public class MainEditor implements Runnable{
 				lblListTitle.setText("Tiles:");
 			else
 				lblListTitle.setText("Elements:");
-			
-			//Updates tilex/y
-			tileX = mouseY / TILE_SIZE;
-			tileY = mouseX / TILE_SIZE;
-			
-			//If a map is loaded and buttons are being pressed, edit the map
-			if (map != null) {
-				if (tileX < map.getHeight() && tileY < map.getWidth()  && tileX >= 0 && tileY >= 0 && map.getTiles() != null) {
-					if (mouse1Pressed && !spacePressed) {
-						switch (selectedLayer) {
-						case TILE_LAYER:
-							switch (selectedTool) {
-							case PENCIL_TOOL:
-								if(list.getSelectedValue() != null) {
-									map.getTiles()[tileX][tileY] = ((MapTile) list.getSelectedValue()).id;
-								}
-								break;
-							case BUCKET_TOOL:
-								boolean[][] filledTiles = new boolean[map.getHeight()][map.getWidth()];
-								String replaceTile = map.getTiles()[tileX][tileY];
-								bucketFillTiles(replaceTile, filledTiles, tileX, tileY);
-								break;
-							case ENTITY_TOOL:
-								if (!isWindowOpen("entity-adder")) {
-									addOpenWindow("entity-adder");
-									EntityAdder entityAdder = new EntityAdder(this, x, y);
-									entityAdder.setVisible(true);
-								}
-								break;
-							}
-							break;
-						case ELEMENT_LAYER:
-							switch (selectedTool) {
-							case PENCIL_TOOL:
-								if (list.getSelectedValue() != null) {
-									map.getElements()[tileX][tileY] = ((MapElement) list.getSelectedValue()).id;
-								}
-								break;
-							case BUCKET_TOOL:
-								boolean[][] filledTiles = new boolean[map.getHeight()][map.getWidth()];
-								String replaceTile = map.getElements()[tileX][tileY];
-								bucketFillElements(replaceTile, filledTiles, tileX, tileY);
-								break;
-							case ENTITY_TOOL:
-								if (!isWindowOpen("entity-adder")) {
-									addOpenWindow("entity-adder");
-									EntityAdder entityAdder = new EntityAdder(this, x, y);
-									entityAdder.setVisible(true);
-								}
-								break;
-							}
-							break;
-						}
-					}
-					
-					if (mouse2Pressed) {
-						switch (selectedLayer) {
-						case TILE_LAYER:
-							list.setSelectedValue(assetManager.getTileByID(map.getTiles()[tileX][tileY]), true);
-							break;
-						case ELEMENT_LAYER:
-							list.setSelectedValue(assetManager.getElementByID(map.getElements()[tileX][tileY]), true);
-							break;
-						}
-					}
-				}
-			}
 		}
 		
-	}
-
-	//Recursion bucket fill algorithm for tiles
-	public void bucketFillTiles(String replaceTile, boolean[][] filledTiles, int tileX, int tileY){
-		if(tileX >= map.getHeight()) return;
-		if(tileY >= map.getWidth()) return;
-		if(tileX < 0) return;
-		if(tileY < 0) return;
-		
-		if(filledTiles[tileX][tileY]) return;
-		if(!map.getTiles()[tileX][tileY].equals(replaceTile)) return;
-		
-		filledTiles[tileX][tileY] = true;
-		
-		map.getTiles()[tileX][tileY] = ((MapTile) list.getSelectedValue()).id;
-		bucketFillTiles(replaceTile, filledTiles, tileX + 1, tileY);
-		bucketFillTiles(replaceTile, filledTiles, tileX - 1, tileY);
-		bucketFillTiles(replaceTile, filledTiles, tileX, tileY + 1);
-		bucketFillTiles(replaceTile, filledTiles, tileX, tileY - 1);
-	}
-
-	//Recursion bucket fill algorithm for elements
-	public void bucketFillElements(String replaceTile, boolean[][] filledTiles, int tileX, int tileY){
-		if(tileX >= map.getHeight()) return;
-		if(tileY >= map.getWidth()) return;
-		if(tileX < 0) return;
-		if(tileY < 0) return;
-		
-		if(filledTiles[tileX][tileY]) return;
-		if(!map.getElements()[tileX][tileY].equals(replaceTile)) return;
-		
-		filledTiles[tileX][tileY] = true;
-		
-		map.getElements()[tileX][tileY] = ((MapElement) list.getSelectedValue()).id;
-		bucketFillElements(replaceTile, filledTiles, tileX + 1, tileY);
-		bucketFillElements(replaceTile, filledTiles, tileX - 1, tileY);
-		bucketFillElements(replaceTile, filledTiles, tileX, tileY + 1);
-		bucketFillElements(replaceTile, filledTiles, tileX, tileY - 1);
 	}
 	
 	//Shows new map dialog
@@ -1196,9 +895,6 @@ public class MainEditor implements Runnable{
 			@Override
 			public void newMapCreated (Map map_) {
 				map = map_;
-				
-                panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE));
-                panelMapPanel.revalidate();
 				saveLocation = null;
 				lblMapPath.setText("");
 			}
@@ -1220,8 +916,6 @@ public class MainEditor implements Runnable{
     		lblMapPath.setText("         " + saveLocation);
     		map = new Map();
     		map.load(selectedFile);
-    		panelMapPanel.setPreferredSize(new Dimension(map.getWidth() * TILE_SIZE, map.getHeight() * TILE_SIZE));
-    		panelMapPanel.revalidate();
     		return true;
     	}
 	}
@@ -1254,12 +948,11 @@ public class MainEditor implements Runnable{
 		}
 	}
 	
-	//Reloads the lists depending on the seleted layer
+	//Reloads the lists depending on the selected layer
 	public void reloadLists () {
 		ArrayList<Icon> iconList = new ArrayList<Icon>();
 		switch (selectedLayer) {
 		case 0:
-
 			for (MapTile tile : assetManager.getMapTiles()){
 				if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
 					iconList.add(tile);
@@ -1299,6 +992,80 @@ public class MainEditor implements Runnable{
 			return openWindows.get(type).booleanValue();
 		else
 			return false;
+	}
+
+	public AssetManager getAssetManager() {
+		return assetManager;
+	}
+
+	public boolean showTiles() {
+		return showTiles;
+	}
+
+	public boolean showMapElements() {
+		return showElements;
+	}
+
+	public boolean showGrid() {
+		return showGrid;
+	}
+
+	public void setShowTiles(boolean showTiles) {
+		this.showTiles = showTiles;
+		checkBoxTilesVisible.setSelected(showTiles);
+		mntmToggleTiles.setSelected(showTiles);
+	}
+
+	public void setShowElements(boolean showElements) {
+		this.showElements = showElements;
+		checkBoxElementsVisible.setSelected(showElements);
+		mntmToggleElements.setSelected(showElements);
+	}
+
+	public void setShowGrid(boolean showGrid) {
+		this.showGrid = showGrid;
+		mntmToggleGrid.setSelected(showGrid);
+	}
+
+	public int getSelectedLayer() {
+		return selectedLayer;
+	}
+
+	public Object getSelectedItemValue() {
+		return list.getSelectedValue();
+	}
+	
+	public int getSelectedTool() {
+		return selectedTool;
+	}
+	
+	public JList<Object> getTileList() {
+		return list;
+	}
+	
+	public void setJustSaved(boolean justSaved) {
+		this.justSaved = justSaved;
+	}
+	
+	public void scrollItems(int amount) {
+		if (list.getSelectedValue() != null)
+			list.setSelectedIndex(list.getSelectedIndex() + amount);
+		else {
+			list.setSelectedIndex(0);
+			list.setSelectedIndex(list.getSelectedIndex() + amount);
+		}
+	}
+	
+	public void undo() {
+		changeList.undo();
+	}
+	
+	public void redo() {
+		changeList.redo();
+	}
+	
+	public void save() {
+		showMapSaveDialog(false);
 	}
 	
 }

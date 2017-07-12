@@ -1,6 +1,5 @@
 package net.hollowbit.archipeloeditor.world;
 
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -8,6 +7,9 @@ import java.util.HashMap;
 
 import javax.imageio.ImageIO;
 
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloeditor.MainEditor;
@@ -24,6 +26,10 @@ public class AssetManager {
 	private HashMap<String, MapElement> elementMap;
 	private ArrayList<MapElement> elementList;
 	
+	private Texture grid;
+	private Texture invalid;
+	private Texture blank;
+	
 	//Manages tiles and elements
 	
 	public AssetManager() {
@@ -34,25 +40,25 @@ public class AssetManager {
 		return tileMap.get(id);
 	}
 	
-	public void drawTileByID(Graphics2D g, int x, int y, String id) {
+	public void drawTileByID(SpriteBatch batch, int x, int y, String id) {
 		MapTile tile = tileMap.get(id);
 		if (tile != null)
-			tile.draw(g, x, y);
+			tile.draw(batch, x, y);
 		else
-			g.drawImage(MainEditor.invalidTile, x, y, null);
+			batch.draw(invalid, x, y);
 	}
 	
 	public MapElement getElementByID(String id) {
 		return elementMap.get(id);
 	}
 	
-	public void drawElementByID(Graphics2D g, int x, int y, String id) {
+	public void drawElementByID(SpriteBatch batch, int x, int y, String id) {
 		MapElement element = elementMap.get(id);
 		if (element != null)
-			element.draw(g, x, y);
+			element.draw(batch, x, y);
 		else {
 			if(!id.equalsIgnoreCase("0") && !id.equalsIgnoreCase("null"))
-				g.drawImage(MainEditor.invalidTile, x, y, null);
+				batch.draw(invalid, x, y);
 		}
 	}
 	
@@ -71,19 +77,37 @@ public class AssetManager {
 		return elementList;
 	}
 	
+	public Texture getGridTexture() {
+		return grid;
+	}
+	
+	public Texture getInvalidTexture() {
+		return invalid;
+	}
+	
+	public Texture getBlank() {
+		return blank;
+	}
+	
 	//////////////////////////
 	/*Initiates all Elements!!!*/
 	//////////////////////////
 	public void load () {
+		grid = new Texture("grid.png");
+		invalid = new Texture("invalid.png");
+		blank = new Texture("blank.png");
+		
 		Json json = new Json();
 		String fileData = "";
 		
 		//Load tiles first
 		fileData = FileReader.readFileIntoString("/shared/map-elements/tiles.json");
 		
-		BufferedImage tileMapImage = null;
+		Texture tileMapImage = null;
+		BufferedImage tileMapBufferedImage = null;
 		try {
-			tileMapImage = ImageIO.read(getClass().getResourceAsStream("/tiles.png"));
+			tileMapImage = new Texture("tiles.png");
+			tileMapBufferedImage = ImageIO.read(getClass().getResourceAsStream("/tiles.png"));
 		} catch (IOException e) {
 			System.out.println("Could not load tile map image.");
 			e.printStackTrace();
@@ -92,8 +116,9 @@ public class AssetManager {
 		
 		//Load each individual tile
 		for (TileData data : tileDatas) {
-			BufferedImage texture = tileMapImage.getSubimage(data.x * MainEditor.TILE_SIZE, data.y * MainEditor.TILE_SIZE, MainEditor.TILE_SIZE, MainEditor.TILE_SIZE);
-			MapTile tile = new MapTile(data, texture);
+			TextureRegion texture = new TextureRegion(tileMapImage, data.x * MainEditor.TILE_SIZE, data.y * MainEditor.TILE_SIZE, MainEditor.TILE_SIZE, MainEditor.TILE_SIZE);
+			BufferedImage icon = tileMapBufferedImage.getSubimage(data.x * MainEditor.TILE_SIZE, data.y * MainEditor.TILE_SIZE, MainEditor.TILE_SIZE, MainEditor.TILE_SIZE);
+			MapTile tile = new MapTile(data, texture, icon);
 			tileMap.put(data.id, tile);
 			tileList.add(tile);
 		}
@@ -101,9 +126,11 @@ public class AssetManager {
 		//Load elements now
 		fileData = FileReader.readFileIntoString("/shared/map-elements/elements.json");
 				
-		BufferedImage elementMapImage = null;
+		BufferedImage elementMapBufferedImage = null;
+		Texture elementMapImage = null;
 		try {
-			elementMapImage = ImageIO.read(getClass().getResourceAsStream("/map_elements.png"));
+			elementMapBufferedImage = ImageIO.read(getClass().getResourceAsStream("/map_elements.png"));
+			elementMapImage = new Texture("map_elements.png");
 		} catch (IOException e) {
 			System.out.println("Could not load tile map image.");
 			e.printStackTrace();
@@ -112,8 +139,9 @@ public class AssetManager {
 		
 		//Load each individual element
 		for (ElementData data : elementDatas) {
-			BufferedImage texture = elementMapImage.getSubimage(data.x * MainEditor.TILE_SIZE, data.y * MainEditor.TILE_SIZE, MainEditor.TILE_SIZE * data.width, MainEditor.TILE_SIZE * data.height);
-			MapElement element = new MapElement(data, texture);
+			BufferedImage icon = elementMapBufferedImage.getSubimage(data.x * MainEditor.TILE_SIZE, data.y * MainEditor.TILE_SIZE, MainEditor.TILE_SIZE * data.width, MainEditor.TILE_SIZE * data.height);
+			TextureRegion texture = new TextureRegion(elementMapImage, data.x * MainEditor.TILE_SIZE, data.y * MainEditor.TILE_SIZE, MainEditor.TILE_SIZE * data.width, MainEditor.TILE_SIZE * data.height);
+			MapElement element = new MapElement(data, texture, icon);
 			elementMap.put(data.id, element);
 			elementList.add(element);
 		}
