@@ -15,6 +15,8 @@ public class Chunk {
 		super();
 		this.x = x;
 		this.y = y;
+		this.tiles = new String[ChunkData.SIZE][ChunkData.SIZE];
+		this.elements = new String[ChunkData.SIZE][ChunkData.SIZE];
 	}
 	
 	public Chunk(Chunk chunk) {
@@ -81,7 +83,7 @@ public class Chunk {
 	}
 	
 	public float getPixelX() {
-		return x * ChunkData.SIZE;
+		return x * ChunkData.SIZE * MainEditor.TILE_SIZE;
 	}
 	
 	public int getY() {
@@ -89,7 +91,7 @@ public class Chunk {
 	}
 	
 	public float getPixelY() {
-		return y * ChunkData.SIZE;
+		return y * ChunkData.SIZE * MainEditor.TILE_SIZE;
 	}
 	
 	public String[][] getElements() {

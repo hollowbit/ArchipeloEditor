@@ -95,8 +95,6 @@ public class MainEditor implements Runnable {
 	private JMenuItem mntmReload;
 	private JMenuItem mntmClose;
 	private JMenuItem mntmEdit;
-	private JMenuItem mntmGenerate;
-	private JMenuItem mntmReset;
 	private JLabel lblListTitle;
 	private JToggleButton btnBucketTool;
 	private JLabel lblTileName;
@@ -850,8 +848,6 @@ public class MainEditor implements Runnable {
 			mntmSaveAs.setEnabled(map != null);
 			mntmClose.setEnabled(map != null);
 			mntmEdit.setEnabled(map != null);
-			mntmGenerate.setEnabled(map != null);
-			mntmReset.setEnabled(map != null);
 			
 			if(selectedLayer == 0)
 				lblListTitle.setText("Tiles:");

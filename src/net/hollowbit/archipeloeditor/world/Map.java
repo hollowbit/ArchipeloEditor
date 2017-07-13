@@ -2,6 +2,8 @@ package net.hollowbit.archipeloeditor.world;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Formatter;
 import java.util.Scanner;
 
@@ -37,11 +39,19 @@ public class Map implements Cloneable {
 		this.displayName = displayName;
 		this.music = music;
 		this.naturalLighting = naturalLighting;
-		
+
+		chunks = new ArrayList<Chunk>();
 		entitySnapshots = new ArrayList<EntitySnapshot>();
+		
+		this.addChunk(0, 0);
+		this.addChunk(1, 0);
+		this.addChunk(-1, 0);
+		this.addChunk(1, 1);
+		
+		System.out.println("Map.java  " + width + "  " + height + "  " + minTileX + "  " + minTileY + "  " + maxTileX + "   " + maxTileY);
 	}
 	
-	public void draw (AssetManager assetManager, boolean showTiles, boolean showElements, boolean showGrid, int tileY, int tileX, int selectedLayer, Object selectedListValue, SpriteBatch batch, int visibleX, int visibleY, int visibleWidth, int visibleHeight ){
+	public void draw (AssetManager assetManager, boolean showTiles, boolean showElements, boolean showGrid, int tileX, int tileY, int selectedLayer, Object selectedListValue, SpriteBatch batch, int visibleX, int visibleY, int visibleWidth, int visibleHeight ){
 		//If show tiles and tiles exist, draw them
 		if (showTiles) {
 			int hoverChunkX = tileX / ChunkData.SIZE;
@@ -86,6 +96,42 @@ public class Map implements Cloneable {
 			}
 		}
 		
+	}
+	
+	public void addChunk(int x, int y) {
+		Chunk chunk = new Chunk(x, y);
+		chunks.add(chunk);
+		sortChunks();
+		recalculateSizes();
+	}
+	
+	public void removeChunk(int x, int y) {
+		int indexToRemove = 0;
+		for (int i = 0; i < chunks.size(); i++) {
+			Chunk chunk = chunks.get(i);
+			if (chunk.getX() == x && chunk.getY() == y) {
+				indexToRemove = i;
+				break;
+			}
+		}
+		
+		chunks.remove(indexToRemove);
+		sortChunks();
+		recalculateSizes();
+	}
+	
+	private void sortChunks() {
+		Collections.sort(chunks, new Comparator<Chunk>() {
+			
+			public int compare(Chunk o1, Chunk o2) {
+				if (o1.getY() == o2.getY()) {
+					return o1.getX() - o2.getX();
+				} else {
+					return o2.getY() - o1.getY();
+				}
+			};
+			
+		});
 	}
 	
 	public void load(File file) {
@@ -204,9 +250,9 @@ public class Map implements Cloneable {
 			if (chunk.getX() > highestX)
 				highestX = chunk.getX();
 		}
-		this.width = (highestX - lowestX) * ChunkData.SIZE;
+		this.width = (highestX - lowestX + 1) * ChunkData.SIZE;
 		this.minTileX = lowestX * ChunkData.SIZE;
-		this.maxTileX = highestX * ChunkData.SIZE;
+		this.maxTileX = (highestX + 1) * ChunkData.SIZE - 1;
 		
 		int lowestY = chunks.get(0).getY();
 		int highestY = chunks.get(0).getY();
@@ -219,9 +265,9 @@ public class Map implements Cloneable {
 				highestY = chunk.getY();
 		}
 		
-		this.height = (highestY - lowestY) * ChunkData.SIZE;
+		this.height = (highestY - lowestY + 1) * ChunkData.SIZE;
 		this.minTileY = lowestY * ChunkData.SIZE;
-		this.maxTileY = highestY * ChunkData.SIZE;
+		this.maxTileY = (highestY + 1) * ChunkData.SIZE - 1;
 	}
 	
 	public String getMusic() {
