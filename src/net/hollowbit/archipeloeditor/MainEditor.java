@@ -7,6 +7,7 @@ import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.KeyboardFocusManager;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ComponentEvent;
@@ -132,7 +133,7 @@ public class MainEditor implements Runnable {
 					//Load basic images for editor
 					ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 					ICON = ImageIO.read(classLoader.getResourceAsStream("images/icon.png"));
-					CURSOR = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(classLoader.getResourceAsStream("images/cursor.png")), new Point(16, 16), "blank");
+					CURSOR = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(classLoader.getResourceAsStream("images/cursor.png")), new Point(8, 8), "blank");
 					MainEditor window = new MainEditor();
 					window.frame.setVisible(true);
 				} catch (Exception e) {
@@ -167,6 +168,9 @@ public class MainEditor implements Runnable {
 		frame.setLocationRelativeTo(null);
 		frame.setIconImage(ICON);
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		
+		KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+		manager.setGlobalCurrentFocusCycleRoot(frame);
 		
 		frame.addWindowListener(new WindowListener() {
 			
@@ -769,12 +773,12 @@ public class MainEditor implements Runnable {
 						    		+ "Swimmable: " + tile.swimmable + "<br>"
 						    		+ "Damage: " + tile.damage + "<br>"
 						    		+ "Time(s) Between damage: " + tile.damageSpeed + "<br>"
-						    		+ "Speed Multiplier: " + tile.speedMultiplier + "<br>"
-						    		+ "Collision Table:<br>";
+						    		+ "Speed Multiplier: " + tile.speedMultiplier + "<br>";
 							if (tile.animated) {
 								text += "# of Animation Frames: " + tile.numberOfFrames + "<br>"
 									    + "Time(s) Between Frames: " + tile.animationSpeed + "<br>";
 							}
+							text += "Collision Table:<br>";
 							
 							for(int i = 0; i < tile.collisionTable.length; i++){
 								for(int u = 0; u < tile.collisionTable[0].length; u++){
@@ -793,16 +797,16 @@ public class MainEditor implements Runnable {
 						    		+ "Width: " + element.width + "<br>"
 						    		+ "Height: " + element.height + "<br>"
 						    		+ "OffsetX: " + element.offsetX + "<br>"
-						    		+ "OffsetY: " + element.offsetY + "<br>"
-				    				+ "Collision Table:<br>";
+						    		+ "OffsetY: " + element.offsetY + "<br>";
 							if (element.animated) {
 								text += "# of Animation Frames: " + element.numberOfFrames + "<br>"
 									    + "Time(s) Between Frames: " + element.animationSpeed + "<br>";
 							}
+							text += "Collision Table:<br>";
 							
 							for(int i = 0; i < element.height; i++){
 								for(int u = 0; u < element.width; u++){
-									text +=  element.collisionTable[i][u] ? 1 : 0;
+									text += element.collisionTable[i][u] ? 1 : 0;
 								}
 								text += "<br>";
 							}

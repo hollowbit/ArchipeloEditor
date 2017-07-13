@@ -14,18 +14,10 @@ import net.hollowbit.archipeloshared.MapData;
 
 public class Map implements Cloneable {
 	
-	public static final int TYPE_ISLAND = 0;
-	public static final int TYPE_DUNGEON = 1;
-	public static final int TYPE_HOUSE = 2;
-	public static final int TYPE_SHOP = 2;
-	
-	public static final int CLIMAT_GRASSY = 0;
-	public static final int CLIMAT_SANDY = 1;
-	public static final int CLIMAT_SNOWY = 2;
+	private static final int ELEMENT_RENDER_BUFFER = 3;
 	
 	private String displayName = "";
-	private int type;
-	private int climat;
+	private String music = "";
 	private String name;
 	private String[][] tiles;
 	private String[][] elements;
@@ -36,11 +28,10 @@ public class Map implements Cloneable {
 	}
 	
 	//Create map from editor
-	public Map(String name, String displayName, int type, int climat, int width, int height) {
+	public Map(String name, String displayName, String music, int width, int height) {
 		this.name = name;
 		this.displayName = displayName;
-		this.type = type;
-		this.climat = climat;
+		this.music = music;
 		
 		entitySnapshots = new ArrayList<EntitySnapshot>();
 		
@@ -62,8 +53,8 @@ public class Map implements Cloneable {
 	public void draw (AssetManager assetManager, boolean showTiles, boolean showElements, boolean showGrid, int tileY, int tileX, int selectedLayer, Object selectedListValue, SpriteBatch batch, int visibleX, int visibleY, int visibleWidth, int visibleHeight ){
 		//If show tiles and tiles exist, draw them
 		if (showTiles && tiles != null) {
-			for(int i = visibleY - 3; i < visibleY + visibleHeight + 3; i++){
-				for(int u = visibleX - 3; u < visibleX + visibleWidth + 3; u++){
+			for(int i = visibleY; i <= visibleY + visibleHeight; i++){
+				for(int u = visibleX; u <= visibleX + visibleWidth; u++){
 					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
 						if(tiles != null){
 							if(tiles[i][u] != null)
@@ -85,8 +76,8 @@ public class Map implements Cloneable {
 		
 		//If show elements and elements exist, draw them
 		if (showElements && elements != null) {
-			for(int i = visibleY - 3; i < visibleY + visibleHeight + 3; i++){
-				for(int u = visibleX - 3; u < visibleX + visibleWidth + 3; u++){
+			for(int i = visibleY + visibleHeight + ELEMENT_RENDER_BUFFER - 1; i >= visibleY - ELEMENT_RENDER_BUFFER; i--){
+				for(int u = visibleX - ELEMENT_RENDER_BUFFER; u < visibleX + visibleWidth + ELEMENT_RENDER_BUFFER; u++){
 					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
 						if(elements != null){
 							if(elements[i][u] != null)
@@ -103,8 +94,8 @@ public class Map implements Cloneable {
 
 		//Draw Grid
 		if (showGrid) {			
-			for(int i = visibleY - 3; i < visibleY + visibleHeight + 3; i++){
-				for(int u = visibleX - 3; u < visibleX + visibleWidth + 3; u++){
+			for(int i = visibleY; i <= visibleY + visibleHeight; i++){
+				for(int u = visibleX; u <= visibleX + visibleWidth; u++){
 					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
 						batch.draw(assetManager.getGridTexture(), u * MainEditor.TILE_SIZE, i * MainEditor.TILE_SIZE - 2);
 					}
@@ -137,8 +128,7 @@ public class Map implements Cloneable {
 		//Apply map data
 		name = file.getName().replaceFirst("[.][^.]+$", "");
 		displayName = mapFile.displayName;
-		type = mapFile.type;
-		climat = mapFile.climat;
+		music = mapFile.music;
 		tiles = mapFile.tileData;
 		elements = mapFile.elementData;
 		entitySnapshots = mapFile.entitySnapshots;
@@ -149,8 +139,7 @@ public class Map implements Cloneable {
 		Json json = new Json();
 		MapData mapFile = new MapData();
 		mapFile.displayName = displayName;
-		mapFile.type = type;
-		mapFile.climat = climat;
+		mapFile.music = music;
 		mapFile.tileData = tiles;
 		mapFile.elementData = elements;
 		mapFile.entitySnapshots = entitySnapshots;
@@ -174,8 +163,7 @@ public class Map implements Cloneable {
 	//Close map
 	public void close(){
 		displayName = "";
-		type = 0;
-		climat = 0;
+		music = "";
 		name = "";
 		tiles = null;
 		elements = null;
@@ -237,20 +225,12 @@ public class Map implements Cloneable {
 		elements = newElements;
 	}
 	
-	public int getType() {
-		return type;
+	public String getMusic() {
+		return music;
 	}
-
-	public  void setType(int type) {
-		this.type = type;
-	}
-
-	public int getClimat() {
-		return climat;
-	}
-
-	public void setClimat(int climat) {
-		this.climat = climat;
+	
+	public void setMusic(String music) {
+		this.music = music;
 	}
 
 	public String getName() {

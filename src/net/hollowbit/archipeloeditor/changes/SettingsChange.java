@@ -6,36 +6,31 @@ public class SettingsChange extends Change {
 	
 	private String name;
 	private String displayName;
-	private int type;
-	private int climat;
+	private String music;
 	
 	private String redoName;
 	private String redoDisplayName;
-	private int redoType;
-	private int redoClimat;
+	private String redoMusic;
 	
 	Map map;
 	
 	//Saves a state of settings before new ones are applied
 	public SettingsChange(Map map) {
 		this.map = map;
-		name = new String(map.getName());
-		displayName = new String(map.getDisplayName());
-		type = map.getType();
-		climat = map.getClimat();
+		name = map.getName();
+		displayName = map.getDisplayName();
+		music = map.getMusic();
 	}
 	
 	//Saves settings changed and reverts to old ones
 	@Override
 	public void undoChange() {
-		redoName = new String(map.getName());
-		redoDisplayName = new String(map.getDisplayName());
-		redoType = new Integer(map.getType());
-		redoClimat = new Integer(map.getClimat());
-		map.setName(new String(name));
-		map.setDisplayName(new String(displayName));
-		map.setType(type);
-		map.setClimat(climat);
+		redoName = map.getName();
+		redoDisplayName = map.getDisplayName();
+		redoMusic = map.getMusic();
+		map.setName(name);
+		map.setDisplayName(displayName);
+		map.setMusic(music);
 	}
 	
 	//Redoes change to settings
@@ -43,8 +38,7 @@ public class SettingsChange extends Change {
 	public void redoChanges() {
 		map.setName(new String(redoName));
 		map.setDisplayName(new String(redoDisplayName));
-		map.setType(redoType);
-		map.setClimat(redoClimat);
+		map.setMusic(redoMusic);
 	}
 
 }

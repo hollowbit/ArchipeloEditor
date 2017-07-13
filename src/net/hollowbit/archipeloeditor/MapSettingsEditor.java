@@ -7,7 +7,6 @@ import java.awt.event.MouseEvent;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JSpinner;
@@ -70,34 +69,6 @@ public class MapSettingsEditor extends JFrame {
 		textFieldDisplayName.setColumns(10);
 		getContentPane().add(textFieldDisplayName);
 		
-		final JComboBox<String> comboBoxClimate = new JComboBox<String>();
-		comboBoxClimate.setMaximumRowCount(3);
-		comboBoxClimate.setBounds(162, 157, 86, 20);
-		comboBoxClimate.addItem("Grassy - 0");
-		comboBoxClimate.addItem("Sandy - 1");
-		comboBoxClimate.addItem("Snowy - 2");
-		comboBoxClimate.setSelectedIndex(new Integer(editor.getMap().getClimat()));
-		getContentPane().add(comboBoxClimate);
-		
-		JLabel lblClimat = new JLabel("Climat:");
-		lblClimat.setBounds(162, 141, 46, 14);
-		getContentPane().add(lblClimat);
-		
-		JLabel lblType = new JLabel("Type:");
-		lblType.setBounds(10, 141, 46, 14);
-		getContentPane().add(lblType);
-		
-		final JComboBox<String> comboBoxType = new JComboBox<String>();
-		comboBoxType.setMaximumRowCount(4);
-		comboBoxType.setBounds(10, 157, 86, 20);
-		comboBoxType.addItem("Island - 0");
-		comboBoxType.addItem("Dungeon - 1");
-		comboBoxType.addItem("House - 2");
-		comboBoxType.addItem("Shop - 3");
-		comboBoxType.addItem("Cave - 4");
-		comboBoxType.setSelectedIndex(new Integer(editor.getMap().getType()));
-		getContentPane().add(comboBoxType);
-		
 		JLabel lblNaturalLighting = new JLabel("Natural Lighting:");
 		lblNaturalLighting.setBounds(10, 213, 86, 14);
 		getContentPane().add(lblNaturalLighting);
@@ -154,8 +125,7 @@ public class MapSettingsEditor extends JFrame {
 				editor.getChangeList().addChanges(changes);
 				editor.getMap().setName(textFieldName.getText());
 				editor.getMap().setDisplayName(textFieldDisplayName.getText());
-				editor.getMap().setType(comboBoxType.getSelectedIndex());
-				editor.getMap().setClimat(comboBoxClimate.getSelectedIndex());
+				editor.getMap().setMusic(textFieldMusic.getText());
 				
 				listener.mapSettingsChanged();
 				setVisible(false);

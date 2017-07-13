@@ -51,7 +51,7 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 			assetsLoaded = true;
 			editor.reloadLists();
 		}
-		Gdx.gl.glClearColor(0.46f, 0.46f, 0.46f, 1);
+		Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
 		cam.update(Gdx.graphics.getDeltaTime());
@@ -103,7 +103,7 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 				editor.getTileList().setSelectedValue(editor.getAssetManager().getElementByID(editor.getMap().getElements()[tileY][tileX]), true);
 				break;
 			}
-		} else if (button == Buttons.LEFT) {
+		} else if (button == Buttons.LEFT && !  Gdx.input.isKeyPressed(Keys.SPACE)) {
 			switch(editor.getSelectedLayer()) {
 			case MainEditor.TILE_LAYER:
 				switch (editor.getSelectedTool()) {

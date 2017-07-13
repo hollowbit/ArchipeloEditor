@@ -47,19 +47,31 @@ public class GameCamera {
 	}
 	
 	public void move (float x, float y, float z) {
-		cam.position.set(x + cam.viewportWidth * cam.zoom / 2, y + cam.viewportHeight * cam.zoom / 2, z);
+		cam.position.set(x, y, z);
 		cam.update();
 	}
 	
+	/**
+	 * Zoom camera by a certain amount.
+	 * Note: Does not set zoom, it adds the given amount to it.
+	 * @param zoom
+	 * @param x
+	 * @param y
+	 */
 	public void zoom (float zoom, float x, float y) {
+		Vector3 posToZoomTo = cam.unproject(new Vector3(x, y, 0));//Save world position of mouse cursor
+		
+		//Zoom camera
 		cam.zoom += zoom;
-		
-		cam.position.set(x, y, 0);
-		
 		if (cam.zoom > MAX_ZOOM)
 			cam.zoom = MAX_ZOOM;
 		if (cam.zoom < MIN_ZOOM)
 			cam.zoom = MIN_ZOOM;
+		cam.update();
+		
+		//Move save world coordinate to mouse cursor
+		Vector3 newUnprojected = cam.unproject(new Vector3(x, y, 0));
+		cam.translate(posToZoomTo.x - newUnprojected.x, posToZoomTo.y - newUnprojected.y);
 		cam.update();
 	}
 	
