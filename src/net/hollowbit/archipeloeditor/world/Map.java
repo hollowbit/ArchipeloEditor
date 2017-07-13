@@ -9,99 +9,81 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.MapData;
 
 public class Map implements Cloneable {
 	
-	private static final int ELEMENT_RENDER_BUFFER = 3;
-	
 	private String displayName = "";
 	private String music = "";
 	private String name;
-	private String[][] tiles;
-	private String[][] elements;
+	private boolean naturalLighting;
+	
+	private ArrayList<Chunk> chunks;
 	private ArrayList<EntitySnapshot> entitySnapshots;
 	
+	private int width, height;
+	private int minTileX, maxTileX, minTileY, maxTileY;
+	
 	public Map() {
+		chunks = new ArrayList<Chunk>();
 		entitySnapshots = new ArrayList<EntitySnapshot>();
 	}
 	
 	//Create map from editor
-	public Map(String name, String displayName, String music, int width, int height) {
+	public Map(String name, String displayName, String music, boolean naturalLighting) {
 		this.name = name;
 		this.displayName = displayName;
 		this.music = music;
+		this.naturalLighting = naturalLighting;
 		
 		entitySnapshots = new ArrayList<EntitySnapshot>();
-		
-		tiles = new String[height][width];
-		for (int r = 0; r < height; r++) {
-			for (int c = 0; c < width; c++) {
-				tiles[r][c] = "null";
-			}
-		}
-		
-		elements = new String[height][width];
-		for (int r = 0; r < height; r++) {
-			for (int c = 0; c < width; c++) {
-				elements[r][c] = "null";
-			}
-		}
 	}
 	
 	public void draw (AssetManager assetManager, boolean showTiles, boolean showElements, boolean showGrid, int tileY, int tileX, int selectedLayer, Object selectedListValue, SpriteBatch batch, int visibleX, int visibleY, int visibleWidth, int visibleHeight ){
 		//If show tiles and tiles exist, draw them
-		if (showTiles && tiles != null) {
-			for(int i = visibleY; i <= visibleY + visibleHeight; i++){
-				for(int u = visibleX; u <= visibleX + visibleWidth; u++){
-					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
-						if(tiles != null){
-							if(tiles[i][u] != null)
-								assetManager.drawTileByID(batch, u * MainEditor.TILE_SIZE, i * MainEditor.TILE_SIZE, tiles[i][u]);
-							else {
-								batch.setColor(0, 0, 0, 1);
-								batch.draw(assetManager.getBlank(), u * MainEditor.TILE_SIZE, i * MainEditor.TILE_SIZE);
-								batch.setColor(1, 1, 1, 1);
-							}
-						}
-						
-						//Draw hover tile for user to see where is will go if placed
-						if(i == tileX && u == tileY && selectedListValue != null && selectedLayer == 0)
-							assetManager.getTileByID(((MapTile) selectedListValue).id).draw(batch, u * MainEditor.TILE_SIZE, i * MainEditor.TILE_SIZE);
-					}
-				}
+		if (showTiles) {
+			int hoverChunkX = tileX / ChunkData.SIZE;
+			int hoverChunkY = tileY / ChunkData.SIZE;
+			
+			MapTile hoverTile = null;
+			if (selectedLayer == MainEditor.TILE_LAYER && selectedListValue != null)
+				hoverTile = (MapTile) selectedListValue;
+				
+			for (Chunk chunk : chunks) {
+				if (hoverChunkX == chunk.getX() && hoverChunkY == chunk.getY())
+					chunk.drawTiles(batch, assetManager, hoverTile, tileX % ChunkData.SIZE, tileY % ChunkData.SIZE);
+				else
+					chunk.drawTiles(batch, assetManager, null, -1, -1);
 			}
 		}
 		
 		//If show elements and elements exist, draw them
-		if (showElements && elements != null) {
-			for(int i = visibleY + visibleHeight + ELEMENT_RENDER_BUFFER - 1; i >= visibleY - ELEMENT_RENDER_BUFFER; i--){
-				for(int u = visibleX - ELEMENT_RENDER_BUFFER; u < visibleX + visibleWidth + ELEMENT_RENDER_BUFFER; u++){
-					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
-						if(elements != null){
-							if(elements[i][u] != null)
-								assetManager.drawElementByID(batch, u * MainEditor.TILE_SIZE, i * MainEditor.TILE_SIZE, elements[i][u]);
-						}
-						
-						//Draw hover element for user to see where is will go if placed
-						if(i == tileX && u == tileY && selectedListValue != null && selectedLayer == 1)
-							assetManager.getElementByID(((MapElement) selectedListValue).id).draw(batch, u * MainEditor.TILE_SIZE, i * MainEditor.TILE_SIZE);
-					}
-				}
+		if (showElements) {
+			int hoverChunkX = tileX / ChunkData.SIZE;
+			int hoverChunkY = tileY / ChunkData.SIZE;
+			
+			MapElement hoverElement = null;
+			if (selectedLayer == MainEditor.ELEMENT_LAYER && selectedListValue != null)
+				hoverElement = (MapElement) selectedListValue;
+				
+			for (Chunk chunk : chunks) {
+				if (hoverChunkX == chunk.getX() && hoverChunkY == chunk.getY())
+					chunk.drawElements(batch, assetManager, hoverElement, tileX % ChunkData.SIZE, tileY % ChunkData.SIZE);
+				else
+					chunk.drawElements(batch, assetManager, null, -1, -1);
 			}
 		}
 
 		//Draw Grid
-		if (showGrid) {			
-			for(int i = visibleY; i <= visibleY + visibleHeight; i++){
-				for(int u = visibleX; u <= visibleX + visibleWidth; u++){
-					if(i >= 0 && u >= 0 && i < tiles.length && u < tiles[0].length){
-						batch.draw(assetManager.getGridTexture(), u * MainEditor.TILE_SIZE, i * MainEditor.TILE_SIZE - 2);
-					}
+		if (showGrid) {
+			for (Chunk chunk : chunks) {
+				for(int i = 0; i <= ChunkData.SIZE; i++){
+					for(int u = 0; u <= ChunkData.SIZE; u++)
+						batch.draw(assetManager.getGridTexture(), u * MainEditor.TILE_SIZE + chunk.getPixelX(), i * MainEditor.TILE_SIZE + chunk.getPixelY() - 2);
 				}
 			}
-
 		}
 		
 	}
@@ -129,9 +111,12 @@ public class Map implements Cloneable {
 		name = file.getName().replaceFirst("[.][^.]+$", "");
 		displayName = mapFile.displayName;
 		music = mapFile.music;
-		tiles = mapFile.tileData;
-		elements = mapFile.elementData;
+		naturalLighting = mapFile.naturalLighting;
+		
+		//TODO Load chunks from file
 		entitySnapshots = mapFile.entitySnapshots;
+		
+		recalculateSizes();
 	}
 	
 	//Serialize map with json and save it
@@ -140,8 +125,9 @@ public class Map implements Cloneable {
 		MapData mapFile = new MapData();
 		mapFile.displayName = displayName;
 		mapFile.music = music;
-		mapFile.tileData = tiles;
-		mapFile.elementData = elements;
+		mapFile.naturalLighting = naturalLighting;
+		
+		//TODO Save chunks to file
 		mapFile.entitySnapshots = entitySnapshots;
 		
 		try {
@@ -165,8 +151,11 @@ public class Map implements Cloneable {
 		displayName = "";
 		music = "";
 		name = "";
-		tiles = null;
-		elements = null;
+		chunks.clear();
+		entitySnapshots.clear();
+		width = 0;
+		height = 0;
+		minTileX = minTileY = maxTileX = maxTileY = 0;
 	}
 
 	public String getDisplayName() {
@@ -176,53 +165,63 @@ public class Map implements Cloneable {
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}
-
+	
 	public int getWidth() {
-		if (tiles == null)
-			return 0;
-		else
-			return tiles[0].length;
-	}
-
-	public  int getHeight() {
-		if (tiles == null)
-			return 0;
-		else
-			return tiles.length;
+		return width;
 	}
 	
-	//Resize map while keeping current tiles/elements in place.
-	//this method will soo be upgraded to allow for centering
-	public  void resize(int width, int height){
-		String[][] newTiles = new String[height][tiles[0].length];
-		for(int i = 0; i < height; i++){
-			for(int u = 0; u < tiles[0].length; u++){
-				if(u >= this.tiles[0].length || i >= tiles.length){
-					newTiles[i][u] = "null";
-				}else{
-					if(tiles[i][u] == null)
-						newTiles[i][u] = "null";
-					else
-						newTiles[i][u] = tiles[i][u];
-				}
-			}
-		}
-		tiles = newTiles;
+	public int getHeight() {
+		return height;
+	}
+	
+	public int getMinTileX() {
+		return minTileX;
+	}
+	
+	public int getMaxTileX() {
+		return maxTileX;
+	}
+	
+	public int getMinTileY() {
+		return minTileY;
+	}
+	
+	public int getMaxTileY() {
+		return maxTileY;
+	}
+	
+	/**
+	 * Recalculates the width and height of the map. Since it is a fairly costly calculation, this should only be done when necessary.
+	 */
+	protected void recalculateSizes() {
+		int lowestX = chunks.get(0).getX();
+		int highestX = chunks.get(0).getX();
 		
-		String[][] newElements = new String[height][tiles[0].length];
-		for(int i = 0; i < height; i++){
-			for(int u = 0; u < tiles[0].length; u++){
-				if(u >= this.tiles[0].length || i >= tiles.length){
-					newElements[i][u] = "null";
-				}else{
-					if(elements[i][u] == null)
-						newElements[i][u] = "null";
-					else
-						newElements[i][u] = elements[i][u];
-				}
-			}
+		for (Chunk chunk : chunks) {
+			if (chunk.getX() < lowestX)
+				lowestX = chunk.getX();
+			
+			if (chunk.getX() > highestX)
+				highestX = chunk.getX();
 		}
-		elements = newElements;
+		this.width = (highestX - lowestX) * ChunkData.SIZE;
+		this.minTileX = lowestX * ChunkData.SIZE;
+		this.maxTileX = highestX * ChunkData.SIZE;
+		
+		int lowestY = chunks.get(0).getY();
+		int highestY = chunks.get(0).getY();
+		
+		for (Chunk chunk : chunks) {
+			if (chunk.getY() < lowestY)
+				lowestY = chunk.getY();
+			
+			if (chunk.getY() > highestY)
+				highestY = chunk.getY();
+		}
+		
+		this.height = (highestY - lowestY) * ChunkData.SIZE;
+		this.minTileY = lowestY * ChunkData.SIZE;
+		this.maxTileY = highestY * ChunkData.SIZE;
 	}
 	
 	public String getMusic() {
@@ -240,21 +239,97 @@ public class Map implements Cloneable {
 	public void setName(String name) {
 		this.name = name;
 	}
-
-	public String[][] getTiles() {
-		return tiles;
+	
+	public void setTile(int tileX, int tileY, String tileId) {
+		int chunkX = tileX / ChunkData.SIZE;
+		int chunkY = tileY / ChunkData.SIZE;
+		
+		for (Chunk chunk : chunks) {
+			if (chunk.getX() == chunkX && chunk.getY() == chunkY) {
+				int xWithinChunk = tileX % ChunkData.SIZE;
+				int yWithinChunk = tileY % ChunkData.SIZE;
+				
+				chunk.getTiles()[yWithinChunk][xWithinChunk] = tileId;
+				return;
+			}
+			
+			//At this point, chunk is assumed to not be there
+			if (chunk.getY() > chunkY && chunk.getX() > chunkX)
+				return;
+		}
+		
+		//Chunk at location not found, don't do anything
 	}
-
-	public void setTiles(String[][] tiles) {
-		this.tiles = tiles;
+	
+	public String getTile(int tileX, int tileY) {
+		int chunkX = tileX / ChunkData.SIZE;
+		int chunkY = tileY / ChunkData.SIZE;
+		
+		for (Chunk chunk : chunks) {
+			if (chunk.getX() == chunkX && chunk.getY() == chunkY) {
+				int xWithinChunk = tileX % ChunkData.SIZE;
+				int yWithinChunk = tileY % ChunkData.SIZE;
+				
+				return chunk.getTiles()[yWithinChunk][xWithinChunk];
+			}
+			
+			//At this point, chunk is assumed to not be there
+			if (chunk.getY() > chunkY && chunk.getX() > chunkX)
+				return null;
+		}
+		
+		//Chunk at location not found, return null
+		return null;
 	}
-
-	public String[][] getElements() {
-		return elements;
+	
+	public void setElement(int tileX, int tileY, String elementId) {
+		int chunkX = tileX / ChunkData.SIZE;
+		int chunkY = tileY / ChunkData.SIZE;
+		
+		for (Chunk chunk : chunks) {
+			if (chunk.getX() == chunkX && chunk.getY() == chunkY) {
+				int xWithinChunk = tileX % ChunkData.SIZE;
+				int yWithinChunk = tileY % ChunkData.SIZE;
+				
+				chunk.getElements()[yWithinChunk][xWithinChunk] = elementId;
+				return;
+			}
+			
+			//At this point, chunk is assumed to not be there
+			if (chunk.getY() > chunkY && chunk.getX() > chunkX)
+				return;
+		}
+		
+		//Chunk at location not found, don't do anything
 	}
-
-	public void setElements(String[][] elements) {
-		this.elements = elements;
+	
+	public String getElement(int tileX, int tileY) {
+		int chunkX = tileX / ChunkData.SIZE;
+		int chunkY = tileY / ChunkData.SIZE;
+		
+		for (Chunk chunk : chunks) {
+			if (chunk.getX() == chunkX && chunk.getY() == chunkY) {
+				int xWithinChunk = tileX % ChunkData.SIZE;
+				int yWithinChunk = tileY % ChunkData.SIZE;
+				
+				return chunk.getElements()[yWithinChunk][xWithinChunk];
+			}
+			
+			//At this point, chunk is assumed to not be there
+			if (chunk.getY() > chunkY && chunk.getX() > chunkX)
+				return null;
+		}
+		
+		//Chunk at location not found, return null
+		return null;
+	}
+	
+	public ArrayList<Chunk> getChunks() {
+		return chunks;
+	}
+	
+	public void setChunks(ArrayList<Chunk> chunks) {
+		this.chunks = chunks;
 	}
 
 }

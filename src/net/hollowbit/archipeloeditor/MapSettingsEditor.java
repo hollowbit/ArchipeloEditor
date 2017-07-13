@@ -9,12 +9,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JSpinner;
 import javax.swing.JTextField;
-
-import net.hollowbit.archipeloeditor.changes.Change;
-import net.hollowbit.archipeloeditor.changes.ResizeChange;
-import net.hollowbit.archipeloeditor.changes.SettingsChange;
 
 
 public class MapSettingsEditor extends JFrame {
@@ -77,14 +72,6 @@ public class MapSettingsEditor extends JFrame {
 		chckbxYesno.setBounds(6, 224, 97, 23);
 		getContentPane().add(chckbxYesno);
 		
-		JLabel lblWidth = new JLabel("Width:");
-		lblWidth.setBounds(278, 813, 46, 14);
-		getContentPane().add(lblWidth);
-		
-		JLabel lblHeight = new JLabel("Height:");
-		lblHeight.setBounds(278, 160, 46, 14);
-		getContentPane().add(lblHeight);
-		
 		JLabel lblMusic = new JLabel("Music:");
 		lblMusic.setBounds(162, 203, 46, 14);
 		getContentPane().add(lblMusic);
@@ -94,35 +81,12 @@ public class MapSettingsEditor extends JFrame {
 		getContentPane().add(textFieldMusic);
 		textFieldMusic.setColumns(10);
 		
-		final JSpinner spinnerWidth = new JSpinner();
-		spinnerWidth.setValue(new Integer(editor.getMap().getWidth()));
-		spinnerWidth.setBounds(345, 128, 89, 20);
-		getContentPane().add(spinnerWidth);
-		
-		final JSpinner spinnerHeight = new JSpinner();
-		spinnerHeight.setValue(new Integer(editor.getMap().getHeight()));
-		spinnerHeight.setBounds(345, 160, 89, 20);
-		getContentPane().add(spinnerHeight);
-		
 		JButton btnSave = new JButton("Save");
 		btnSave.addActionListener(new ActionListener() {//Save changes to map
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Change[] changes;
-				
-				//Makes sure to only resize the map if the width and height are different
-				if ((int) spinnerWidth.getValue() != editor.getMap().getWidth() || (int) spinnerHeight.getValue() != editor.getMap().getHeight()) {
-					changes = new Change[2];
-					changes[1] = new ResizeChange(editor.getMap());
-					editor.getMap().resize((int) spinnerWidth.getValue(), (int) spinnerHeight.getValue());
-				} else
-					changes = new Change[1];
-				
-				changes[0] = new SettingsChange(editor.getMap());
-				
 				//Applies settings to map
-				editor.getChangeList().addChanges(changes);
 				editor.getMap().setName(textFieldName.getText());
 				editor.getMap().setDisplayName(textFieldDisplayName.getText());
 				editor.getMap().setMusic(textFieldMusic.getText());

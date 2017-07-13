@@ -10,9 +10,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JSpinner;
 import javax.swing.JTextField;
-import javax.swing.SpinnerNumberModel;
 
 import net.hollowbit.archipeloeditor.world.Map;
 
@@ -75,14 +73,6 @@ public class NewMapMenu extends JFrame {
 		chckbxYesno.setBounds(6, 224, 97, 23);
 		getContentPane().add(chckbxYesno);
 		
-		JLabel lblWidth = new JLabel("Width:");
-		lblWidth.setBounds(278, 131, 46, 14);
-		getContentPane().add(lblWidth);
-		
-		JLabel lblHeight = new JLabel("Height:");
-		lblHeight.setBounds(278, 160, 46, 14);
-		getContentPane().add(lblHeight);
-		
 		JLabel lblMusic = new JLabel("Music:");
 		lblMusic.setBounds(162, 203, 46, 14);
 		getContentPane().add(lblMusic);
@@ -92,16 +82,6 @@ public class NewMapMenu extends JFrame {
 		getContentPane().add(textFieldMusic);
 		textFieldMusic.setColumns(10);
 		
-		SpinnerNumberModel sizeSpinnerModelWidth = new SpinnerNumberModel(50, 0, Integer.MAX_VALUE, 1);
-		final JSpinner spinnerWidth = new JSpinner(sizeSpinnerModelWidth);
-		spinnerWidth.setBounds(345, 128, 89, 20);
-		getContentPane().add(spinnerWidth);
-		
-		SpinnerNumberModel sizeSpinnerModelHeight = new SpinnerNumberModel(50, 0, Integer.MAX_VALUE, 1);
-		final JSpinner spinnerHeight = new JSpinner(sizeSpinnerModelHeight);
-		spinnerHeight.setBounds(345, 160, 89, 20);
-		getContentPane().add(spinnerHeight);
-		
 		JButton btnSave = new JButton("Create");
 		final JFrame frame = this;
 		btnSave.addActionListener(new ActionListener() {
@@ -109,13 +89,13 @@ public class NewMapMenu extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				//Makes sure that required fields aren't empty
-				if (textFieldName.getText().equals("") || textFieldDisplayName.getText().equals("") || (int) spinnerWidth.getValue() <= 0 || (int) spinnerHeight.getValue() <= 0) {
-					JOptionPane.showMessageDialog(frame, "A field must be empty or less than or equal to 0. Required fields are: Name, display name, width & height.", "Error", JOptionPane.WARNING_MESSAGE);
+				if (textFieldName.getText().equals("") || textFieldDisplayName.getText().equals("")) {
+					JOptionPane.showMessageDialog(frame, "Some fields are empty. Required fields are: Name and display name", "Error", JOptionPane.WARNING_MESSAGE);
 					return;
 				}
 				
 				//If it all checks out, create a new map
-				Map map = new Map(textFieldName.getText(), textFieldDisplayName.getText(), textFieldMusic.getText(), (int) spinnerWidth.getValue(), (int) spinnerHeight.getValue());
+				Map map = new Map(textFieldName.getText(), textFieldDisplayName.getText(), textFieldMusic.getText(), chckbxYesno.isSelected());
 				listener.newMapCreated(map);
 				
 				setVisible(false);

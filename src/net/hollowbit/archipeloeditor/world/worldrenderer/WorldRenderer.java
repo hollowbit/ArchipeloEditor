@@ -11,8 +11,7 @@ import com.badlogic.gdx.math.Vector2;
 
 import net.hollowbit.archipeloeditor.EntityAdder;
 import net.hollowbit.archipeloeditor.MainEditor;
-import net.hollowbit.archipeloeditor.changes.ElementMapChange;
-import net.hollowbit.archipeloeditor.changes.TileMapChange;
+import net.hollowbit.archipeloeditor.changes.MapChange;
 import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloeditor.world.MapElement;
 import net.hollowbit.archipeloeditor.world.MapTile;
@@ -91,16 +90,16 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 		int tileX = (int) (mouseLocation.x / MainEditor.TILE_SIZE);
 		int tileY = (int) (mouseLocation.y / MainEditor.TILE_SIZE);
 		
-		if (tileX >= editor.getMap().getHeight() || tileY >= editor.getMap().getWidth() || tileX < 0 || tileY < 0 || editor.getMap().getTiles() == null)
+		if (tileX >= editor.getMap().getMaxTileX() || tileY >= editor.getMap().getMaxTileY() || tileX < editor.getMap().getMinTileX() || tileY < editor.getMap().getMinTileY())
 			return false;
 		
 		if (button == Buttons.RIGHT) {
 			switch (editor.getSelectedLayer()) {
 			case MainEditor.TILE_LAYER:
-				editor.getTileList().setSelectedValue(editor.getAssetManager().getTileByID(editor.getMap().getTiles()[tileY][tileX]), true);
+				editor.getTileList().setSelectedValue(editor.getAssetManager().getTileByID(editor.getMap().getTile(tileX, tileY)), true);
 				break;
 			case MainEditor.ELEMENT_LAYER:
-				editor.getTileList().setSelectedValue(editor.getAssetManager().getElementByID(editor.getMap().getElements()[tileY][tileX]), true);
+				editor.getTileList().setSelectedValue(editor.getAssetManager().getElementByID(editor.getMap().getElement(tileX, tileY)), true);
 				break;
 			}
 		} else if (button == Buttons.LEFT && !  Gdx.input.isKeyPressed(Keys.SPACE)) {
@@ -109,20 +108,20 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 				switch (editor.getSelectedTool()) {
 				case MainEditor.PENCIL_TOOL:
 					if(editor.getSelectedItemValue() != null) {
-						editor.getChangeList().addChanges(new TileMapChange(editor.getMap()));
+						editor.getChangeList().addChanges(new MapChange(editor.getMap()));
 						editor.setJustSaved(false);
 					
-						editor.getMap().getTiles()[tileY][tileX] = ((MapTile) editor.getSelectedItemValue()).id;
+						editor.getMap().setTile(tileX, tileY, ((MapTile) editor.getSelectedItemValue()).id);
 					}
 					break;
 				case MainEditor.BUCKET_TOOL:
 					if(editor.getSelectedItemValue() != null) {
-						editor.getChangeList().addChanges(new TileMapChange(editor.getMap()));
+						editor.getChangeList().addChanges(new MapChange(editor.getMap()));
 						editor.setJustSaved(false);
 						
 						boolean[][] filledTiles = new boolean[editor.getMap().getHeight()][editor.getMap().getWidth()];
-						String replaceTile = editor.getMap().getTiles()[tileY][tileX];
-						bucketFillTiles(replaceTile, filledTiles, tileY, tileX);
+						String replaceTile = editor.getMap().getTile(tileX, tileY);
+						bucketFillTiles(replaceTile, filledTiles, tileX, tileY);
 					}
 					break;
 				case MainEditor.ENTITY_TOOL:
@@ -138,20 +137,20 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 				switch(editor.getSelectedTool()) {
 				case MainEditor.PENCIL_TOOL:
 					if(editor.getSelectedItemValue() != null) {
-						editor.getChangeList().addChanges(new ElementMapChange(editor.getMap()));
+						editor.getChangeList().addChanges(new MapChange(editor.getMap()));
 						editor.setJustSaved(false);
 					
-						editor.getMap().getElements()[tileY][tileX] = ((MapElement) editor.getSelectedItemValue()).id;
+						editor.getMap().setElement(tileX, tileY, ((MapElement) editor.getSelectedItemValue()).id);
 					}
 					break;
 				case MainEditor.BUCKET_TOOL:
 					if(editor.getSelectedItemValue() != null) {
-						editor.getChangeList().addChanges(new ElementMapChange(editor.getMap()));
+						editor.getChangeList().addChanges(new MapChange(editor.getMap()));
 						editor.setJustSaved(false);
 						
 						boolean[][] filledElements = new boolean[editor.getMap().getHeight()][editor.getMap().getWidth()];
-						String replaceElement = editor.getMap().getElements()[tileY][tileX];
-						bucketFillElements(replaceElement, filledElements, tileY, tileX);
+						String replaceElement = editor.getMap().getElement(tileX, tileY);
+						bucketFillElements(replaceElement, filledElements, tileX, tileY);
 					}
 					break;
 				case MainEditor.ENTITY_TOOL:
@@ -162,7 +161,7 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 					}
 					break;
 				}
-				editor.getChangeList().addChanges(new ElementMapChange(editor.getMap()));
+				editor.getChangeList().addChanges(new MapChange(editor.getMap()));
 				editor.setJustSaved(false);
 				break;
 			}
@@ -185,7 +184,7 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 		int tileX = (int) (mouseLocation.x / MainEditor.TILE_SIZE);
 		int tileY = (int) (mouseLocation.y / MainEditor.TILE_SIZE);
 		
-		if (tileY >= editor.getMap().getHeight() || tileX >= editor.getMap().getWidth() || tileX < 0 || tileY < 0 || editor.getMap().getTiles() == null)
+		if (tileY >= editor.getMap().getMaxTileX() || tileX >= editor.getMap().getMaxTileY() || tileX < editor.getMap().getMinTileX() || tileY < editor.getMap().getMinTileY())
 			return false;
 		
 		if (!Gdx.input.isKeyPressed(Keys.SPACE)) {
@@ -194,7 +193,14 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 				switch (editor.getSelectedTool()) {
 				case MainEditor.PENCIL_TOOL:
 					if(editor.getSelectedItemValue() != null)
-						editor.getMap().getTiles()[tileY][tileX] = ((MapTile) editor.getSelectedItemValue()).id;
+						editor.getMap().setTile(tileX, tileY, ((MapTile) editor.getSelectedItemValue()).id);
+					break;
+				case MainEditor.BUCKET_TOOL:
+					if(editor.getSelectedItemValue() != null) {
+						boolean[][] filledTiles = new boolean[editor.getMap().getHeight()][editor.getMap().getWidth()];
+						String replaceTile = editor.getMap().getTile(tileX, tileY);
+						bucketFillTiles(replaceTile, filledTiles, tileX, tileY);
+					}
 					break;
 				}
 				break;
@@ -202,7 +208,14 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 				switch (editor.getSelectedTool()) {
 				case MainEditor.PENCIL_TOOL:
 					if (editor.getSelectedItemValue() != null) {
-						editor.getMap().getElements()[tileY][tileX] = ((MapElement) editor.getSelectedItemValue()).id;
+						editor.getMap().setTile(tileX, tileY, ((MapElement) editor.getSelectedItemValue()).id);
+					}
+					break;
+				case MainEditor.BUCKET_TOOL:
+					if(editor.getSelectedItemValue() != null) {
+						boolean[][] filledElements = new boolean[editor.getMap().getHeight()][editor.getMap().getWidth()];
+						String replaceElement = editor.getMap().getElement(tileX, tileY);
+						bucketFillElements(replaceElement, filledElements, tileX, tileY);
 					}
 					break;
 				}
@@ -290,11 +303,11 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 		if(tileY < 0) return;
 		
 		if(filledTiles[tileX][tileY]) return;
-		if(!editor.getMap().getTiles()[tileX][tileY].equals(replaceTile)) return;
+		if(!editor.getMap().getTile(tileX, tileY).equals(replaceTile)) return;
 		
 		filledTiles[tileX][tileY] = true;
 		
-		editor.getMap().getTiles()[tileX][tileY] = ((MapTile) editor.getSelectedItemValue()).id;
+		editor.getMap().setTile(tileX, tileY, ((MapTile) editor.getSelectedItemValue()).id);
 		bucketFillTiles(replaceTile, filledTiles, tileX + 1, tileY);
 		bucketFillTiles(replaceTile, filledTiles, tileX - 1, tileY);
 		bucketFillTiles(replaceTile, filledTiles, tileX, tileY + 1);
@@ -309,11 +322,11 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 		if(tileY < 0) return;
 		
 		if(filledTiles[tileX][tileY]) return;
-		if(!editor.getMap().getElements()[tileX][tileY].equals(replaceTile)) return;
+		if(!editor.getMap().getElement(tileX, tileY).equals(replaceTile)) return;
 		
 		filledTiles[tileX][tileY] = true;
 		
-		editor.getMap().getElements()[tileX][tileY] = ((MapElement) editor.getSelectedItemValue()).id;
+		editor.getMap().setElement(tileX, tileY, ((MapElement) editor.getSelectedItemValue()).id);
 		bucketFillElements(replaceTile, filledTiles, tileX + 1, tileY);
 		bucketFillElements(replaceTile, filledTiles, tileX - 1, tileY);
 		bucketFillElements(replaceTile, filledTiles, tileX, tileY + 1);

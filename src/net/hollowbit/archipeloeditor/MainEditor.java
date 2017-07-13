@@ -396,37 +396,6 @@ public class MainEditor implements Runnable {
 		});
 		mnMap.add(mntmEdit);
 		
-		mntmGenerate = new JMenuItem("Generate...");
-		mntmGenerate.addMouseListener(new MouseAdapter() {//Open map generator menu
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				if(mntmEdit.isEnabled())
-					JOptionPane.showMessageDialog(frame, "Map generating is not yet implemented, sorry :(");
-			}
-		});
-		mnMap.add(mntmGenerate);
-		
-		mntmReset = new JMenuItem("Reset");
-		mntmReset.addMouseListener(new MouseAdapter(){//Resets the map, makes sure user really wants to do that
-			
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				if(mntmEdit.isEnabled()){
-					int option = JOptionPane.showConfirmDialog(frame, "Are you sure you want to reset the map?", "Map Reset", JOptionPane.YES_NO_OPTION);
-					if(option == JOptionPane.YES_OPTION){
-						for(int i = 0; i < map.getHeight(); i++){
-							for(int u = 0; u < map.getWidth(); u++){
-								map.getTiles()[i][u] = "null";
-								map.getElements()[i][u] = "null";
-							}
-						}
-					}
-				}
-			}
-			
-		});
-		mnMap.add(mntmReset);
-		
 		JMenu mnView = new JMenu("View");
 		menuBar.add(mnView);
 		
