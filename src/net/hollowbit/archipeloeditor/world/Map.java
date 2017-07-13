@@ -46,16 +46,22 @@ public class Map implements Cloneable {
 		this.addChunk(0, 0);
 		this.addChunk(1, 0);
 		this.addChunk(-1, 0);
+		this.addChunk(-1, -1);
 		this.addChunk(1, 1);
-		
-		System.out.println("Map.java  " + width + "  " + height + "  " + minTileX + "  " + minTileY + "  " + maxTileX + "   " + maxTileY);
 	}
 	
 	public void draw (AssetManager assetManager, boolean showTiles, boolean showElements, boolean showGrid, int tileX, int tileY, int selectedLayer, Object selectedListValue, SpriteBatch batch, int visibleX, int visibleY, int visibleWidth, int visibleHeight ){
 		//If show tiles and tiles exist, draw them
 		if (showTiles) {
-			int hoverChunkX = tileX / ChunkData.SIZE;
-			int hoverChunkY = tileY / ChunkData.SIZE;
+			int hoverChunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
+			int hoverChunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
+			
+			int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+			if (tileX < 0)
+				xWithinChunk = ChunkData.SIZE - xWithinChunk;
+			int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+			if (tileY < 0)
+				yWithinChunk = ChunkData.SIZE - yWithinChunk;
 			
 			MapTile hoverTile = null;
 			if (selectedLayer == MainEditor.TILE_LAYER && selectedListValue != null)
@@ -63,7 +69,7 @@ public class Map implements Cloneable {
 				
 			for (Chunk chunk : chunks) {
 				if (hoverChunkX == chunk.getX() && hoverChunkY == chunk.getY())
-					chunk.drawTiles(batch, assetManager, hoverTile, tileX % ChunkData.SIZE, tileY % ChunkData.SIZE);
+					chunk.drawTiles(batch, assetManager, hoverTile, xWithinChunk, yWithinChunk);
 				else
 					chunk.drawTiles(batch, assetManager, null, -1, -1);
 			}
@@ -71,8 +77,15 @@ public class Map implements Cloneable {
 		
 		//If show elements and elements exist, draw them
 		if (showElements) {
-			int hoverChunkX = tileX / ChunkData.SIZE;
-			int hoverChunkY = tileY / ChunkData.SIZE;
+			int hoverChunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
+			int hoverChunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
+
+			int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+			if (tileX < 0)
+				xWithinChunk = ChunkData.SIZE - xWithinChunk;
+			int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+			if (tileY < 0)
+				yWithinChunk = ChunkData.SIZE - yWithinChunk;
 			
 			MapElement hoverElement = null;
 			if (selectedLayer == MainEditor.ELEMENT_LAYER && selectedListValue != null)
@@ -80,7 +93,7 @@ public class Map implements Cloneable {
 				
 			for (Chunk chunk : chunks) {
 				if (hoverChunkX == chunk.getX() && hoverChunkY == chunk.getY())
-					chunk.drawElements(batch, assetManager, hoverElement, tileX % ChunkData.SIZE, tileY % ChunkData.SIZE);
+					chunk.drawElements(batch, assetManager, hoverElement, xWithinChunk, yWithinChunk);
 				else
 					chunk.drawElements(batch, assetManager, null, -1, -1);
 			}
@@ -286,41 +299,43 @@ public class Map implements Cloneable {
 		this.name = name;
 	}
 	
-	public void setTile(int tileX, int tileY, String tileId) {
-		int chunkX = tileX / ChunkData.SIZE;
-		int chunkY = tileY / ChunkData.SIZE;
-		
+	public void setTile(int chunkX, int chunkY, int xWithinChunk, int yWithinChunk, String tileId) {
 		for (Chunk chunk : chunks) {
 			if (chunk.getX() == chunkX && chunk.getY() == chunkY) {
-				int xWithinChunk = tileX % ChunkData.SIZE;
-				int yWithinChunk = tileY % ChunkData.SIZE;
-				
 				chunk.getTiles()[yWithinChunk][xWithinChunk] = tileId;
 				return;
 			}
 			
 			//At this point, chunk is assumed to not be there
-			if (chunk.getY() > chunkY && chunk.getX() > chunkX)
+			if (chunk.getY() < chunkY && chunk.getX() > chunkX)
 				return;
 		}
 		
 		//Chunk at location not found, don't do anything
 	}
 	
-	public String getTile(int tileX, int tileY) {
-		int chunkX = tileX / ChunkData.SIZE;
-		int chunkY = tileY / ChunkData.SIZE;
+	public void setTile(int tileX, int tileY, String tileId) {
+		int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
+		int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
 		
+		int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+		if (tileX < 0)
+			xWithinChunk = ChunkData.SIZE - xWithinChunk;
+		int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+		if (tileY < 0)
+			yWithinChunk = ChunkData.SIZE - yWithinChunk;
+		
+		setTile(chunkX, chunkY, xWithinChunk, yWithinChunk, tileId);
+	}
+	
+	public String getTile(int chunkX, int chunkY, int xWithinChunk, int yWithinChunk) {
 		for (Chunk chunk : chunks) {
 			if (chunk.getX() == chunkX && chunk.getY() == chunkY) {
-				int xWithinChunk = tileX % ChunkData.SIZE;
-				int yWithinChunk = tileY % ChunkData.SIZE;
-				
 				return chunk.getTiles()[yWithinChunk][xWithinChunk];
 			}
 			
 			//At this point, chunk is assumed to not be there
-			if (chunk.getY() > chunkY && chunk.getX() > chunkX)
+			if (chunk.getY() < chunkY && chunk.getX() > chunkX)
 				return null;
 		}
 		
@@ -328,46 +343,76 @@ public class Map implements Cloneable {
 		return null;
 	}
 	
-	public void setElement(int tileX, int tileY, String elementId) {
-		int chunkX = tileX / ChunkData.SIZE;
-		int chunkY = tileY / ChunkData.SIZE;
+	public String getTile(int tileX, int tileY) {
+		int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
+		int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
 		
+		int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+		if (tileX < 0)
+			xWithinChunk = ChunkData.SIZE - xWithinChunk;
+		int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+		if (tileY < 0)
+			yWithinChunk = ChunkData.SIZE - yWithinChunk;
+		
+		return getTile(chunkX, chunkY, xWithinChunk, yWithinChunk);
+	}
+	
+	public void setElement(int chunkX, int chunkY, int xWithinChunk, int yWithinChunk, String elementId) {
 		for (Chunk chunk : chunks) {
 			if (chunk.getX() == chunkX && chunk.getY() == chunkY) {
-				int xWithinChunk = tileX % ChunkData.SIZE;
-				int yWithinChunk = tileY % ChunkData.SIZE;
-				
 				chunk.getElements()[yWithinChunk][xWithinChunk] = elementId;
 				return;
 			}
 			
 			//At this point, chunk is assumed to not be there
-			if (chunk.getY() > chunkY && chunk.getX() > chunkX)
+			if (chunk.getY() < chunkY && chunk.getX() > chunkX)
 				return;
 		}
 		
 		//Chunk at location not found, don't do anything
 	}
-	
-	public String getElement(int tileX, int tileY) {
-		int chunkX = tileX / ChunkData.SIZE;
-		int chunkY = tileY / ChunkData.SIZE;
 		
+	public void setElement(int tileX, int tileY, String elementId) {
+		int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
+		int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
+		
+		int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+		if (tileX < 0)
+			xWithinChunk = ChunkData.SIZE - xWithinChunk;
+		int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+		if (tileY < 0)
+			yWithinChunk = ChunkData.SIZE - yWithinChunk;
+		
+		setElement(chunkX, chunkY, xWithinChunk, yWithinChunk, elementId);
+	}
+	
+	public String getElement(int chunkX, int chunkY, int xWithinChunk, int yWithinChunk) {
 		for (Chunk chunk : chunks) {
 			if (chunk.getX() == chunkX && chunk.getY() == chunkY) {
-				int xWithinChunk = tileX % ChunkData.SIZE;
-				int yWithinChunk = tileY % ChunkData.SIZE;
-				
 				return chunk.getElements()[yWithinChunk][xWithinChunk];
 			}
 			
 			//At this point, chunk is assumed to not be there
-			if (chunk.getY() > chunkY && chunk.getX() > chunkX)
+			if (chunk.getY() < chunkY && chunk.getX() > chunkX)
 				return null;
 		}
 		
 		//Chunk at location not found, return null
 		return null;
+	}
+	
+	public String getElement(int tileX, int tileY) {
+		int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
+		int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
+		
+		int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+		if (tileX < 0)
+			xWithinChunk = ChunkData.SIZE - xWithinChunk;
+		int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+		if (tileY < 0)
+			yWithinChunk = ChunkData.SIZE - yWithinChunk;
+		
+		return getElement(chunkX, chunkY, xWithinChunk, yWithinChunk);
 	}
 	
 	public ArrayList<Chunk> getChunks() {

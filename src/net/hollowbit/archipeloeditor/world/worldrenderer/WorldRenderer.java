@@ -15,6 +15,7 @@ import net.hollowbit.archipeloeditor.changes.MapChange;
 import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloeditor.world.MapElement;
 import net.hollowbit.archipeloeditor.world.MapTile;
+import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.CollisionRect;
 
 public class WorldRenderer extends ApplicationAdapter implements InputProcessor {
@@ -93,6 +94,7 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 		if (tileX >= editor.getMap().getMaxTileX() || tileY >= editor.getMap().getMaxTileY() || tileX < editor.getMap().getMinTileX() || tileY < editor.getMap().getMinTileY())
 			return false;
 		
+		
 		if (button == Buttons.RIGHT) {
 			switch (editor.getSelectedLayer()) {
 			case MainEditor.TILE_LAYER:
@@ -102,7 +104,7 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 				editor.getTileList().setSelectedValue(editor.getAssetManager().getElementByID(editor.getMap().getElement(tileX, tileY)), true);
 				break;
 			}
-		} else if (button == Buttons.LEFT && !  Gdx.input.isKeyPressed(Keys.SPACE)) {
+		} else if (button == Buttons.LEFT && !Gdx.input.isKeyPressed(Keys.SPACE)) {
 			switch(editor.getSelectedLayer()) {
 			case MainEditor.TILE_LAYER:
 				switch (editor.getSelectedTool()) {
@@ -119,9 +121,19 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 						editor.getChangeList().addChanges(new MapChange(editor.getMap()));
 						editor.setJustSaved(false);
 						
-						boolean[][] filledTiles = new boolean[editor.getMap().getHeight()][editor.getMap().getWidth()];
+						boolean[][] filledTiles = new boolean[ChunkData.SIZE][ChunkData.SIZE];
 						String replaceTile = editor.getMap().getTile(tileX, tileY);
-						bucketFillTiles(replaceTile, filledTiles, tileX, tileY);
+						
+						int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
+						int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
+						int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+						if (tileX < 0)
+							xWithinChunk = ChunkData.SIZE - xWithinChunk;
+						int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+						if (tileY < 0)
+							yWithinChunk = ChunkData.SIZE - yWithinChunk;
+						
+						bucketFillTiles(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk, yWithinChunk);
 					}
 					break;
 				case MainEditor.ENTITY_TOOL:
@@ -150,7 +162,18 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 						
 						boolean[][] filledElements = new boolean[editor.getMap().getHeight()][editor.getMap().getWidth()];
 						String replaceElement = editor.getMap().getElement(tileX, tileY);
-						bucketFillElements(replaceElement, filledElements, tileX, tileY);
+						
+						int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
+						int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
+						
+						int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+						if (tileX < 0)
+							xWithinChunk = ChunkData.SIZE - xWithinChunk;
+						int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+						if (tileY < 0)
+							yWithinChunk = ChunkData.SIZE - yWithinChunk;
+						
+						bucketFillElements(replaceElement, filledElements, chunkX, chunkY, xWithinChunk, yWithinChunk);
 					}
 					break;
 				case MainEditor.ENTITY_TOOL:
@@ -199,7 +222,18 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 					if(editor.getSelectedItemValue() != null) {
 						boolean[][] filledTiles = new boolean[editor.getMap().getHeight()][editor.getMap().getWidth()];
 						String replaceTile = editor.getMap().getTile(tileX, tileY);
-						bucketFillTiles(replaceTile, filledTiles, tileX, tileY);
+						
+						int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
+						int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
+						
+						int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+						if (tileX < 0)
+							xWithinChunk = ChunkData.SIZE - xWithinChunk;
+						int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+						if (tileY < 0)
+							yWithinChunk = ChunkData.SIZE - yWithinChunk;
+						
+						bucketFillTiles(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk, yWithinChunk);
 					}
 					break;
 				}
@@ -215,7 +249,18 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 					if(editor.getSelectedItemValue() != null) {
 						boolean[][] filledElements = new boolean[editor.getMap().getHeight()][editor.getMap().getWidth()];
 						String replaceElement = editor.getMap().getElement(tileX, tileY);
-						bucketFillElements(replaceElement, filledElements, tileX, tileY);
+						
+						int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
+						int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
+						
+						int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+						if (tileX < 0)
+							xWithinChunk = ChunkData.SIZE - xWithinChunk;
+						int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+						if (tileY < 0)
+							yWithinChunk = ChunkData.SIZE - yWithinChunk;
+						
+						bucketFillElements(replaceElement, filledElements, chunkX, chunkY, xWithinChunk, yWithinChunk);
 					}
 					break;
 				}
@@ -296,41 +341,57 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 	}
 
 	//Recursion bucket fill algorithm for tiles
-	public void bucketFillTiles(String replaceTile, boolean[][] filledTiles, int tileX, int tileY){
-		if(tileX >= editor.getMap().getHeight()) return;
-		if(tileY >= editor.getMap().getWidth()) return;
-		if(tileX < 0) return;
-		if(tileY < 0) return;
+	public void bucketFillTiles(String replaceTile, boolean[][] filledTiles, int chunkX, int chunkY, int xWithinChunk, int yWithinChunk){
+		if(xWithinChunk >= ChunkData.SIZE) return;
+		if(yWithinChunk >= ChunkData.SIZE) return;
+		if(xWithinChunk < 0) return;
+		if(yWithinChunk < 0) return;
 		
-		if(filledTiles[tileX][tileY]) return;
-		if(!editor.getMap().getTile(tileX, tileY).equals(replaceTile)) return;
+		if(filledTiles[yWithinChunk][xWithinChunk]) return;
+		if(editor.getMap().getTile(chunkX, chunkY, xWithinChunk, yWithinChunk) == null) {
+			if (replaceTile != null)
+				return;
+		} else {
+			if (replaceTile == null)
+				return;
+			
+			if(!editor.getMap().getTile(chunkX, chunkY, xWithinChunk, yWithinChunk).equals(replaceTile))
+				return;
+		}
 		
-		filledTiles[tileX][tileY] = true;
+		filledTiles[yWithinChunk][xWithinChunk] = true;
 		
-		editor.getMap().setTile(tileX, tileY, ((MapTile) editor.getSelectedItemValue()).id);
-		bucketFillTiles(replaceTile, filledTiles, tileX + 1, tileY);
-		bucketFillTiles(replaceTile, filledTiles, tileX - 1, tileY);
-		bucketFillTiles(replaceTile, filledTiles, tileX, tileY + 1);
-		bucketFillTiles(replaceTile, filledTiles, tileX, tileY - 1);
+		editor.getMap().setTile(chunkX, chunkY, xWithinChunk, yWithinChunk, ((MapTile) editor.getSelectedItemValue()).id);
+		bucketFillTiles(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk + 1, yWithinChunk);
+		bucketFillTiles(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk - 1, yWithinChunk);
+		bucketFillTiles(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk, yWithinChunk + 1);
+		bucketFillTiles(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk, yWithinChunk - 1);
 	}
 
 	//Recursion bucket fill algorithm for elements
-	public void bucketFillElements(String replaceTile, boolean[][] filledTiles, int tileX, int tileY){
-		if(tileX >= editor.getMap().getHeight()) return;
-		if(tileY >= editor.getMap().getWidth()) return;
-		if(tileX < 0) return;
-		if(tileY < 0) return;
+	public void bucketFillElements(String replaceTile, boolean[][] filledTiles, int chunkX, int chunkY, int xWithinChunk, int yWithinChunk){
+		if(xWithinChunk >= ChunkData.SIZE) return;
+		if(yWithinChunk >= ChunkData.SIZE) return;
+		if(xWithinChunk < 0) return;
+		if(yWithinChunk < 0) return;
 		
-		if(filledTiles[tileX][tileY]) return;
-		if(!editor.getMap().getElement(tileX, tileY).equals(replaceTile)) return;
+		if(filledTiles[yWithinChunk][xWithinChunk]) return;
+		if(editor.getMap().getElement(chunkX, chunkY, xWithinChunk, yWithinChunk) == null) {
+			if (replaceTile != null)
+				return;
+		} else {
+			if (replaceTile == null)
+				return;
+			
+			if(!editor.getMap().getElement(chunkX, chunkY, xWithinChunk, yWithinChunk).equals(replaceTile))
+				return;
+		}		filledTiles[yWithinChunk][xWithinChunk] = true;
 		
-		filledTiles[tileX][tileY] = true;
-		
-		editor.getMap().setElement(tileX, tileY, ((MapElement) editor.getSelectedItemValue()).id);
-		bucketFillElements(replaceTile, filledTiles, tileX + 1, tileY);
-		bucketFillElements(replaceTile, filledTiles, tileX - 1, tileY);
-		bucketFillElements(replaceTile, filledTiles, tileX, tileY + 1);
-		bucketFillElements(replaceTile, filledTiles, tileX, tileY - 1);
+		editor.getMap().setElement(chunkX, chunkY, xWithinChunk, yWithinChunk, ((MapElement) editor.getSelectedItemValue()).id);
+		bucketFillElements(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk + 1, yWithinChunk);
+		bucketFillElements(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk - 1, yWithinChunk);
+		bucketFillElements(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk, yWithinChunk + 1);
+		bucketFillElements(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk, yWithinChunk - 1);
 	}
 
 }
