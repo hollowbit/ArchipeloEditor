@@ -58,6 +58,10 @@ import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglCanvas;
 
 import net.hollowbit.archipeloeditor.changes.ChangeList;
+import net.hollowbit.archipeloeditor.tools.editortools.Bucket;
+import net.hollowbit.archipeloeditor.tools.editortools.EntityAdderTool;
+import net.hollowbit.archipeloeditor.tools.editortools.Pencil;
+import net.hollowbit.archipeloeditor.tools.editortools.Tool;
 import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloeditor.world.Map;
 import net.hollowbit.archipeloeditor.world.MapElement;
@@ -82,7 +86,7 @@ public class MainEditor implements Runnable {
 	private boolean showTiles = true;
 	private boolean showElements = true;
 	private int selectedLayer = 0;//0 = tiles, 1 = elements
-	private int selectedTool = 0;//0 = pencil, 1 = bucket	
+	private Tool selectedTool;
 	private String saveLocation = null;	
 	private boolean showGrid = false;
 	
@@ -161,6 +165,8 @@ public class MainEditor implements Runnable {
 	
 	//Method to initialize all components, keeps the constructor clean
 	private void initialize() {
+		MainEditor editor = this;
+		
 		frame = new JFrame("Archipelo Map Editor v1.0");
 		frame.setBounds(100, 100, 1280, 720);
 		frame.setLocationRelativeTo(null);
@@ -512,12 +518,13 @@ public class MainEditor implements Runnable {
 		//Pencil
 		final JToggleButton btnPencilTool = new JToggleButton(new ImageIcon(pencilIcon));
 		btnPencilTool.setSelected(true);
+		selectedTool = new Pencil(editor, worldRenderer);
 		btnPencilTool.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
 				btnBucketTool.setSelected(false);
 				btnEntityTool.setSelected(false);
-				selectedTool = 0;
+				selectedTool = new Pencil(editor, worldRenderer);
 			}
 		});
 		GridBagConstraints gbc_btnPencilTool = new GridBagConstraints();
@@ -532,7 +539,7 @@ public class MainEditor implements Runnable {
 			public void mouseReleased(MouseEvent arg0) {
 				btnPencilTool.setSelected(false);
 				btnEntityTool.setSelected(false);
-				selectedTool = 1;
+				selectedTool = new Bucket(editor, worldRenderer);
 			}
 		});
 		GridBagConstraints gbc_btnBucketTool = new GridBagConstraints();
@@ -547,7 +554,7 @@ public class MainEditor implements Runnable {
 			public void mouseReleased(MouseEvent arg0) {
 				btnPencilTool.setSelected(false);
 				btnBucketTool.setSelected(false);
-				selectedTool = 2;
+				selectedTool = new EntityAdderTool(editor, worldRenderer);
 			}
 		});
 		GridBagConstraints gbc_btnEntityTool = new GridBagConstraints();
@@ -1004,7 +1011,7 @@ public class MainEditor implements Runnable {
 		return list.getSelectedValue();
 	}
 	
-	public int getSelectedTool() {
+	public Tool getSelectedTool() {
 		return selectedTool;
 	}
 	

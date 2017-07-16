@@ -9,18 +9,13 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
-import net.hollowbit.archipeloeditor.EntityAdder;
 import net.hollowbit.archipeloeditor.MainEditor;
-import net.hollowbit.archipeloeditor.changes.MapChange;
 import net.hollowbit.archipeloeditor.world.AssetManager;
-import net.hollowbit.archipeloeditor.world.MapElement;
-import net.hollowbit.archipeloeditor.world.MapTile;
-import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.CollisionRect;
 
 public class WorldRenderer extends ApplicationAdapter implements InputProcessor {
 	
-	public static final float REDO_UNDO_TIMER = 0.1f;
+	public static final float REDO_UNDO_TIMER = 0.15f;
 	public static final float UNITS_PER_PIXEL = 1 / 3f;//World pixels per screen pixel.
 	private static final float ZOOM_SCALE = 0.2f;
 	
@@ -127,107 +122,21 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 				break;
 			}
 		} else if (button == Buttons.LEFT && !Gdx.input.isKeyPressed(Keys.SPACE)) {
-			switch(editor.getSelectedLayer()) {
-			case MainEditor.TILE_LAYER:
-				switch (editor.getSelectedTool()) {
-				case MainEditor.PENCIL_TOOL:
-					if(editor.getSelectedItemValue() != null) {
-						editor.getChangeList().addChanges(new MapChange(editor.getMap()));
-						editor.setJustSaved(false);
-						
-						if (shiftPressed())
-							drawLine(lastX, lastY, tileX, tileY);
-						else
-							editor.getMap().setTile(tileX, tileY, ((MapTile) editor.getSelectedItemValue()).id);
-							
-						lastX = tileX;
-						lastY = tileY;
-					}
-					break;
-				case MainEditor.BUCKET_TOOL:
-					if(editor.getSelectedItemValue() != null) {
-						editor.getChangeList().addChanges(new MapChange(editor.getMap()));
-						editor.setJustSaved(false);
-						
-						boolean[][] filledTiles = new boolean[ChunkData.SIZE][ChunkData.SIZE];
-						String replaceTile = editor.getMap().getTile(tileX, tileY);
-						
-						int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
-						int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
-						int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
-						if (tileX < 0)
-							xWithinChunk = ChunkData.SIZE - xWithinChunk;
-						int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
-						if (tileY < 0)
-							yWithinChunk = ChunkData.SIZE - yWithinChunk;
-						
-						bucketFillTiles(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk, yWithinChunk);
-					}
-					break;
-				case MainEditor.ENTITY_TOOL:
-					if (!editor.isWindowOpen("entity-adder")) {
-						editor.addOpenWindow("entity-adder");
-						EntityAdder entityAdder = new EntityAdder(editor, (int) mouseLocation.x, (int) mouseLocation.y);
-						entityAdder.setVisible(true);
-					}
-					break;
-				}
-				break;
-			case MainEditor.ELEMENT_LAYER:
-				switch(editor.getSelectedTool()) {
-				case MainEditor.PENCIL_TOOL:
-					if(editor.getSelectedItemValue() != null) {
-						editor.getChangeList().addChanges(new MapChange(editor.getMap()));
-						editor.setJustSaved(false);
-					
-						if (shiftPressed())
-							drawLine(lastX, lastY, tileX, tileY);
-						else
-							editor.getMap().setElement(tileX, tileY, ((MapElement) editor.getSelectedItemValue()).id);
-						
-						lastX = tileX;
-						lastY = tileY;
-					}
-					break;
-				case MainEditor.BUCKET_TOOL:
-					if(editor.getSelectedItemValue() != null) {
-						editor.getChangeList().addChanges(new MapChange(editor.getMap()));
-						editor.setJustSaved(false);
-						
-						boolean[][] filledElements = new boolean[editor.getMap().getHeight()][editor.getMap().getWidth()];
-						String replaceElement = editor.getMap().getElement(tileX, tileY);
-						
-						int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
-						int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
-						
-						int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
-						if (tileX < 0)
-							xWithinChunk = ChunkData.SIZE - xWithinChunk;
-						int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
-						if (tileY < 0)
-							yWithinChunk = ChunkData.SIZE - yWithinChunk;
-						
-						bucketFillElements(replaceElement, filledElements, chunkX, chunkY, xWithinChunk, yWithinChunk);
-					}
-					break;
-				case MainEditor.ENTITY_TOOL:
-					if (!editor.isWindowOpen("entity-adder")) {
-						editor.addOpenWindow("entity-adder");
-						EntityAdder entityAdder = new EntityAdder(editor, (int) mouseLocation.x, (int) mouseLocation.y);
-						entityAdder.setVisible(true);
-					}
-					break;
-				}
-				editor.getChangeList().addChanges(new MapChange(editor.getMap()));
-				editor.setJustSaved(false);
-				break;
-			}
+			if (editor.getSelectedTool() != null)
+				editor.getSelectedTool().touchDown(mouseLocation.x, mouseLocation.y, tileX, tileY);
 		}
 		return true;
 	}
 
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+		Vector2 mouseLocation = cam.unproject(new Vector2(screenX, screenY));
+		
+		int tileX = (int) (mouseLocation.x / MainEditor.TILE_SIZE);
+		int tileY = (int) (mouseLocation.y / MainEditor.TILE_SIZE);
+	
+		if (editor.getSelectedTool() != null)
+			editor.getSelectedTool().touchUp(mouseLocation.x, mouseLocation.y, tileX, tileY);
 		return true;
 	}
 
@@ -245,211 +154,13 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 			return false;
 		
 		if (!Gdx.input.isKeyPressed(Keys.SPACE)) {
-			switch (editor.getSelectedLayer()) {
-			case MainEditor.TILE_LAYER:
-				switch (editor.getSelectedTool()) {
-				case MainEditor.PENCIL_TOOL:
-					if(editor.getSelectedItemValue() != null) {
-						drawLine(lastX, lastY, tileX, tileY);
-						lastX = tileX;
-						lastY = tileY;
-					}
-					break;
-				case MainEditor.BUCKET_TOOL:
-					if(editor.getSelectedItemValue() != null) {
-						boolean[][] filledTiles = new boolean[editor.getMap().getHeight()][editor.getMap().getWidth()];
-						String replaceTile = editor.getMap().getTile(tileX, tileY);
-						
-						int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
-						int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
-						
-						int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
-						if (tileX < 0)
-							xWithinChunk = ChunkData.SIZE - xWithinChunk;
-						int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
-						if (tileY < 0)
-							yWithinChunk = ChunkData.SIZE - yWithinChunk;
-						
-						bucketFillTiles(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk, yWithinChunk);
-					}
-					break;
-				}
-				break;
-			case MainEditor.ELEMENT_LAYER:
-				switch (editor.getSelectedTool()) {
-				case MainEditor.PENCIL_TOOL:
-					if (editor.getSelectedItemValue() != null) {
-						drawLine(lastX, lastY, tileX, tileY);
-						lastX = tileX;
-						lastY = tileY;
-					}
-					break;
-				case MainEditor.BUCKET_TOOL:
-					if(editor.getSelectedItemValue() != null) {
-						boolean[][] filledElements = new boolean[editor.getMap().getHeight()][editor.getMap().getWidth()];
-						String replaceElement = editor.getMap().getElement(tileX, tileY);
-						
-						int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
-						int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
-						
-						int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
-						if (tileX < 0)
-							xWithinChunk = ChunkData.SIZE - xWithinChunk;
-						int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
-						if (tileY < 0)
-							yWithinChunk = ChunkData.SIZE - yWithinChunk;
-						
-						bucketFillElements(replaceElement, filledElements, chunkX, chunkY, xWithinChunk, yWithinChunk);
-					}
-					break;
-				}
-				break;
-			}
+			if (editor.getSelectedTool() != null)
+				editor.getSelectedTool().touchDragged(mouseLocation.x, mouseLocation.y, tileX, tileY);
 		}
 		return true;
 	}
 	
-	/**
-	 * Draws a line using the selected element or tile given the limits of the line.
-	 * The line is 1 pixel wide.
-	 * Will simply not do anything if there is no selected tile or element.
-	 * @param startX
-	 * @param startY
-	 * @param endX
-	 * @param endY
-	 */
-	public void drawLine(int x1, int y1, int x2, int y2) {
-		if (editor.getSelectedItemValue() == null)
-			return;
-		
-		if (x1 == x2 && y1 == y2) {
-			if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
-        		editor.getMap().setTile(x1, y1, ((MapTile) editor.getSelectedItemValue()).id);
-        	else
-        		editor.getMap().setElement(x1, y1, ((MapElement) editor.getSelectedItemValue()).id);
-			return;
-		}
-		
-		int signumY = (int) Math.signum(y2 - y1);
-		int deltaX = Math.abs(x2 - x1) + 1;
-		
-		if (deltaX == 1) {
-			if (y1 < y2) {
-				for (int y = y1; y < y2; y++) {
-					if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
-		        		editor.getMap().setTile(x1, y, ((MapTile) editor.getSelectedItemValue()).id);
-		        	else
-		        		editor.getMap().setElement(x1, y, ((MapElement) editor.getSelectedItemValue()).id);
-				}
-			} else {
-				for (int y = y2; y < y1; y++) {
-					if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
-		        		editor.getMap().setTile(x1, y, ((MapTile) editor.getSelectedItemValue()).id);
-		        	else
-		        		editor.getMap().setElement(x1, y, ((MapElement) editor.getSelectedItemValue()).id);
-				}
-			}
-			return;
-		}
-		
-		int deltaY = Math.abs(y2 - y1) + 1;
-		
-		if (deltaY == 1) {
-			if (x1 < x2) {
-				for (int x = x1; x <= x2; x++) {
-					if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
-		        		editor.getMap().setTile(x, y1, ((MapTile) editor.getSelectedItemValue()).id);
-		        	else
-		        		editor.getMap().setElement(x, y1, ((MapElement) editor.getSelectedItemValue()).id);
-				}
-			} else {
-				for (int x = x2; x <= x1; x++) {
-					if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
-		        		editor.getMap().setTile(x, y1, ((MapTile) editor.getSelectedItemValue()).id);
-		        	else
-		        		editor.getMap().setElement(x, y1, ((MapElement) editor.getSelectedItemValue()).id);
-				}
-			}
-			return;
-		}
-		
-		float deltaError = Math.abs((float) deltaY / deltaX);
-		
-		float error = 0;
-		int y = y1;
-		
-		if (x1 < x2) {
-			for (int x = x1; x <= x2; x++) {
-				//Plot point
-				if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
-	        		editor.getMap().setTile(x, y, ((MapTile) editor.getSelectedItemValue()).id);
-	        	else
-	        		editor.getMap().setElement(x, y, ((MapElement) editor.getSelectedItemValue()).id);
-				error += deltaError;
-				
-				while(error >= 1) {
-					//Plot point
-					if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
-	            		editor.getMap().setTile(x, y, ((MapTile) editor.getSelectedItemValue()).id);
-	            	else
-	            		editor.getMap().setElement(x, y, ((MapElement) editor.getSelectedItemValue()).id);
-					
-					//Update error
-					y += signumY;
-					error -= 1;
-					if (signumY > 0) {
-						if (y > y2)
-							break;
-					} else {
-						if (y < y2)
-							break;
-					}
-				}
-				if (signumY > 0) {
-					if (y > y2)
-						break;
-				} else {
-					if (y < y2)
-						break;
-				}
-			}
-		} else {
-			for (int x = x1; x >= x2; x--) {
-				//Plot point
-				if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
-	        		editor.getMap().setTile(x, y, ((MapTile) editor.getSelectedItemValue()).id);
-	        	else
-	        		editor.getMap().setElement(x, y, ((MapElement) editor.getSelectedItemValue()).id);
-				error += deltaError;
-				
-				while(error >= 1) {
-					//Plot point
-					if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
-	            		editor.getMap().setTile(x, y, ((MapTile) editor.getSelectedItemValue()).id);
-	            	else
-	            		editor.getMap().setElement(x, y, ((MapElement) editor.getSelectedItemValue()).id);
-					
-					//Update error
-					y += signumY;
-					error -= 1;
-					if (signumY > 0) {
-						if (y > y2)
-							break;
-					} else {
-						if (y < y2)
-							break;
-					}
-				}
-				if (signumY > 0) {
-					if (y > y2)
-						break;
-				} else {
-					if (y < y2)
-						break;
-				}
-			}
-		}
-	}
+	
 
 	@Override
 	public boolean mouseMoved(int screenX, int screenY) {
@@ -503,15 +214,15 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 		return false;
 	}
 	
-	protected boolean controlPressed() {
+	public boolean controlPressed() {
 		return Gdx.input.isKeyPressed(Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Keys.CONTROL_RIGHT);
 	}
 	
-	protected boolean shiftPressed() {
+	public boolean shiftPressed() {
 		return Gdx.input.isKeyPressed(Keys.SHIFT_LEFT) || Gdx.input.isKeyPressed(Keys.SHIFT_RIGHT);
 	}
 	
-	protected boolean altPressed() {
+	public boolean altPressed() {
 		return Gdx.input.isKeyPressed(Keys.ALT_LEFT) || Gdx.input.isKeyPressed(Keys.ALT_RIGHT);
 	}
 
@@ -523,60 +234,6 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 	@Override
 	public boolean keyTyped(char character) {
 		return false;
-	}
-
-	//Recursion bucket fill algorithm for tiles
-	public void bucketFillTiles(String replaceTile, boolean[][] filledTiles, int chunkX, int chunkY, int xWithinChunk, int yWithinChunk){
-		if(xWithinChunk >= ChunkData.SIZE) return;
-		if(yWithinChunk >= ChunkData.SIZE) return;
-		if(xWithinChunk < 0) return;
-		if(yWithinChunk < 0) return;
-		
-		if(filledTiles[yWithinChunk][xWithinChunk]) return;
-		if(editor.getMap().getTile(chunkX, chunkY, xWithinChunk, yWithinChunk) == null) {
-			if (replaceTile != null)
-				return;
-		} else {
-			if (replaceTile == null)
-				return;
-			
-			if(!editor.getMap().getTile(chunkX, chunkY, xWithinChunk, yWithinChunk).equals(replaceTile))
-				return;
-		}
-		
-		filledTiles[yWithinChunk][xWithinChunk] = true;
-		
-		editor.getMap().setTile(chunkX, chunkY, xWithinChunk, yWithinChunk, ((MapTile) editor.getSelectedItemValue()).id);
-		bucketFillTiles(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk + 1, yWithinChunk);
-		bucketFillTiles(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk - 1, yWithinChunk);
-		bucketFillTiles(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk, yWithinChunk + 1);
-		bucketFillTiles(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk, yWithinChunk - 1);
-	}
-
-	//Recursion bucket fill algorithm for elements
-	public void bucketFillElements(String replaceTile, boolean[][] filledTiles, int chunkX, int chunkY, int xWithinChunk, int yWithinChunk){
-		if(xWithinChunk >= ChunkData.SIZE) return;
-		if(yWithinChunk >= ChunkData.SIZE) return;
-		if(xWithinChunk < 0) return;
-		if(yWithinChunk < 0) return;
-		
-		if(filledTiles[yWithinChunk][xWithinChunk]) return;
-		if(editor.getMap().getElement(chunkX, chunkY, xWithinChunk, yWithinChunk) == null) {
-			if (replaceTile != null)
-				return;
-		} else {
-			if (replaceTile == null)
-				return;
-			
-			if(!editor.getMap().getElement(chunkX, chunkY, xWithinChunk, yWithinChunk).equals(replaceTile))
-				return;
-		}		filledTiles[yWithinChunk][xWithinChunk] = true;
-		
-		editor.getMap().setElement(chunkX, chunkY, xWithinChunk, yWithinChunk, ((MapElement) editor.getSelectedItemValue()).id);
-		bucketFillElements(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk + 1, yWithinChunk);
-		bucketFillElements(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk - 1, yWithinChunk);
-		bucketFillElements(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk, yWithinChunk + 1);
-		bucketFillElements(replaceTile, filledTiles, chunkX, chunkY, xWithinChunk, yWithinChunk - 1);
 	}
 
 }

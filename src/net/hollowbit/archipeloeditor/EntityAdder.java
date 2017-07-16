@@ -16,7 +16,7 @@ public class EntityAdder extends JFrame {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public EntityAdder (MainEditor editor, int x, int y) {
+	public EntityAdder (MainEditor editor, float x, float y) {
 		setAlwaysOnTop(true);
 		setResizable(false);
 		setTitle("Entity Adder");
