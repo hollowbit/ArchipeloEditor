@@ -19,7 +19,8 @@ import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.CollisionRect;
 
 public class WorldRenderer extends ApplicationAdapter implements InputProcessor {
-
+	
+	public static final float REDO_UNDO_TIMER = 0.1f;
 	public static final float UNITS_PER_PIXEL = 1 / 3f;//World pixels per screen pixel.
 	private static final float ZOOM_SCALE = 0.2f;
 	
@@ -29,6 +30,10 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 	protected GameCamera cam;
 	
 	protected boolean assetsLoaded = false;
+	
+	protected int lastX, lastY;
+	protected float redoTimer = 0;
+	protected float undoTimer = 0;
 	
 	public WorldRenderer(MainEditor editor, AssetManager assetManager) {
 		this.editor = editor;
@@ -53,6 +58,24 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 		}
 		Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		
+		if (Gdx.input.isKeyPressed(Keys.Z) && controlPressed() && !shiftPressed()) {
+			undoTimer -= Gdx.graphics.getDeltaTime();
+			if (undoTimer <= 0) {
+				undoTimer = REDO_UNDO_TIMER + undoTimer;
+				editor.undo();
+			}
+		} else
+			undoTimer = 0;
+		
+		if (((Gdx.input.isKeyPressed(Keys.Z) && shiftPressed()) || Gdx.input.isKeyPressed(Keys.Y)) && controlPressed()) {
+			redoTimer -= Gdx.graphics.getDeltaTime();
+			if (redoTimer <= 0) {
+				redoTimer = REDO_UNDO_TIMER - redoTimer;
+				editor.redo();
+			}
+		} else
+			redoTimer = 0;
 		
 		cam.update(Gdx.graphics.getDeltaTime());
 		
@@ -94,7 +117,6 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 		if (tileX >= editor.getMap().getMaxTileX() || tileY >= editor.getMap().getMaxTileY() || tileX < editor.getMap().getMinTileX() || tileY < editor.getMap().getMinTileY())
 			return false;
 		
-		
 		if (button == Buttons.RIGHT) {
 			switch (editor.getSelectedLayer()) {
 			case MainEditor.TILE_LAYER:
@@ -112,8 +134,14 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 					if(editor.getSelectedItemValue() != null) {
 						editor.getChangeList().addChanges(new MapChange(editor.getMap()));
 						editor.setJustSaved(false);
-					
-						editor.getMap().setTile(tileX, tileY, ((MapTile) editor.getSelectedItemValue()).id);
+						
+						if (shiftPressed())
+							drawLine(lastX, lastY, tileX, tileY);
+						else
+							editor.getMap().setTile(tileX, tileY, ((MapTile) editor.getSelectedItemValue()).id);
+							
+						lastX = tileX;
+						lastY = tileY;
 					}
 					break;
 				case MainEditor.BUCKET_TOOL:
@@ -152,7 +180,13 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 						editor.getChangeList().addChanges(new MapChange(editor.getMap()));
 						editor.setJustSaved(false);
 					
-						editor.getMap().setElement(tileX, tileY, ((MapElement) editor.getSelectedItemValue()).id);
+						if (shiftPressed())
+							drawLine(lastX, lastY, tileX, tileY);
+						else
+							editor.getMap().setElement(tileX, tileY, ((MapElement) editor.getSelectedItemValue()).id);
+						
+						lastX = tileX;
+						lastY = tileY;
 					}
 					break;
 				case MainEditor.BUCKET_TOOL:
@@ -215,8 +249,11 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 			case MainEditor.TILE_LAYER:
 				switch (editor.getSelectedTool()) {
 				case MainEditor.PENCIL_TOOL:
-					if(editor.getSelectedItemValue() != null)
-						editor.getMap().setTile(tileX, tileY, ((MapTile) editor.getSelectedItemValue()).id);
+					if(editor.getSelectedItemValue() != null) {
+						drawLine(lastX, lastY, tileX, tileY);
+						lastX = tileX;
+						lastY = tileY;
+					}
 					break;
 				case MainEditor.BUCKET_TOOL:
 					if(editor.getSelectedItemValue() != null) {
@@ -242,7 +279,9 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 				switch (editor.getSelectedTool()) {
 				case MainEditor.PENCIL_TOOL:
 					if (editor.getSelectedItemValue() != null) {
-						editor.getMap().setTile(tileX, tileY, ((MapElement) editor.getSelectedItemValue()).id);
+						drawLine(lastX, lastY, tileX, tileY);
+						lastX = tileX;
+						lastY = tileY;
 					}
 					break;
 				case MainEditor.BUCKET_TOOL:
@@ -268,6 +307,148 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 			}
 		}
 		return true;
+	}
+	
+	/**
+	 * Draws a line using the selected element or tile given the limits of the line.
+	 * The line is 1 pixel wide.
+	 * Will simply not do anything if there is no selected tile or element.
+	 * @param startX
+	 * @param startY
+	 * @param endX
+	 * @param endY
+	 */
+	public void drawLine(int x1, int y1, int x2, int y2) {
+		if (editor.getSelectedItemValue() == null)
+			return;
+		
+		if (x1 == x2 && y1 == y2) {
+			if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
+        		editor.getMap().setTile(x1, y1, ((MapTile) editor.getSelectedItemValue()).id);
+        	else
+        		editor.getMap().setElement(x1, y1, ((MapElement) editor.getSelectedItemValue()).id);
+			return;
+		}
+		
+		int signumY = (int) Math.signum(y2 - y1);
+		int deltaX = Math.abs(x2 - x1) + 1;
+		
+		if (deltaX == 1) {
+			if (y1 < y2) {
+				for (int y = y1; y < y2; y++) {
+					if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
+		        		editor.getMap().setTile(x1, y, ((MapTile) editor.getSelectedItemValue()).id);
+		        	else
+		        		editor.getMap().setElement(x1, y, ((MapElement) editor.getSelectedItemValue()).id);
+				}
+			} else {
+				for (int y = y2; y < y1; y++) {
+					if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
+		        		editor.getMap().setTile(x1, y, ((MapTile) editor.getSelectedItemValue()).id);
+		        	else
+		        		editor.getMap().setElement(x1, y, ((MapElement) editor.getSelectedItemValue()).id);
+				}
+			}
+			return;
+		}
+		
+		int deltaY = Math.abs(y2 - y1) + 1;
+		
+		if (deltaY == 1) {
+			if (x1 < x2) {
+				for (int x = x1; x <= x2; x++) {
+					if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
+		        		editor.getMap().setTile(x, y1, ((MapTile) editor.getSelectedItemValue()).id);
+		        	else
+		        		editor.getMap().setElement(x, y1, ((MapElement) editor.getSelectedItemValue()).id);
+				}
+			} else {
+				for (int x = x2; x <= x1; x++) {
+					if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
+		        		editor.getMap().setTile(x, y1, ((MapTile) editor.getSelectedItemValue()).id);
+		        	else
+		        		editor.getMap().setElement(x, y1, ((MapElement) editor.getSelectedItemValue()).id);
+				}
+			}
+			return;
+		}
+		
+		float deltaError = Math.abs((float) deltaY / deltaX);
+		
+		float error = 0;
+		int y = y1;
+		
+		if (x1 < x2) {
+			for (int x = x1; x <= x2; x++) {
+				//Plot point
+				if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
+	        		editor.getMap().setTile(x, y, ((MapTile) editor.getSelectedItemValue()).id);
+	        	else
+	        		editor.getMap().setElement(x, y, ((MapElement) editor.getSelectedItemValue()).id);
+				error += deltaError;
+				
+				while(error >= 1) {
+					//Plot point
+					if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
+	            		editor.getMap().setTile(x, y, ((MapTile) editor.getSelectedItemValue()).id);
+	            	else
+	            		editor.getMap().setElement(x, y, ((MapElement) editor.getSelectedItemValue()).id);
+					
+					//Update error
+					y += signumY;
+					error -= 1;
+					if (signumY > 0) {
+						if (y > y2)
+							break;
+					} else {
+						if (y < y2)
+							break;
+					}
+				}
+				if (signumY > 0) {
+					if (y > y2)
+						break;
+				} else {
+					if (y < y2)
+						break;
+				}
+			}
+		} else {
+			for (int x = x1; x >= x2; x--) {
+				//Plot point
+				if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
+	        		editor.getMap().setTile(x, y, ((MapTile) editor.getSelectedItemValue()).id);
+	        	else
+	        		editor.getMap().setElement(x, y, ((MapElement) editor.getSelectedItemValue()).id);
+				error += deltaError;
+				
+				while(error >= 1) {
+					//Plot point
+					if (editor.getSelectedLayer() == MainEditor.TILE_LAYER)
+	            		editor.getMap().setTile(x, y, ((MapTile) editor.getSelectedItemValue()).id);
+	            	else
+	            		editor.getMap().setElement(x, y, ((MapElement) editor.getSelectedItemValue()).id);
+					
+					//Update error
+					y += signumY;
+					error -= 1;
+					if (signumY > 0) {
+						if (y > y2)
+							break;
+					} else {
+						if (y < y2)
+							break;
+					}
+				}
+				if (signumY > 0) {
+					if (y > y2)
+						break;
+				} else {
+					if (y < y2)
+						break;
+				}
+			}
+		}
 	}
 
 	@Override
@@ -299,7 +480,7 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 			if (controlPressed())
 				editor.setShowElements(!editor.showMapElements());
 			break;
-		case Keys.Z:
+		/*case Keys.Z:
 			if (controlPressed()) {
 				if (shiftPressed())
 					editor.redo();
@@ -307,6 +488,10 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 					editor.undo();
 			}
 			break;
+		case Keys.Y:
+			if (controlPressed())
+				editor.redo();
+			break;*/
 		case Keys.S:
 			if (controlPressed())
 				editor.save();

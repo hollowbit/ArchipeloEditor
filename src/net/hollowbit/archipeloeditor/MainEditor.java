@@ -131,7 +131,7 @@ public class MainEditor implements Runnable {
 					//Load basic images for editor
 					ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 					ICON = ImageIO.read(classLoader.getResourceAsStream("images/icon.png"));
-					CURSOR = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(classLoader.getResourceAsStream("images/cursor.png")), new Point(8, 8), "blank");
+					CURSOR = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(classLoader.getResourceAsStream("images/cursor.png")), new Point(16, 8), "blank");
 					MainEditor window = new MainEditor();
 					window.frame.setVisible(true);
 				} catch (Exception e) {

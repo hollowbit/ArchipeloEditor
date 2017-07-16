@@ -2,13 +2,13 @@ package net.hollowbit.archipeloeditor.changes;
 
 import java.util.ArrayList;
 
-import net.hollowbit.archipeloeditor.world.Chunk;
+import net.hollowbit.archipeloeditor.world.ChunkRow;
 import net.hollowbit.archipeloeditor.world.Map;
 
 public class MapChange extends Change {
 	
-	ArrayList<Chunk> chunks;
-	ArrayList<Chunk> redoChunks;
+	ArrayList<ChunkRow> chunkRows;
+	ArrayList<ChunkRow> redoChunkRows;
 	
 	Map map;
 	
@@ -16,31 +16,31 @@ public class MapChange extends Change {
 	public MapChange(Map map) {
 		this.map = map;
 		
-		chunks = new ArrayList<Chunk>();
-		for (Chunk chunk : map.getChunks())
-			chunks.add(new Chunk(chunk));
+		chunkRows = new ArrayList<ChunkRow>();
+		for (ChunkRow chunkRow : map.getChunkRows())
+			chunkRows.add(new ChunkRow(chunkRow));
 	}
 	
 	//Undoes the changes
 	@Override
 	public void undoChange() {
-		redoChunks = new ArrayList<Chunk>();
-		for (Chunk chunk : map.getChunks())
-			chunks.add(new Chunk(chunk));
+		redoChunkRows = new ArrayList<ChunkRow>();
+		for (ChunkRow chunkRow : map.getChunkRows())
+			redoChunkRows.add(new ChunkRow(chunkRow));
 		
-		ArrayList<Chunk> newChunks = new ArrayList<Chunk>();
-		for (Chunk chunk : chunks)
-			newChunks.add(new Chunk(chunk));
-		map.setChunks(newChunks);
+		ArrayList<ChunkRow> newChunkRows = new ArrayList<ChunkRow>();
+		for (ChunkRow chunkRow : chunkRows)
+			newChunkRows.add(new ChunkRow(chunkRow));
+		map.setChunkRows(newChunkRows);
 	}
 	
 	//Redoes undone changes
 	@Override
 	public void redoChanges() {
-		ArrayList<Chunk> newChunks = new ArrayList<Chunk>();
-		for (Chunk chunk : redoChunks)
-			newChunks.add(new Chunk(chunk));
-		map.setChunks(newChunks);
+		ArrayList<ChunkRow> newChunkRows = new ArrayList<ChunkRow>();
+		for (ChunkRow chunkRow : redoChunkRows)
+			newChunkRows.add(new ChunkRow(chunkRow));
+		map.setChunkRows(newChunkRows);
 	}
 
 }
