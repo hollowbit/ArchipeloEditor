@@ -31,6 +31,8 @@ public class Map implements Cloneable {
 	public Map() {
 		chunkRows = new ArrayList<ChunkRow>();
 		entitySnapshots = new ArrayList<EntitySnapshot>();
+		
+		this.addChunk(0, 0);
 	}
 	
 	//Create map from editor
@@ -39,15 +41,11 @@ public class Map implements Cloneable {
 		this.displayName = displayName;
 		this.music = music;
 		this.naturalLighting = naturalLighting;
-
+		
 		chunkRows = new ArrayList<ChunkRow>();
 		entitySnapshots = new ArrayList<EntitySnapshot>();
 		
 		this.addChunk(0, 0);
-		this.addChunk(1, 0);
-		this.addChunk(-1, 0);
-		this.addChunk(-1, -1);
-		this.addChunk(1, 1);
 	}
 	
 	public void draw (AssetManager assetManager, boolean showTiles, boolean showElements, boolean showGrid, int tileX, int tileY, int selectedLayer, Object selectedListValue, SpriteBatch batch, int visibleX, int visibleY, int visibleWidth, int visibleHeight ){
@@ -140,9 +138,16 @@ public class Map implements Cloneable {
 		
 	}
 	
+	public boolean doesChunkExist(int x, int y) {
+		return this.getChunk(x, y) != null;
+	}
+	
 	public void addChunk(int x, int y) {
 		Chunk chunk = new Chunk(x, y);
-		
+		this.addChunk(x, y, chunk);
+	}
+	
+	public void addChunk(int x, int y, Chunk chunk) {
 		ChunkRow rowFound = null;
 		for (ChunkRow row : chunkRows) {
 			if (row.getY() == y) {
@@ -506,9 +511,20 @@ public class Map implements Cloneable {
 	}
 	
 	public void setChunkRows(ArrayList<ChunkRow> chunkRows) {
-		System.out.println("Map.java new rows set");
 		this.chunkRows = chunkRows;
 		sortChunkRows();
 	}
-
+	
+	public Chunk getChunk(int x, int y) {
+		for (ChunkRow row : chunkRows) {
+			if (row.getY() == y) {
+				for (Chunk chunk : row.getChunks()) {
+					if (chunk.getX() == x)
+						return chunk;
+				}
+			}
+		}
+		
+		return null;
+	}
 }

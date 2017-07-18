@@ -43,8 +43,25 @@ public class Chunk {
 		this.elements = data.elements;
 	}
 	
-	public void generate() {
-		//TODO implement generators
+	/**
+	 * Duplicates the values of the given chunk into this one.
+	 * @param chunk
+	 */
+	public void set(Chunk chunkToCopy) {
+		this.x = chunkToCopy.x;
+		this.y = chunkToCopy.y;
+		
+		this.tiles = new String[ChunkData.SIZE][ChunkData.SIZE];
+		for (int r = 0; r < ChunkData.SIZE; r++) {
+			for (int c = 0; c < ChunkData.SIZE; c++)
+				this.tiles[r][c] = chunkToCopy.tiles[r][c];
+		}
+		
+		this.elements = new String[ChunkData.SIZE][ChunkData.SIZE];
+		for (int r = 0; r < ChunkData.SIZE; r++) {
+			for (int c = 0; c < ChunkData.SIZE; c++)
+				this.elements[r][c] = chunkToCopy.elements[r][c];
+		}
 	}
 	
 	public void drawTiles(SpriteBatch batch, AssetManager assetManager, MapTile hoverTile, int hoverX, int hoverY) {

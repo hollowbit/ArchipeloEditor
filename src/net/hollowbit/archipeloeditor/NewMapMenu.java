@@ -23,7 +23,7 @@ public class NewMapMenu extends JFrame {
 	private JTextField textFieldMusic;
 	
 	//Dialog to create a new map
-	public NewMapMenu (NewMapMenuListener listener) {
+	public NewMapMenu (MainEditor editor, NewMapMenuListener listener) {
 		setAlwaysOnTop(true);
 		setResizable(false);
 		setTitle("New Map");

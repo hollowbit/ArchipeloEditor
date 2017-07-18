@@ -29,6 +29,7 @@ public class AssetManager {
 	private Texture grid;
 	private Texture invalid;
 	private Texture blank;
+	private Texture chunk;
 	
 	//Manages tiles and elements
 	
@@ -77,6 +78,10 @@ public class AssetManager {
 		return elementList;
 	}
 	
+	public Texture getChunkTexture() {
+		return chunk;
+	}
+	
 	public Texture getGridTexture() {
 		return grid;
 	}
@@ -93,6 +98,7 @@ public class AssetManager {
 	/*Initiates all Elements!!!*/
 	//////////////////////////
 	public void load () {
+		chunk = new Texture("chunk.png");
 		grid = new Texture("grid.png");
 		invalid = new Texture("invalid.png");
 		blank = new Texture("blank.png");
