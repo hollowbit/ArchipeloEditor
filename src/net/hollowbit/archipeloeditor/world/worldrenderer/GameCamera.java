@@ -41,9 +41,11 @@ public class GameCamera {
 	
 	public void update (float deltatime) {
 		if (Gdx.input.isKeyPressed(Keys.SPACE) && Gdx.input.isTouched()) {
-			cam.translate(-Gdx.input.getDeltaX() * cam.zoom, Gdx.input.getDeltaY() * cam.zoom);
+			Vector2 oldPos = unproject(new Vector2(Gdx.input.getX() - Gdx.input.getDeltaX(), Gdx.input.getY() - Gdx.input.getDeltaY()));
+			Vector2 newPos = unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+			cam.translate(oldPos.x - newPos.x, oldPos.y - newPos.y);
+			cam.update();
 		}
-		cam.update();
 	}
 	
 	public void move (float x, float y, float z) {

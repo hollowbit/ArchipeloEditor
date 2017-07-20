@@ -37,7 +37,6 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglCanvas;
@@ -51,6 +50,7 @@ import net.hollowbit.archipeloeditor.tools.editortools.Tool;
 import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloeditor.world.Map;
 import net.hollowbit.archipeloeditor.world.worldrenderer.WorldRenderer;
+import net.hollowbit.archipeloshared.InvalidMapFolderException;
 
 public class MainEditor implements Runnable {
 
@@ -631,7 +631,8 @@ public class MainEditor implements Runnable {
 	//Shows map open dialog
 	public boolean showMapOpenDialog () {
 		JFileChooser openFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-		openFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
+		openFile.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		openFile.setAcceptAllFileFilterUsed(false);
     	openFile.showOpenDialog(null);
     	File selectedFile = openFile.getSelectedFile();
     	
@@ -641,7 +642,12 @@ public class MainEditor implements Runnable {
     		saveLocation = selectedFile.getPath();
     		lblMapPath.setText("         " + saveLocation);
     		map = new Map();
-    		map.load(selectedFile);
+    		try {
+				map.load(selectedFile);
+			} catch (InvalidMapFolderException e) {
+				map = null;
+				JOptionPane.showMessageDialog(frame, "Could not load the given map folder: " + e.getMessage(), "Error Loading Map", JOptionPane.ERROR_MESSAGE);
+			}
     		return true;
     	}
 	}
@@ -650,7 +656,8 @@ public class MainEditor implements Runnable {
 	public boolean showMapSaveDialog (boolean forceNewLocation) {
 		if (saveLocation == null || forceNewLocation) {
 			JFileChooser saveFile = new JFileChooser(System.getProperty("user.home") + "/Desktop");
-			saveFile.setFileFilter(new FileNameExtensionFilter("json", "json"));
+			saveFile.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			saveFile.setAcceptAllFileFilterUsed(false);
             saveFile.showSaveDialog(null);
             File selectedFile = saveFile.getSelectedFile();
             
@@ -658,18 +665,34 @@ public class MainEditor implements Runnable {
             	return false;
             else {
             	saveLocation = selectedFile.getPath();
-            	saveLocation = saveLocation.replaceFirst("[.][^.]+$", "");
-            	saveLocation = saveLocation + ".json";
-            	lblMapPath.setText("         " + saveLocation);
-                map.save(new File(saveLocation));
-                justSaved = true;
-                JOptionPane.showMessageDialog(frame, "You map was successfully saved!", "Saved!", JOptionPane.INFORMATION_MESSAGE);
+            	lblMapPath.setText("         " + saveLocation + "/" + map.getName());
+            	boolean error = false;
+                try {
+					map.save(new File(saveLocation));
+				} catch (IOException e) {
+					JOptionPane.showMessageDialog(frame, "Could not save the map: " + e.getMessage(), "Error Saving Map", JOptionPane.ERROR_MESSAGE);
+					error = true;
+				}
+                
+                if (!error) {
+	                justSaved = true;
+	                JOptionPane.showMessageDialog(frame, "You map was successfully saved!", "Saved!", JOptionPane.INFORMATION_MESSAGE);
+                }
                 return true;
             }
 		} else {
-			map.save(new File(saveLocation));
-			justSaved = true;
-            JOptionPane.showMessageDialog(frame, "You map was successfully saved!", "Saved!", JOptionPane.INFORMATION_MESSAGE);
+			boolean error = false;
+			try {
+				map.save(new File(saveLocation));
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(frame, "Could not save the map: " + e.getMessage(), "Error Saving Map", JOptionPane.ERROR_MESSAGE);
+				error = true;
+			}
+			
+			if (!error) {
+				justSaved = true;
+            	JOptionPane.showMessageDialog(frame, "You map was successfully saved!", "Saved!", JOptionPane.INFORMATION_MESSAGE);
+			}
 			return true;
 		}
 	}

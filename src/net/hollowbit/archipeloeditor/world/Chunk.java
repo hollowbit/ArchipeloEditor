@@ -1,15 +1,19 @@
 package net.hollowbit.archipeloeditor.world;
 
+import java.util.ArrayList;
+
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloshared.ChunkData;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public class Chunk {
 	
 	private int x, y;
 	private String[][] tiles;
 	private String[][] elements;
+	private ArrayList<EntitySnapshot> entitySnapshots;
 	
 	public Chunk(int x, int y) {
 		super();
@@ -17,6 +21,7 @@ public class Chunk {
 		this.y = y;
 		this.tiles = new String[ChunkData.SIZE][ChunkData.SIZE];
 		this.elements = new String[ChunkData.SIZE][ChunkData.SIZE];
+		entitySnapshots = new ArrayList<EntitySnapshot>();
 	}
 	
 	public Chunk(Chunk chunkToCopy) {
@@ -34,6 +39,10 @@ public class Chunk {
 			for (int c = 0; c < ChunkData.SIZE; c++)
 				this.elements[r][c] = chunkToCopy.elements[r][c];
 		}
+		
+		entitySnapshots = new ArrayList<EntitySnapshot>();
+		for (EntitySnapshot entity : chunkToCopy.entitySnapshots)
+			this.entitySnapshots.add(new EntitySnapshot(entity));
 	}
 	
 	public Chunk(ChunkData data) {
@@ -41,6 +50,21 @@ public class Chunk {
 		this.y = data.y;
 		this.tiles = data.tiles;
 		this.elements = data.elements;
+		this.entitySnapshots = data.entities;
+	}
+	
+	/**
+	 * Returns the chunk data to be saved to a file
+	 * @return
+	 */
+	public ChunkData getData() {
+		ChunkData data = new ChunkData();
+		data.x = this.x;
+		data.y = this.y;
+		data.tiles = this.tiles;
+		data.elements = this.elements;
+		data.entities = this.entitySnapshots;
+		return data;
 	}
 	
 	/**

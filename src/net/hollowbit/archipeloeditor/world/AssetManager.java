@@ -7,6 +7,7 @@ import java.util.HashMap;
 
 import javax.imageio.ImageIO;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -98,10 +99,10 @@ public class AssetManager {
 	/*Initiates all Elements!!!*/
 	//////////////////////////
 	public void load () {
-		chunk = new Texture("chunk.png");
-		grid = new Texture("grid.png");
-		invalid = new Texture("invalid.png");
-		blank = new Texture("blank.png");
+		chunk = new Texture(Gdx.files.internal("chunk.png"), true);
+		grid = new Texture(Gdx.files.internal("grid.png"), true);
+		invalid = new Texture(Gdx.files.internal("invalid.png"), true);
+		blank = new Texture(Gdx.files.internal("blank.png"), true);
 		
 		Json json = new Json();
 		String fileData = "";
@@ -112,7 +113,7 @@ public class AssetManager {
 		Texture tileMapImage = null;
 		BufferedImage tileMapBufferedImage = null;
 		try {
-			tileMapImage = new Texture("tiles.png");
+			tileMapImage = new Texture(Gdx.files.internal("tiles.png"), true);
 			tileMapBufferedImage = ImageIO.read(getClass().getResourceAsStream("/tiles.png"));
 		} catch (IOException e) {
 			System.out.println("Could not load tile map image.");
@@ -136,7 +137,7 @@ public class AssetManager {
 		Texture elementMapImage = null;
 		try {
 			elementMapBufferedImage = ImageIO.read(getClass().getResourceAsStream("/map_elements.png"));
-			elementMapImage = new Texture("map_elements.png");
+			elementMapImage = new Texture(Gdx.files.internal("map_elements.png"), true);
 		} catch (IOException e) {
 			System.out.println("Could not load tile map image.");
 			e.printStackTrace();

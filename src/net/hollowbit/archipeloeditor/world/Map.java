@@ -1,18 +1,22 @@
 package net.hollowbit.archipeloeditor.world;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Formatter;
-import java.util.Scanner;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonWriter;
+import com.badlogic.gdx.utils.JsonValue.PrettyPrintSettings;
 
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloshared.ChunkData;
-import net.hollowbit.archipeloshared.EntitySnapshot;
+import net.hollowbit.archipeloshared.ChunkLocation;
+import net.hollowbit.archipeloshared.InvalidMapFolderException;
 import net.hollowbit.archipeloshared.MapData;
 
 public class Map implements Cloneable {
@@ -23,16 +27,12 @@ public class Map implements Cloneable {
 	private boolean naturalLighting;
 	
 	private ArrayList<ChunkRow> chunkRows;
-	private ArrayList<EntitySnapshot> entitySnapshots;
 	
 	private int width, height;
 	private int minTileX, maxTileX, minTileY, maxTileY;
 	
 	public Map() {
 		chunkRows = new ArrayList<ChunkRow>();
-		entitySnapshots = new ArrayList<EntitySnapshot>();
-		
-		this.addChunk(0, 0);
 	}
 	
 	//Create map from editor
@@ -43,7 +43,6 @@ public class Map implements Cloneable {
 		this.naturalLighting = naturalLighting;
 		
 		chunkRows = new ArrayList<ChunkRow>();
-		entitySnapshots = new ArrayList<EntitySnapshot>();
 		
 		this.addChunk(0, 0);
 	}
@@ -210,61 +209,117 @@ public class Map implements Cloneable {
 		});
 	}
 	
-	public void load(File file) {
-		//Load file
-		Scanner scanner = null;
-		String fileData = "";
+	public void load(File folder) throws InvalidMapFolderException {
+		if (!folder.exists())
+			throw new InvalidMapFolderException("No folder selected");
+		
+		File settingsFile = new File(folder, "settings.json");
+		if (!settingsFile.exists())
+			throw new InvalidMapFolderException("Settings file not found. There must be a settings.json file in the map's root directory.");
+			
+		Json json = new Json();
+		MapData mapData;
+		FileReader reader = null;
 		try {
-			scanner = new Scanner(file);
-			while (scanner.hasNext()) {
-				fileData += scanner.next();
-			}
-			scanner.close();
+			 reader = new FileReader(settingsFile);
+			mapData = (MapData) json.fromJson(MapData.class, reader);
 		} catch (Exception e) {
-			System.out.println("Could not read map file!");
-			e.printStackTrace();
+			throw new InvalidMapFolderException("Settings file is invalid.");
+		} finally {
+			try {
+				reader.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		
-		//Parse json
-		Json json = new Json();
-		MapData mapFile = json.fromJson(MapData.class, fileData);
+		this.name = mapData.name;
+		this.displayName = mapData.displayName;
+		this.naturalLighting = mapData.naturalLighting;
+		this.music = mapData.music;
 		
-		//Apply map data
-		name = file.getName().replaceFirst("[.][^.]+$", "");
-		displayName = mapFile.displayName;
-		music = mapFile.music;
-		naturalLighting = mapFile.naturalLighting;
-		
-		//TODO Load chunks from file
-		entitySnapshots = mapFile.entitySnapshots;
-		
-		recalculateSizes();
+		//Load in chunks now that we have the settings
+		File chunkFolder = new File(folder, "chunks/");
+		for (ChunkLocation chunkLocation : mapData.chunks) {
+			//Get the chunk row folder
+			File chunkRowFolder = new File(chunkFolder, chunkLocation.y + "/");
+			if (!chunkRowFolder.exists())
+				throw new InvalidMapFolderException("Expected a chunk row folder called \"" + chunkLocation.y + "\" but it was not found.");
+			
+			//Get the chunk file in folder
+			File chunkFile = new File(chunkRowFolder, chunkLocation.x + ".json");
+			if (!chunkFile.exists())
+				throw new InvalidMapFolderException("Could not find the expected chunk file at \"" + chunkLocation.y + "/" + chunkLocation.x + ".json\"");
+			
+			//Load data from chunk file
+			reader = null;
+			try {
+				reader = new FileReader(chunkFile);
+				ChunkData data = (ChunkData) json.fromJson(ChunkData.class, reader);
+				
+				this.addChunk(chunkLocation.x, chunkLocation.y, new Chunk(data));
+				reader.close();
+			} catch (Exception e) {
+				throw new InvalidMapFolderException("Invalid chunk file at \"" + chunkLocation.y + "/" + chunkLocation.x + ".json\"");
+			} finally {
+				try {
+					reader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	
 	//Serialize map with json and save it
-	public void save(File file) {
+	public void save(File parentFolder) throws IOException {
+		parentFolder.mkdirs();
+		File folder = new File(parentFolder, name + "/");
+		folder.mkdirs();
+		
+		File settingsFile = new File(folder, "settings.json");
+		settingsFile.createNewFile();
+
 		Json json = new Json();
-		MapData mapFile = new MapData();
-		mapFile.displayName = displayName;
-		mapFile.music = music;
-		mapFile.naturalLighting = naturalLighting;
+		PrettyPrintSettings settings = new PrettyPrintSettings();
+		settings.singleLineColumns = 30;
+		settings.wrapNumericArrays = false;
+		settings.outputType = JsonWriter.OutputType.javascript;
 		
-		//TODO Save chunks to file
-		mapFile.entitySnapshots = entitySnapshots;
+		FileWriter settingsWriter = new FileWriter(settingsFile);
+		MapData data = new MapData();
+		data.name = this.name;
+		data.displayName = this.displayName;
+		data.naturalLighting = this.naturalLighting;
+		data.music = this.music;
 		
-		try {
-			if(!file.exists()){
-				file.getParentFile().mkdirs();
-				file.createNewFile();
+		File chunkFolder = new File(folder, "chunks/");
+		chunkFolder.mkdirs();
+		deleteFolderContents(chunkFolder);//Make sure chunk folder is empty before putting things in it
+		
+		for (ChunkRow row : chunkRows) {
+			File rowFolder = new File(chunkFolder, row.getY() + "/");
+			rowFolder.mkdirs();
+			deleteFolderContents(rowFolder);//Make sure row folder is empty
+			
+			for (Chunk chunk : row.getChunks()) {
+				FileWriter chunkFileWriter = new FileWriter(new File(rowFolder, chunk.getX() + ".json"));
+				chunkFileWriter.write(json.prettyPrint(chunk.getData(), settings));
+				chunkFileWriter.close();
+				
+				data.chunks.add(new ChunkLocation(chunk.getX(), chunk.getY()));
 			}
-			Formatter formatter = new Formatter(file.getPath());
-			
-			formatter.format("%s", json.toJson(mapFile));
-			
-			formatter.flush();
-			formatter.close();
-		} catch (Exception e) {
-			e.printStackTrace();
+		}
+		
+		settingsWriter.write(json.prettyPrint(data, settings));
+		settingsWriter.close();
+	}
+	
+	private void deleteFolderContents(File folder) {
+		for (File child : folder.listFiles()) {
+			if (child.isDirectory())
+				deleteFolderContents(child);
+			child.delete();
 		}
 	}
 	
@@ -276,7 +331,6 @@ public class Map implements Cloneable {
 		for (ChunkRow row : chunkRows)
 			row.getChunks().clear();
 		chunkRows.clear();
-		entitySnapshots.clear();
 		width = 0;
 		height = 0;
 		minTileX = minTileY = maxTileX = maxTileY = 0;

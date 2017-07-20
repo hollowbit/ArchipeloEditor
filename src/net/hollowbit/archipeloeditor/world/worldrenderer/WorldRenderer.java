@@ -5,7 +5,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.PixmapIO;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.TextureData;
+import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
+import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
 import com.badlogic.gdx.math.Vector2;
 
 import net.hollowbit.archipeloeditor.MainEditor;
@@ -29,6 +36,8 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 	protected float redoTimer = 0;
 	protected float undoTimer = 0;
 	
+	protected boolean renderMapToFile = false;
+	
 	public WorldRenderer(MainEditor editor, AssetManager assetManager) {
 		this.editor = editor;
 		this.assetManager = assetManager;
@@ -51,6 +60,37 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 			if (editor.getSelectedTool() != null)
 				editor.getSelectedTool().reload(assetManager);
 		}
+		
+		if (renderMapToFile) {
+			SpriteBatch screenShotBatch = new SpriteBatch();
+			FrameBuffer fbo = new FrameBuffer(Format.RGBA8888, editor.getMap().getWidth() * MainEditor.TILE_SIZE, editor.getMap().getWidth() * MainEditor.TILE_SIZE, true) {
+		        @Override
+		        protected Texture createColorTexture() {
+		            PixmapTextureData data = new PixmapTextureData(new Pixmap(width, height, format), format, false, false);
+		            Texture result = new Texture(data);
+		            result.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+		            result.setWrap(Texture.TextureWrap.ClampToEdge, Texture.TextureWrap.ClampToEdge);
+		            return result;
+		        }
+		    };
+			fbo.begin();
+			Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
+			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+			
+			screenShotBatch.begin();
+			editor.getMap().draw(assetManager, true, true, false, 0, 0, 0, null, screenShotBatch, editor.getMap().getMinTileX(), editor.getMap().getMinTileY(), editor.getMap().getWidth(), editor.getMap().getHeight());
+			screenShotBatch.end();
+			
+			fbo.end();
+			
+			TextureData data = fbo.getColorBufferTexture().getTextureData();
+			if (!data.isPrepared())
+				data.prepare();
+			Pixmap pixmap = data.consumePixmap();
+			PixmapIO.writePNG(Gdx.files.absolute("C:/Users/Nathanael/Desktop/test.png"), pixmap);
+			renderMapToFile = false;
+		}
+		
 		Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
@@ -204,6 +244,9 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 			break;
 		case Keys.F5:
 			this.reloadAssets();
+			break;
+		case Keys.F2:
+			renderMapToFile = true;
 			break;
 		}
 		return false;
