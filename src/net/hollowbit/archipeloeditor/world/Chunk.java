@@ -28,16 +28,20 @@ public class Chunk {
 		this.x = chunkToCopy.x;
 		this.y = chunkToCopy.y;
 		
-		this.tiles = new String[ChunkData.SIZE][ChunkData.SIZE];
-		for (int r = 0; r < ChunkData.SIZE; r++) {
-			for (int c = 0; c < ChunkData.SIZE; c++)
-				this.tiles[r][c] = chunkToCopy.tiles[r][c];
+		if (chunkToCopy.tiles != null) {
+			this.tiles = new String[ChunkData.SIZE][ChunkData.SIZE];
+			for (int r = 0; r < ChunkData.SIZE; r++) {
+				for (int c = 0; c < ChunkData.SIZE; c++)
+					this.tiles[r][c] = chunkToCopy.tiles[r][c];
+			}
 		}
 		
-		this.elements = new String[ChunkData.SIZE][ChunkData.SIZE];
-		for (int r = 0; r < ChunkData.SIZE; r++) {
-			for (int c = 0; c < ChunkData.SIZE; c++)
-				this.elements[r][c] = chunkToCopy.elements[r][c];
+		if (chunkToCopy.elements != null) {
+			this.elements = new String[ChunkData.SIZE][ChunkData.SIZE];
+			for (int r = 0; r < ChunkData.SIZE; r++) {
+				for (int c = 0; c < ChunkData.SIZE; c++)
+					this.elements[r][c] = chunkToCopy.elements[r][c];
+			}
 		}
 		
 		entitySnapshots = new ArrayList<EntitySnapshot>();
@@ -51,6 +55,12 @@ public class Chunk {
 		this.tiles = data.tiles;
 		this.elements = data.elements;
 		this.entitySnapshots = data.entities;
+		
+		if (this.tiles == null)
+			this.tiles = new String[ChunkData.SIZE][ChunkData.SIZE];
+		
+		if (this.elements == null)
+			this.elements = new String[ChunkData.SIZE][ChunkData.SIZE];
 	}
 	
 	/**
@@ -75,16 +85,20 @@ public class Chunk {
 		this.x = chunkToCopy.x;
 		this.y = chunkToCopy.y;
 		
-		this.tiles = new String[ChunkData.SIZE][ChunkData.SIZE];
-		for (int r = 0; r < ChunkData.SIZE; r++) {
-			for (int c = 0; c < ChunkData.SIZE; c++)
-				this.tiles[r][c] = chunkToCopy.tiles[r][c];
+		if (chunkToCopy.tiles != null) {
+			this.tiles = new String[ChunkData.SIZE][ChunkData.SIZE];
+			for (int r = 0; r < ChunkData.SIZE; r++) {
+				for (int c = 0; c < ChunkData.SIZE; c++)
+					this.tiles[r][c] = chunkToCopy.tiles[r][c];
+			}
 		}
 		
-		this.elements = new String[ChunkData.SIZE][ChunkData.SIZE];
-		for (int r = 0; r < ChunkData.SIZE; r++) {
-			for (int c = 0; c < ChunkData.SIZE; c++)
-				this.elements[r][c] = chunkToCopy.elements[r][c];
+		if (chunkToCopy.elements != null) {
+			this.elements = new String[ChunkData.SIZE][ChunkData.SIZE];
+			for (int r = 0; r < ChunkData.SIZE; r++) {
+				for (int c = 0; c < ChunkData.SIZE; c++)
+					this.elements[r][c] = chunkToCopy.elements[r][c];
+			}
 		}
 	}
 	
