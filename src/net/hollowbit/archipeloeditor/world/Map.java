@@ -4,20 +4,19 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.TreeMap;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Json;
-import com.badlogic.gdx.utils.JsonWriter;
 import com.badlogic.gdx.utils.JsonValue.PrettyPrintSettings;
+import com.badlogic.gdx.utils.JsonWriter;
 
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.ChunkLocation;
 import net.hollowbit.archipeloshared.InvalidMapFolderException;
 import net.hollowbit.archipeloshared.MapData;
+import net.hollowbit.archipeloshared.TileData;
 
 public class Map implements Cloneable {
 	
@@ -26,13 +25,13 @@ public class Map implements Cloneable {
 	private String name;
 	private boolean naturalLighting;
 	
-	private ArrayList<ChunkRow> chunkRows;
+	private TreeMap<Integer, ChunkRow> chunkRows;
 	
 	private int width, height;
 	private int minTileX, maxTileX, minTileY, maxTileY;
 	
 	public Map() {
-		chunkRows = new ArrayList<ChunkRow>();
+		chunkRows = new TreeMap<Integer, ChunkRow>();
 	}
 	
 	//Create map from editor
@@ -42,12 +41,12 @@ public class Map implements Cloneable {
 		this.music = music;
 		this.naturalLighting = naturalLighting;
 		
-		chunkRows = new ArrayList<ChunkRow>();
+		chunkRows = new TreeMap<Integer, ChunkRow>();
 		
 		this.addChunk(0, 0);
 	}
 	
-	public void draw (AssetManager assetManager, boolean showTiles, boolean showElements, boolean showGrid, int tileX, int tileY, int selectedLayer, Object selectedListValue, SpriteBatch batch, int visibleX, int visibleY, int visibleWidth, int visibleHeight ){
+	public void draw (AssetManager assetManager, boolean showTiles, boolean showElements, boolean showGrid, boolean showCollisionMap, int tileX, int tileY, int selectedLayer, Object selectedListValue, SpriteBatch batch, int visibleX, int visibleY, int visibleWidth, int visibleHeight ){
 		int visibleChunkX = (int) Math.floor((float) visibleX / ChunkData.SIZE);
 		int visibleChunkY = (int) Math.floor((float) visibleY / ChunkData.SIZE);
 		
@@ -67,11 +66,11 @@ public class Map implements Cloneable {
 			if (selectedLayer == MainEditor.TILE_LAYER && selectedListValue != null)
 				hoverTile = (MapTile) selectedListValue;
 				
-			for (ChunkRow chunkRow : chunkRows) {
+			for (ChunkRow chunkRow : chunkRows.values()) {
 				if (chunkRow.getY() < visibleChunkY - 1 || chunkRow.getY() > visibleChunkY + (visibleHeight / ChunkData.SIZE) + 1)
 					continue;
 				
-				for (Chunk chunk : chunkRow.getChunks()) {
+				for (Chunk chunk : chunkRow.getChunks().values()) {
 					if (chunk.getX() < visibleChunkX - 1 || chunk.getX() > visibleChunkX + (visibleWidth / ChunkData.SIZE) + 1)
 						continue;
 						
@@ -99,12 +98,12 @@ public class Map implements Cloneable {
 			if (selectedLayer == MainEditor.ELEMENT_LAYER && selectedListValue != null)
 				hoverElement = (MapElement) selectedListValue;
 			
-			for (ChunkRow chunkRow : chunkRows) {
+			for (ChunkRow chunkRow : chunkRows.descendingMap().values()) {
 				if (chunkRow.getY() < visibleChunkY - 1 || chunkRow.getY() > visibleChunkY + (visibleHeight / ChunkData.SIZE) + 1)
 					continue;
 				
 				for (int row = ChunkData.SIZE - 1; row >= 0; row--) {
-					for (Chunk chunk : chunkRow.getChunks()) {
+					for (Chunk chunk : chunkRow.getChunks().values()) {
 						if (chunk.getX() < visibleChunkX - 1 || chunk.getX() > visibleChunkX + (visibleWidth / ChunkData.SIZE) + 1)
 							continue;
 						
@@ -119,11 +118,11 @@ public class Map implements Cloneable {
 
 		//Draw Grid
 		if (showGrid) {
-			for (ChunkRow chunkRow : chunkRows) {
+			for (ChunkRow chunkRow : chunkRows.values()) {
 				if (chunkRow.getY() < visibleChunkY - 1 || chunkRow.getY() > visibleChunkY + (visibleHeight / ChunkData.SIZE) + 1)
 					continue;
 				
-				for (Chunk chunk : chunkRow.getChunks()) {
+				for (Chunk chunk : chunkRow.getChunks().values()) {
 					if (chunk.getX() < visibleChunkX - 1 || chunk.getX() > visibleChunkX + (visibleWidth / ChunkData.SIZE) + 1)
 						continue;
 					
@@ -135,6 +134,112 @@ public class Map implements Cloneable {
 			}
 		}
 		
+		if (showCollisionMap) {
+			for (ChunkRow chunkRow : chunkRows.values()) {
+				if (chunkRow.getY() < visibleChunkY - 1 || chunkRow.getY() > visibleChunkY + (visibleHeight / ChunkData.SIZE) + 1)
+					continue;
+				
+				for (Chunk chunk : chunkRow.getChunks().values()) {
+					if (chunk.getX() < visibleChunkX - 1 || chunk.getX() > visibleChunkX + (visibleWidth / ChunkData.SIZE) + 1)
+						continue;
+					
+					for (int r = 0; r < ChunkData.SIZE * TileData.COLLISION_MAP_SCALE; r++) {
+						for (int c = 0; c < ChunkData.SIZE * TileData.COLLISION_MAP_SCALE; c++) {
+							boolean render = true;
+							if (chunk.getOverrideCollisionMap()[r][c] == Chunk.COLLISION_DEFAULT) {
+								if (chunk.getNaturalCollisionMap()[r][c])
+									batch.setColor(0.8f, 0.0f, 0.0f, 0.5f);
+								else
+									render = false;
+							} else if (chunk.getOverrideCollisionMap()[r][c] == Chunk.COLLISION_YES)
+								batch.setColor(0.8f, 0.0f, 0.0f, 0.5f);
+							else if (chunk.getOverrideCollisionMap()[r][c] == Chunk.COLLISION_NO) {
+								batch.setColor(0.7f, 0.6f, 0.0f, 0.5f);
+								render = false;
+							}
+							
+							if (render)
+								batch.draw(assetManager.getBlank(), chunk.getPixelX() + c * MainEditor.TILE_SIZE / TileData.COLLISION_MAP_SCALE, chunk.getPixelY() + r * MainEditor.TILE_SIZE / TileData.COLLISION_MAP_SCALE, MainEditor.TILE_SIZE / TileData.COLLISION_MAP_SCALE, MainEditor.TILE_SIZE / TileData.COLLISION_MAP_SCALE);
+							batch.setColor(1, 1, 1, 1);
+						}
+					}
+				}
+			}
+		}
+		
+	}
+	
+	public void regenerateCollisionMaps(AssetManager assetManager) {
+		for (ChunkRow row : chunkRows.values()) {
+			for (Chunk chunk : row.getChunks().values()) {
+				int chunkColX = chunk.getX() * ChunkData.SIZE * TileData.COLLISION_MAP_SCALE;
+				int chunkColY = chunk.getY() * ChunkData.SIZE * TileData.COLLISION_MAP_SCALE;
+				
+				for (int r = 0; r < ChunkData.SIZE; r++) {
+					for (int c = 0; c < ChunkData.SIZE; c++) {
+						//Apply tile to collision map
+						MapTile tile = assetManager.getTileByID(chunk.getTiles()[r][c]);
+						if (tile == null)
+							continue;
+						
+						for (int colRow = 0; colRow < tile.collisionTable.length; colRow++) {
+							for (int colCol = 0; colCol < tile.collisionTable[0].length; colCol++) {
+								if (tile.collisionTable[colRow][colCol]) {
+									int x = c * TileData.COLLISION_MAP_SCALE + colCol + chunkColX;
+									int y = r * TileData.COLLISION_MAP_SCALE + colRow + chunkColY;
+									
+									this.setCollisionMapAtPos(x, y, true);
+								}
+							}
+						}
+						
+						//Apply map element to collision map
+						MapElement element = assetManager.getElementByID(chunk.getElements()[r][c]);
+						if (element != null) {
+							for (int colRow = 0; colRow < element.collisionTable.length; colRow++) {
+								for (int colCol = 0; colCol < element.collisionTable[0].length; colCol++) {
+									if (element.collisionTable[colRow][colCol]) {
+										int x = c * TileData.COLLISION_MAP_SCALE + colCol + chunkColX + element.offsetX;
+										int y = r * TileData.COLLISION_MAP_SCALE + colRow + chunkColY + element.offsetY - (element.collisionTable.length - 1);
+										
+										this.setCollisionMapAtPos(x, y, true);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	private void setNaturalCollisionMapAtPos(int x, int y, boolean collides) {
+		int chunkX = (int) Math.floor((float) x / (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE));
+		int chunkY = (int) Math.floor((float) y / (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE));
+		
+		int xWithinChunk = Math.abs(x) % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE);
+		if (x < 0)
+			xWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - xWithinChunk;
+		int yWithinChunk = Math.abs(y) % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE);
+		if (y < 0)
+			yWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - yWithinChunk;
+		
+		if (xWithinChunk == (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) || yWithinChunk == (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE))
+			return;
+		
+		Chunk chunk = getChunk(chunkX, chunkY);
+		if (chunk != null)
+			chunk.getNaturalCollisionMap()[yWithinChunk][xWithinChunk] = collides;
+	}
+	
+	/**
+	 * Artificially override a natural collision
+	 * @param x
+	 * @param y
+	 * @param collides
+	 */
+	public void setCollisionMapAtPos(int x, int y, boolean collides) {
+		this.setNaturalCollisionMapAtPos(x, y, collides);
 	}
 	
 	public boolean doesChunkExist(int x, int y) {
@@ -147,66 +252,29 @@ public class Map implements Cloneable {
 	}
 	
 	public void addChunk(int x, int y, Chunk chunk) {
-		ChunkRow rowFound = null;
-		for (ChunkRow row : chunkRows) {
-			if (row.getY() == y) {
-				row.getChunks().add(chunk);
-				rowFound = row;
-				break;
-			}
-		}
+		ChunkRow row = chunkRows.get(y);
+		if (row != null)
+			row.getChunks().put(x, chunk);
 		
 		//Add new row to accommodate for new chunk
-		if (rowFound == null) {
-			rowFound = new ChunkRow(y);
-			chunkRows.add(rowFound);
-			rowFound.getChunks().add(chunk);
-			sortChunkRows();
+		if (row == null) {
+			row = new ChunkRow(y);
+			chunkRows.put(y, row);
+			row.getChunks().put(x, chunk);
 		}
 		
-		rowFound.sort();
 		recalculateSizes();
 	}
 	
 	public void removeChunk(int x, int y) {
-		int rowToRemove = -1;
-		for (int u = 0; u < chunkRows.size(); u++) {
-			ChunkRow row = chunkRows.get(u);
-			if (row.getY() == y) {
-				int indexToRemove = 0;
-				for (int i = 0; i < row.getChunks().size(); i++) {
-					if (row.getChunks().get(i).getX() == x) {
-						indexToRemove = i;
-						break;
-					}
-				}
-				row.getChunks().remove(indexToRemove);
-				
-				if (row.getChunks().isEmpty())
-					rowToRemove = u;
-				else
-					row.sort();
-				break;
-			}
-		}
+		ChunkRow row = chunkRows.get(y);
+		if (row != null)
+			row.getChunks().remove(x);
 		
-		if (rowToRemove != -1) {
-			chunkRows.remove(rowToRemove);
-			sortChunkRows();
-		}
+		if (row.getChunks().isEmpty())
+			chunkRows.remove(row.getY());
 		
 		recalculateSizes();
-	}
-	
-	private void sortChunkRows() {
-		Collections.sort(chunkRows, new Comparator<ChunkRow>() {
-			
-			@Override
-			public int compare(ChunkRow o1, ChunkRow o2) {
-				return o2.getY() - o1.getY();
-			}
-			
-		});
 	}
 	
 	public void load(File folder) throws InvalidMapFolderException {
@@ -297,12 +365,12 @@ public class Map implements Cloneable {
 		chunkFolder.mkdirs();
 		deleteFolderContents(chunkFolder);//Make sure chunk folder is empty before putting things in it
 		
-		for (ChunkRow row : chunkRows) {
+		for (ChunkRow row : chunkRows.values()) {
 			File rowFolder = new File(chunkFolder, row.getY() + "/");
 			rowFolder.mkdirs();
 			deleteFolderContents(rowFolder);//Make sure row folder is empty
 			
-			for (Chunk chunk : row.getChunks()) {
+			for (Chunk chunk : row.getChunks().values()) {
 				FileWriter chunkFileWriter = new FileWriter(new File(rowFolder, chunk.getX() + ".json"));
 				chunkFileWriter.write(json.prettyPrint(chunk.getData(), settings));
 				chunkFileWriter.close();
@@ -328,7 +396,7 @@ public class Map implements Cloneable {
 		displayName = "";
 		music = "";
 		name = "";
-		for (ChunkRow row : chunkRows)
+		for (ChunkRow row : chunkRows.values())
 			row.getChunks().clear();
 		chunkRows.clear();
 		width = 0;
@@ -372,28 +440,35 @@ public class Map implements Cloneable {
 	 * Recalculates the width and height of the map. Since it is a fairly costly calculation, this should only be done when necessary.
 	 */
 	protected void recalculateSizes() {
-		int lowestX = chunkRows.get(0).getChunks().get(0).getX();
-		int highestX = chunkRows.get(0).getChunks().get(0).getX();
-		
-		for (ChunkRow row : chunkRows) {
-			for (Chunk chunk : row.getChunks()) {
-				if (chunk.getX() < lowestX)
-					lowestX = chunk.getX();
-				
-				if (chunk.getX() > highestX)
-					highestX = chunk.getX();
+		if (chunkRows.size() == 0) {
+			width = 0;
+			height = 0;
+			minTileX = 0;
+			minTileY = 0;
+			maxTileX = 0;
+			maxTileY = 0;
+		} else {
+			int lowestX = chunkRows.firstEntry().getValue().getChunks().firstKey();
+			int highestX = chunkRows.firstEntry().getValue().getChunks().lastKey();
+			
+			for (ChunkRow row : chunkRows.values()) {
+				if (row.getChunks().firstKey() < lowestX)
+					lowestX = row.getChunks().firstKey();
+					
+				if (row.getChunks().lastKey() > highestX)
+					highestX = row.getChunks().lastKey();
 			}
+			this.width = (highestX - lowestX + 1) * ChunkData.SIZE;
+			this.minTileX = lowestX * ChunkData.SIZE;
+			this.maxTileX = (highestX + 1) * ChunkData.SIZE - 1;
+			
+			int lowestY = chunkRows.firstKey();
+			int highestY = chunkRows.lastKey();
+			
+			this.height = (highestY - lowestY + 1) * ChunkData.SIZE;
+			this.minTileY = lowestY * ChunkData.SIZE;
+			this.maxTileY = (highestY + 1) * ChunkData.SIZE - 1;
 		}
-		this.width = (highestX - lowestX + 1) * ChunkData.SIZE;
-		this.minTileX = lowestX * ChunkData.SIZE;
-		this.maxTileX = (highestX + 1) * ChunkData.SIZE - 1;
-		
-		int lowestY = chunkRows.get(chunkRows.size() - 1).getY();
-		int highestY = chunkRows.get(0).getY();
-		
-		this.height = (highestY - lowestY + 1) * ChunkData.SIZE;
-		this.minTileY = lowestY * ChunkData.SIZE;
-		this.maxTileY = (highestY + 1) * ChunkData.SIZE - 1;
 	}
 	
 	public String getMusic() {
@@ -413,26 +488,12 @@ public class Map implements Cloneable {
 	}
 	
 	public void setTile(int chunkX, int chunkY, int xWithinChunk, int yWithinChunk, String tileId) {
-		for (ChunkRow row : chunkRows) {
-			if (row.getY() == chunkY) {
-				for (Chunk chunk : row.getChunks()) {
-					if (chunk.getX() == chunkX) {
-						chunk.getTiles()[yWithinChunk][xWithinChunk] = tileId;
-						return;
-					}
-					
-					//At this point, chunk is assumed to not be there
-					if (chunk.getX() > chunkX)
-						return;
-				}
-				break;
-			}
-			
-			if (row.getY() < chunkY)
-				break;
+		ChunkRow row = chunkRows.get(chunkY);
+		if (row != null) {
+			Chunk chunk = row.getChunks().get(chunkX);
+			if (chunk != null)
+				chunk.getTiles()[yWithinChunk][xWithinChunk] = tileId;
 		}
-		
-		//Chunk at location not found, don't do anything
 	}
 	
 	public void setTile(int tileX, int tileY, String tileId) {
@@ -450,22 +511,11 @@ public class Map implements Cloneable {
 	}
 	
 	public String getTile(int chunkX, int chunkY, int xWithinChunk, int yWithinChunk) {
-		for (ChunkRow row : chunkRows) {
-			if (row.getY() == chunkY) {
-				for (Chunk chunk : row.getChunks()) {
-					if (chunk.getX() == chunkX) {
-						return chunk.getTiles()[yWithinChunk][xWithinChunk];
-					}
-					
-					//At this point, chunk is assumed to not be there
-					if (chunk.getX() > chunkX)
-						return null;
-				}
-				break;
-			}
-			
-			if (row.getY() < chunkY)
-				break;
+		ChunkRow row = chunkRows.get(chunkY);
+		if (row != null) {
+			Chunk chunk = row.getChunks().get(chunkX);
+			if (chunk != null)
+				return chunk.getTiles()[yWithinChunk][xWithinChunk];
 		}
 		
 		//Chunk at location not found, return null
@@ -487,26 +537,12 @@ public class Map implements Cloneable {
 	}
 	
 	public void setElement(int chunkX, int chunkY, int xWithinChunk, int yWithinChunk, String elementId) {
-		for (ChunkRow row : chunkRows) {
-			if (row.getY() == chunkY) {
-				for (Chunk chunk : row.getChunks()) {
-					if (chunk.getX() == chunkX) {
-						chunk.getElements()[yWithinChunk][xWithinChunk] = elementId;
-						return;
-					}
-					
-					//At this point, chunk is assumed to not be there
-					if (chunk.getX() > chunkX)
-						return;
-				}
-				break;
-			}
-			
-			if (row.getY() < chunkY)
-				break;
+		ChunkRow row = chunkRows.get(chunkY);
+		if (row != null) {
+			Chunk chunk = row.getChunks().get(chunkX);
+			if (chunk != null)
+				chunk.getElements()[yWithinChunk][xWithinChunk] = elementId;
 		}
-		
-		//Chunk at location not found, don't do anything
 	}
 		
 	public void setElement(int tileX, int tileY, String elementId) {
@@ -524,22 +560,11 @@ public class Map implements Cloneable {
 	}
 	
 	public String getElement(int chunkX, int chunkY, int xWithinChunk, int yWithinChunk) {
-		for (ChunkRow row : chunkRows) {
-			if (row.getY() == chunkY) {
-				for (Chunk chunk : row.getChunks()) {
-					if (chunk.getX() == chunkX) {
-						return chunk.getElements()[yWithinChunk][xWithinChunk];
-					}
-					
-					//At this point, chunk is assumed to not be there
-					if (chunk.getX() > chunkX)
-						return null;
-				}
-				break;
-			}
-			
-			if (row.getY() < chunkY)
-				break;
+		ChunkRow row = chunkRows.get(chunkY);
+		if (row != null) {
+			Chunk chunk = row.getChunks().get(chunkX);
+			if (chunk != null)
+				return chunk.getElements()[yWithinChunk][xWithinChunk];
 		}
 		
 		//Chunk at location not found, return null
@@ -560,25 +585,17 @@ public class Map implements Cloneable {
 		return getElement(chunkX, chunkY, xWithinChunk, yWithinChunk);
 	}
 	
-	public ArrayList<ChunkRow> getChunkRows() {
-		return chunkRows;
-	}
-	
-	public void setChunkRows(ArrayList<ChunkRow> chunkRows) {
-		this.chunkRows = chunkRows;
-		sortChunkRows();
-	}
-	
 	public Chunk getChunk(int x, int y) {
-		for (ChunkRow row : chunkRows) {
-			if (row.getY() == y) {
-				for (Chunk chunk : row.getChunks()) {
-					if (chunk.getX() == x)
-						return chunk;
-				}
-			}
+		ChunkRow row = chunkRows.get(y);
+		if (row != null) {
+			return row.getChunks().get(x);
 		}
 		
 		return null;
 	}
+	
+	public TreeMap<Integer, ChunkRow> getChunkRows() {
+		return chunkRows;
+	}
+	
 }

@@ -68,9 +68,6 @@ public class EntityAdderTool extends Tool {
 	public void touchDragged(float x, float y, int tileX, int tileY) {}
 
 	@Override
-	public void updateVisibilities(boolean tilesVisible, boolean elementsVisible, boolean gridVisible) {}
-
-	@Override
 	public void mouseScrolled(int amount) {}
 
 }

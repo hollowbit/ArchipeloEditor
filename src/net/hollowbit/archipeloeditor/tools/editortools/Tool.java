@@ -22,7 +22,7 @@ public abstract class Tool {
 	
 	public abstract void addComponents(JPanel panel);
 	public abstract void render(SpriteBatch batch);
-	public abstract void updateVisibilities(boolean tilesVisible, boolean elementsVisible, boolean gridVisible);
+	public void updateVisibilities(boolean tilesVisible, boolean elementsVisible, boolean gridVisible, boolean collisionMapVisible){};
 	
 	public abstract void touchDown(float x, float y, int tileX, int tileY, int button);
 	public abstract void touchUp(float x, float y, int tileX, int tileY, int button);

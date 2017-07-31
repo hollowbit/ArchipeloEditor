@@ -64,7 +64,7 @@ public class ChunkTool extends Tool {
 		panel.add(addRemoveBtn, gdc_addRemoveBtn);
 		
 		//Generator label
-		generateLbl = new JLabel("Generate:");
+		generateLbl = new JLabel("Generator:");
 		generateLbl.setPreferredSize(new Dimension(194, 15));
 
 		GridBagConstraints gbc_generateLbl = new GridBagConstraints();
@@ -164,8 +164,8 @@ public class ChunkTool extends Tool {
 			if (Gdx.input.isKeyJustPressed(Keys.RIGHT) && isChunkSelected)
 				selectedChunkX++;
 			
-			for (ChunkRow row : editor.getMap().getChunkRows()) {
-				for (Chunk chunk : row.getChunks()) {
+			for (ChunkRow row : editor.getMap().getChunkRows().values()) {
+				for (Chunk chunk : row.getChunks().values()) {
 					batch.setColor(0, 0, 0, 1);
 					batch.draw(editor.getAssetManager().getChunkTexture(), chunk.getPixelX(), chunk.getPixelY(), ChunkData.SIZE * MainEditor.TILE_SIZE, ChunkData.SIZE * MainEditor.TILE_SIZE);
 					batch.setColor(1, 1, 1, 1);
@@ -179,10 +179,6 @@ public class ChunkTool extends Tool {
 			}
 			
 		}
-	}
-
-	@Override
-	public void updateVisibilities(boolean tilesVisible, boolean elementsVisible, boolean gridVisible) {
 	}
 
 	@Override

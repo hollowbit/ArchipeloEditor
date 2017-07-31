@@ -439,7 +439,7 @@ public class Bucket extends Tool {
 	}
 
 	@Override
-	public void updateVisibilities(boolean tilesVisible, boolean elementsVisible, boolean gridVisible) {
+	public void updateVisibilities(boolean tilesVisible, boolean elementsVisible, boolean gridVisible, boolean collisionMapVisible) {
 		if (checkBoxTilesVisible != null)
 			checkBoxTilesVisible.setSelected(tilesVisible);
 		if (checkBoxElementsVisible != null)

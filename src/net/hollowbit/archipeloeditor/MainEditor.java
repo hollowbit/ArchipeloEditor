@@ -69,9 +69,11 @@ public class MainEditor implements Runnable {
 	
 	private boolean showTiles = true;
 	private boolean showElements = true;
-	private Tool selectedTool;
-	private String saveLocation = null;	
 	private boolean showGrid = false;
+	private boolean showCollisionMap = false;
+	
+	private Tool selectedTool;
+	private String saveLocation = null;
 	
 	private JLabel lblMapPath;
 	private WorldRenderer worldRenderer;
@@ -79,6 +81,7 @@ public class MainEditor implements Runnable {
 	private JMenuItem mntmSave;
 	private JMenuItem mntmSaveAs;
 	private JMenuItem mntmReload;
+	private JMenuItem mntmReloadCollisions;
 	private JMenuItem mntmClose;
 	private JMenuItem mntmEdit;
 	private JToggleButton btnBucketTool;
@@ -101,6 +104,7 @@ public class MainEditor implements Runnable {
 	JCheckBoxMenuItem mntmToggleGrid;
 	JCheckBoxMenuItem mntmToggleTiles;
 	JCheckBoxMenuItem mntmToggleElements;
+	JCheckBoxMenuItem mntmToggleCollisionMap;
 	
 	private HashMap<String, Boolean> openWindows;
 	
@@ -302,6 +306,16 @@ public class MainEditor implements Runnable {
 		});
 		mnFile.add(mntmReload);
 		
+		mntmReloadCollisions = new JMenuItem("Reload Collision Map (F6)");
+		mntmReloadCollisions.addMouseListener(new MouseAdapter() {//Same as save but forces saving in a new location
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if (map != null)
+					map.regenerateCollisionMaps(assetManager);
+			}
+		});
+		mnFile.add(mntmReloadCollisions);
+		
 		mntmClose = new JMenuItem("Close");
 		mntmClose.addMouseListener(new MouseAdapter(){//Closes map but makes sure it is saved
 			
@@ -379,42 +393,57 @@ public class MainEditor implements Runnable {
 		JMenu mnView = new JMenu("View");
 		menuBar.add(mnView);
 		
-		mntmToggleGrid = new JCheckBoxMenuItem("Show Grid (Ctrl + G)");//Control grid showing
+		mntmToggleGrid = new JCheckBoxMenuItem("Show Grid (G)");//Control grid showing
 		mntmToggleGrid.addChangeListener(new ChangeListener(){
 
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				showGrid = mntmToggleGrid.isSelected();
+				if (selectedTool != null)
+					selectedTool.updateVisibilities(showTiles, showElements, showGrid, showCollisionMap);
 			}
 			
 		});
 		mnView.add(mntmToggleGrid);
 		
-		mntmToggleTiles = new JCheckBoxMenuItem("Show Tiles (Ctrl + T)");//Control tile showing
+		mntmToggleTiles = new JCheckBoxMenuItem("Show Tiles (T)");//Control tile showing
 		mntmToggleTiles.addChangeListener(new ChangeListener(){
 
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				showTiles = mntmToggleTiles.isSelected();
 				if (selectedTool != null)
-					selectedTool.updateVisibilities(showTiles, showElements, showGrid);
+					selectedTool.updateVisibilities(showTiles, showElements, showGrid, showCollisionMap);
 			}
 			
 		});
 		mnView.add(mntmToggleTiles);
 		
-		mntmToggleElements = new JCheckBoxMenuItem("Show Elements (Ctrl + E)");//Control element showing
+		mntmToggleElements = new JCheckBoxMenuItem("Show Elements (E)");//Control element showing
 		mntmToggleElements.addChangeListener(new ChangeListener(){
 
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				showElements = mntmToggleElements.isSelected();
 				if (selectedTool != null)
-					selectedTool.updateVisibilities(showTiles, showElements, showGrid);
+					selectedTool.updateVisibilities(showTiles, showElements, showGrid, showCollisionMap);
 			}
 			
 		});
 		mnView.add(mntmToggleElements);
+		
+		mntmToggleCollisionMap = new JCheckBoxMenuItem("Show Collision Map (C)");//Control element showing
+		mntmToggleCollisionMap.addChangeListener(new ChangeListener(){
+
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				showCollisionMap = mntmToggleCollisionMap.isSelected();
+				if (selectedTool != null)
+					selectedTool.updateVisibilities(showTiles, showElements, showGrid, showCollisionMap);
+			}
+			
+		});
+		mnView.add(mntmToggleCollisionMap);
 		
 		JMenu mnAbout = new JMenu("About");
 		mnAbout.addMouseListener(new MouseAdapter() {//Opens about menu, with some info on this program
@@ -735,26 +764,37 @@ public class MainEditor implements Runnable {
 	public boolean showGrid() {
 		return showGrid;
 	}
+	
+	public boolean showCollisionMap() {
+		return showCollisionMap;
+	}
 
 	public void setShowTiles(boolean showTiles) {
 		this.showTiles = showTiles;
 		mntmToggleTiles.setSelected(showTiles);
 		if (selectedTool != null)
-			selectedTool.updateVisibilities(showTiles, showElements, showGrid);
+			selectedTool.updateVisibilities(showTiles, showElements, showGrid, showCollisionMap);
 	}
 
 	public void setShowElements(boolean showElements) {
 		this.showElements = showElements;
 		mntmToggleElements.setSelected(showElements);
 		if (selectedTool != null)
-			selectedTool.updateVisibilities(showTiles, showElements, showGrid);
+			selectedTool.updateVisibilities(showTiles, showElements, showGrid, showCollisionMap);
 	}
 
 	public void setShowGrid(boolean showGrid) {
 		this.showGrid = showGrid;
 		mntmToggleGrid.setSelected(showGrid);
 		if (selectedTool != null)
-			selectedTool.updateVisibilities(showTiles, showElements, showGrid);
+			selectedTool.updateVisibilities(showTiles, showElements, showGrid, showCollisionMap);
+	}
+	
+	public void setShowCollisionMap(boolean showCollisionMap) {
+		this.showCollisionMap = showCollisionMap;
+		mntmToggleCollisionMap.setSelected(showCollisionMap);
+		if (selectedTool != null)
+			selectedTool.updateVisibilities(showTiles, showElements, showGrid, showCollisionMap);
 	}
 	
 	public Tool getSelectedTool() {

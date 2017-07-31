@@ -78,7 +78,7 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 			
 			screenShotBatch.begin();
-			editor.getMap().draw(assetManager, true, true, false, 0, 0, 0, null, screenShotBatch, editor.getMap().getMinTileX(), editor.getMap().getMinTileY(), editor.getMap().getWidth(), editor.getMap().getHeight());
+			editor.getMap().draw(assetManager, true, true, false, false, 0, 0, 0, null, screenShotBatch, editor.getMap().getMinTileX(), editor.getMap().getMinTileY(), editor.getMap().getWidth(), editor.getMap().getHeight());
 			screenShotBatch.end();
 			
 			fbo.end();
@@ -127,7 +127,7 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 				selectedLayer = editor.getSelectedTool().getSelectedLayer();
 			}
 			
-			editor.getMap().draw(editor.getAssetManager(), editor.showTiles(), editor.showMapElements(), editor.showGrid(), (int) (mouseLocation.x / MainEditor.TILE_SIZE), (int) (mouseLocation.y / MainEditor.TILE_SIZE), selectedLayer, selectedItem, batch, (int) (rect.xWithOffset() / MainEditor.TILE_SIZE), (int) (rect.yWithOffset() / MainEditor.TILE_SIZE), (int) (rect.width / MainEditor.TILE_SIZE), (int) (rect.height / MainEditor.TILE_SIZE));
+			editor.getMap().draw(editor.getAssetManager(), editor.showTiles(), editor.showMapElements(), editor.showGrid(), editor.showCollisionMap(), (int) (mouseLocation.x / MainEditor.TILE_SIZE), (int) (mouseLocation.y / MainEditor.TILE_SIZE), selectedLayer, selectedItem, batch, (int) (rect.xWithOffset() / MainEditor.TILE_SIZE), (int) (rect.yWithOffset() / MainEditor.TILE_SIZE), (int) (rect.width / MainEditor.TILE_SIZE), (int) (rect.height / MainEditor.TILE_SIZE));
 		}
 		
 		if (editor.getSelectedTool() != null)
@@ -215,15 +215,15 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 	public boolean keyDown(int keycode) {
 		switch(keycode) {
 		case Keys.G:
-			if (controlPressed())
+			if (!controlPressed() && !shiftPressed())
 				editor.setShowGrid(!editor.showGrid());
 			break;
 		case Keys.T:
-			if (controlPressed())
+			if (!controlPressed() && !shiftPressed())
 				editor.setShowTiles(!editor.showTiles());
 			break;
 		case Keys.E:
-			if (controlPressed())
+			if (!controlPressed() && !shiftPressed())
 				editor.setShowElements(!editor.showMapElements());
 			break;
 		/*case Keys.Z:
@@ -247,6 +247,14 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 			break;
 		case Keys.F2:
 			renderMapToFile = true;
+			break;
+		case Keys.C:
+			if (!controlPressed() && !shiftPressed())
+				editor.setShowCollisionMap(!editor.showCollisionMap());
+			break;
+		case Keys.F6:
+			if (editor.getMap() != null)
+				editor.getMap().regenerateCollisionMaps(editor.getAssetManager());
 			break;
 		}
 		return false;
