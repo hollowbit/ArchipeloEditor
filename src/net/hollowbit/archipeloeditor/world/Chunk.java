@@ -1,6 +1,6 @@
 package net.hollowbit.archipeloeditor.world;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -18,7 +18,7 @@ public class Chunk {
 	private int x, y;
 	private String[][] tiles;
 	private String[][] elements;
-	private ArrayList<EntitySnapshot> entitySnapshots;
+	private HashMap<String, EntitySnapshot> entitySnapshots;
 	private boolean[][] naturalCollisionMap;
 	private byte[][] overrideCollisionMap;
 	
@@ -30,7 +30,7 @@ public class Chunk {
 		this.elements = new String[ChunkData.SIZE][ChunkData.SIZE];
 		this.naturalCollisionMap = new boolean[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
 		this.overrideCollisionMap = new byte[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
-		entitySnapshots = new ArrayList<EntitySnapshot>();
+		entitySnapshots = new HashMap<String, EntitySnapshot>();
 	}
 	
 	public Chunk(Chunk chunkToCopy) {
@@ -69,9 +69,7 @@ public class Chunk {
 			}
 		}
 		
-		entitySnapshots = new ArrayList<EntitySnapshot>();
-		for (EntitySnapshot entity : chunkToCopy.entitySnapshots)
-			this.entitySnapshots.add(new EntitySnapshot(entity));
+		entitySnapshots = new HashMap<String, EntitySnapshot>(chunkToCopy.entitySnapshots);
 	}
 	
 	public Chunk(ChunkData data) {
