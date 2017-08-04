@@ -170,6 +170,17 @@ public class Map implements Cloneable {
 	}
 	
 	public void regenerateCollisionMaps(AssetManager assetManager) {
+		//Clear collisions
+		for (ChunkRow row : chunkRows.values()) {
+			for (Chunk chunk : row.getChunks().values()) {
+				for (int r = 0; r < ChunkData.SIZE * TileData.COLLISION_MAP_SCALE; r++) {
+					for (int c = 0; c < ChunkData.SIZE * TileData.COLLISION_MAP_SCALE; c++)
+						chunk.getNaturalCollisionMap()[r][c] = false;
+				}
+			}
+		}
+		
+		//Calculate collisions
 		for (ChunkRow row : chunkRows.values()) {
 			for (Chunk chunk : row.getChunks().values()) {
 				int chunkColX = chunk.getX() * ChunkData.SIZE * TileData.COLLISION_MAP_SCALE;
@@ -198,9 +209,9 @@ public class Map implements Cloneable {
 						if (element != null) {
 							for (int colRow = 0; colRow < element.collisionTable.length; colRow++) {
 								for (int colCol = 0; colCol < element.collisionTable[0].length; colCol++) {
-									if (element.collisionTable[colRow][colCol]) {
+									if (element.collisionTable[element.collisionTable.length - colRow - 1][colCol]) {
 										int x = c * TileData.COLLISION_MAP_SCALE + colCol + chunkColX + element.offsetX;
-										int y = r * TileData.COLLISION_MAP_SCALE + colRow + chunkColY + element.offsetY - (element.collisionTable.length - 1);
+										int y = r * TileData.COLLISION_MAP_SCALE + colRow + chunkColY + element.offsetY;
 										
 										this.setCollisionMapAtPos(x, y, true);
 									}
