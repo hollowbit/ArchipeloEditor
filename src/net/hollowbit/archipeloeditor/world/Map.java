@@ -50,18 +50,19 @@ public class Map implements Cloneable {
 		int visibleChunkX = (int) Math.floor((float) visibleX / ChunkData.SIZE);
 		int visibleChunkY = (int) Math.floor((float) visibleY / ChunkData.SIZE);
 		
+
+		int hoverChunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
+		int hoverChunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
+		
+		int xWithinChunk = tileX % ChunkData.SIZE;
+		if (tileX < 0)
+			xWithinChunk = ChunkData.SIZE - (Math.abs(tileX + 1) % ChunkData.SIZE) - 1;
+		int yWithinChunk = tileY % ChunkData.SIZE;
+		if (tileY < 0)
+			yWithinChunk = ChunkData.SIZE - (Math.abs(tileY + 1) % ChunkData.SIZE) - 1;
+		
 		//If show tiles and tiles exist, draw them
 		if (showTiles) {
-			int hoverChunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
-			int hoverChunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
-			
-			int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
-			if (tileX < 0)
-				xWithinChunk = ChunkData.SIZE - xWithinChunk;
-			int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
-			if (tileY < 0)
-				yWithinChunk = ChunkData.SIZE - yWithinChunk;
-			
 			MapTile hoverTile = null;
 			if (selectedLayer == MainEditor.TILE_LAYER && selectedListValue != null)
 				hoverTile = (MapTile) selectedListValue;
@@ -84,16 +85,6 @@ public class Map implements Cloneable {
 		
 		//If show elements and elements exist, draw them
 		if (showElements) {
-			int hoverChunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
-			int hoverChunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
-
-			int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
-			if (tileX < 0)
-				xWithinChunk = ChunkData.SIZE - xWithinChunk;
-			int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
-			if (tileY < 0)
-				yWithinChunk = ChunkData.SIZE - yWithinChunk;
-			
 			MapElement hoverElement = null;
 			if (selectedLayer == MainEditor.ELEMENT_LAYER && selectedListValue != null)
 				hoverElement = (MapElement) selectedListValue;
@@ -228,15 +219,13 @@ public class Map implements Cloneable {
 		int chunkX = (int) Math.floor((float) x / (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE));
 		int chunkY = (int) Math.floor((float) y / (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE));
 		
-		int xWithinChunk = Math.abs(x) % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE);
-		if (x < 0)
-			xWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - xWithinChunk;
-		int yWithinChunk = Math.abs(y) % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE);
-		if (y < 0)
-			yWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - yWithinChunk;
+		int xWithinChunk = x % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE);
+		if (x <0)
+			xWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - (Math.abs(x + 1) % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE)) - 1;
 		
-		if (xWithinChunk == (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) || yWithinChunk == (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE))
-			return;
+		int yWithinChunk = y % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE);
+		if (y < 0)
+			yWithinChunk = (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE) - (Math.abs(y + 1) % (ChunkData.SIZE * TileData.COLLISION_MAP_SCALE)) - 1;
 		
 		Chunk chunk = getChunk(chunkX, chunkY);
 		if (chunk != null)
@@ -355,7 +344,8 @@ public class Map implements Cloneable {
 		parentFolder.mkdirs();
 		File folder = new File(parentFolder, name + "/");
 		folder.mkdirs();
-		
+
+		System.out.println("Preparing settings file...");
 		File settingsFile = new File(folder, "settings.json");
 		settingsFile.createNewFile();
 
@@ -376,22 +366,34 @@ public class Map implements Cloneable {
 		chunkFolder.mkdirs();
 		deleteFolderContents(chunkFolder);//Make sure chunk folder is empty before putting things in it
 		
+		int numChunks = 0;
+		for (ChunkRow row : chunkRows.values()) {
+			numChunks += row.getChunks().size();
+		}
+		
+		int currentCount = 0;
 		for (ChunkRow row : chunkRows.values()) {
 			File rowFolder = new File(chunkFolder, row.getY() + "/");
 			rowFolder.mkdirs();
 			deleteFolderContents(rowFolder);//Make sure row folder is empty
 			
 			for (Chunk chunk : row.getChunks().values()) {
+				currentCount++;
+				
+				System.out.println("Writing chunks..." + ((float) currentCount / numChunks * 100) + "%");
+				
 				FileWriter chunkFileWriter = new FileWriter(new File(rowFolder, chunk.getX() + ".json"));
-				chunkFileWriter.write(json.prettyPrint(chunk.getData(), settings));
+				json.toJson(chunk.getData(), chunkFileWriter);
 				chunkFileWriter.close();
 				
 				data.chunks.add(new ChunkLocation(chunk.getX(), chunk.getY()));
 			}
 		}
 		
+		System.out.println("Writing settings file...");
 		settingsWriter.write(json.prettyPrint(data, settings));
 		settingsWriter.close();
+		System.out.println("Done!");
 	}
 	
 	private void deleteFolderContents(File folder) {
@@ -511,12 +513,12 @@ public class Map implements Cloneable {
 		int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
 		int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
 		
-		int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+		int xWithinChunk = tileX % ChunkData.SIZE;
 		if (tileX < 0)
-			xWithinChunk = ChunkData.SIZE - xWithinChunk;
-		int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+			xWithinChunk = ChunkData.SIZE - (Math.abs(tileX + 1) % ChunkData.SIZE) - 1;
+		int yWithinChunk = tileY % ChunkData.SIZE;
 		if (tileY < 0)
-			yWithinChunk = ChunkData.SIZE - yWithinChunk;
+			yWithinChunk = ChunkData.SIZE - (Math.abs(tileY + 1) % ChunkData.SIZE) - 1;
 		
 		setTile(chunkX, chunkY, xWithinChunk, yWithinChunk, tileId);
 	}
@@ -537,12 +539,12 @@ public class Map implements Cloneable {
 		int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
 		int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
 		
-		int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+		int xWithinChunk = tileX % ChunkData.SIZE;
 		if (tileX < 0)
-			xWithinChunk = ChunkData.SIZE - xWithinChunk;
-		int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+			xWithinChunk = ChunkData.SIZE - (Math.abs(tileX + 1) % ChunkData.SIZE) - 1;
+		int yWithinChunk = tileY % ChunkData.SIZE;
 		if (tileY < 0)
-			yWithinChunk = ChunkData.SIZE - yWithinChunk;
+			yWithinChunk = ChunkData.SIZE - (Math.abs(tileY + 1) % ChunkData.SIZE) - 1;
 		
 		return getTile(chunkX, chunkY, xWithinChunk, yWithinChunk);
 	}
@@ -559,13 +561,13 @@ public class Map implements Cloneable {
 	public void setElement(int tileX, int tileY, String elementId) {
 		int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
 		int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
-		
-		int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+
+		int xWithinChunk = tileX % ChunkData.SIZE;
 		if (tileX < 0)
-			xWithinChunk = ChunkData.SIZE - xWithinChunk;
-		int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+			xWithinChunk = ChunkData.SIZE - (Math.abs(tileX + 1) % ChunkData.SIZE) - 1;
+		int yWithinChunk = tileY % ChunkData.SIZE;
 		if (tileY < 0)
-			yWithinChunk = ChunkData.SIZE - yWithinChunk;
+			yWithinChunk = ChunkData.SIZE - (Math.abs(tileY + 1) % ChunkData.SIZE) - 1;
 		
 		setElement(chunkX, chunkY, xWithinChunk, yWithinChunk, elementId);
 	}
@@ -585,13 +587,13 @@ public class Map implements Cloneable {
 	public String getElement(int tileX, int tileY) {
 		int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
 		int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
-		
-		int xWithinChunk = Math.abs(tileX) % ChunkData.SIZE;
+
+		int xWithinChunk = tileX % ChunkData.SIZE;
 		if (tileX < 0)
-			xWithinChunk = ChunkData.SIZE - xWithinChunk;
-		int yWithinChunk = Math.abs(tileY) % ChunkData.SIZE;
+			xWithinChunk = ChunkData.SIZE - (Math.abs(tileX + 1) % ChunkData.SIZE) - 1;
+		int yWithinChunk = tileY % ChunkData.SIZE;
 		if (tileY < 0)
-			yWithinChunk = ChunkData.SIZE - yWithinChunk;
+			yWithinChunk = ChunkData.SIZE - (Math.abs(tileY + 1) % ChunkData.SIZE) - 1;
 		
 		return getElement(chunkX, chunkY, xWithinChunk, yWithinChunk);
 	}

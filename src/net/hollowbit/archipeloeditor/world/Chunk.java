@@ -30,7 +30,7 @@ public class Chunk {
 		this.elements = new String[ChunkData.SIZE][ChunkData.SIZE];
 		this.naturalCollisionMap = new boolean[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
 		this.overrideCollisionMap = new byte[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
-		entitySnapshots = new HashMap<String, EntitySnapshot>();
+		this.entitySnapshots = new HashMap<String, EntitySnapshot>();
 	}
 	
 	public Chunk(Chunk chunkToCopy) {
@@ -82,43 +82,22 @@ public class Chunk {
 		//Deserialize collision map
 		this.naturalCollisionMap = new boolean[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
 		if (data.collisionData != null && !data.collisionData.equals("")) {
-			char[] bytes = data.collisionData.toCharArray();
-			int i2 = 0;
+			int i = 0;
 	        for (int r = 0; r < naturalCollisionMap.length; r++) {
 	            for (int c = 0; c < naturalCollisionMap[0].length; c++) {
-	            	byte val = (byte) bytes[i2 / Byte.SIZE];
-	                int pos = i2 % Byte.SIZE;
-	                naturalCollisionMap[r][c] = ((val >> pos) & 1) == 1;
-	                
-	                i2++;
+	                naturalCollisionMap[r][c] = data.collisionData.charAt(i) == '1';
+	                i++;
 	            }
 	        }
 		}
 		
 		this.overrideCollisionMap = new byte[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
 		if (data.overrideCollisionData != null && !data.overrideCollisionData.equals("")) {
-			char[] bytes = data.overrideCollisionData.toCharArray();
-			int i2 = 0;
+			int i = 0;
 	        for (int r = 0; r < naturalCollisionMap.length; r++) {
 	            for (int c = 0; c < naturalCollisionMap[0].length; c++) {
-	            	byte val = (byte) bytes[i2 / Byte.SIZE];
-	                int pos = i2 % Byte.SIZE;
-	                boolean tick1 = ((val >> pos) & 1) == 1;
-	                
-	                i2++;
-	                val = (byte) bytes[i2 / Byte.SIZE];
-	                pos = i2 % Byte.SIZE;
-	                boolean tick2 = ((val >> pos) & 1) == 1;
-	                
-	                if (!tick1 && !tick2)
-	                	overrideCollisionMap[r][c] = COLLISION_DEFAULT;
-	                else if (!tick1 && tick2)
-	                	overrideCollisionMap[r][c] = COLLISION_NO;
-	                else if (tick1 && !tick2)
-	                	overrideCollisionMap[r][c] = COLLISION_YES;
-	                else
-	                
-	                i2++;
+	                this.overrideCollisionMap[r][c] = Byte.parseByte("" + data.overrideCollisionData.charAt(i));
+	                i++;
 	            }
 	        }
 		}
@@ -144,57 +123,23 @@ public class Chunk {
 		
 		//Serialize collision data
 		String collisionData = "";
-        int i = 0;
-        byte accum = 0;
         for (int r = 0; r < naturalCollisionMap.length; r++) {
             for (int c = 0; c < naturalCollisionMap[0].length; c++) {
-                if (naturalCollisionMap[r][c])
-                    accum |= (1 << i);
-                else
-                	accum &= ~(1 << i);
-                    
-                i++;
-                if (i >= Byte.SIZE) {
-                    i = 0;
-                    collisionData += (char) accum;
-                }
+                collisionData += naturalCollisionMap[r][c] ? "1" : "0";
             }
         }
-        collisionData += (char) accum;
 		
         data.collisionData = collisionData;
         
         //Serialize override collision data
 		collisionData = "";
-        i = 0;
-        accum = 0;
         for (int r = 0; r < overrideCollisionMap.length; r++) {
             for (int c = 0; c < overrideCollisionMap[0].length; c++) {
-                if (overrideCollisionMap[r][c] == COLLISION_DEFAULT) {
-                    accum &= ~(1 << i);
-                    i++;
-                    accum &= ~(1 << i);
-                } else if (overrideCollisionMap[r][c] == COLLISION_NO) {
-                	accum &= ~(1 << i);
-                    i++;
-                    accum |= (1 << i);
-                } else if (overrideCollisionMap[r][c] == COLLISION_YES) {
-                	accum |= (1 << i);
-                    i++;
-                    accum &= ~(1 << i);
-                }
-                
-                i++;
-                if (i >= Byte.SIZE) {
-                    i = 0;
-                    collisionData += (char) accum;
-                }
+                collisionData += "" + overrideCollisionMap[r][c];
             }
         }
-        collisionData += (char) accum;
         
         data.overrideCollisionData = collisionData;
-        
 		return data;
 	}
 	

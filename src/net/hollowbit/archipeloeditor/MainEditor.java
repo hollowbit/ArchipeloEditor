@@ -668,7 +668,7 @@ public class MainEditor implements Runnable {
     	if (selectedFile == null) 
     		return false;
     	else {
-    		saveLocation = selectedFile.getPath();
+    		saveLocation = selectedFile.getParentFile().getPath();
     		lblMapPath.setText("         " + saveLocation);
     		map = new Map();
     		try {
