@@ -1,11 +1,12 @@
 package net.hollowbit.archipeloeditor.world;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloshared.ChunkData;
+import net.hollowbit.archipeloshared.EntityData;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.TileData;
 
@@ -18,9 +19,9 @@ public class Chunk {
 	private int x, y;
 	private String[][] tiles;
 	private String[][] elements;
-	private HashMap<String, EntitySnapshot> entitySnapshots;
 	private boolean[][] naturalCollisionMap;
 	private byte[][] overrideCollisionMap;
+	private ArrayList<EntitySnapshot> entities;
 	
 	public Chunk(int x, int y) {
 		super();
@@ -30,7 +31,7 @@ public class Chunk {
 		this.elements = new String[ChunkData.SIZE][ChunkData.SIZE];
 		this.naturalCollisionMap = new boolean[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
 		this.overrideCollisionMap = new byte[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
-		this.entitySnapshots = new HashMap<String, EntitySnapshot>();
+		this.entities = new ArrayList<EntitySnapshot>();
 	}
 	
 	public Chunk(Chunk chunkToCopy) {
@@ -69,37 +70,46 @@ public class Chunk {
 			}
 		}
 		
-		entitySnapshots = new HashMap<String, EntitySnapshot>(chunkToCopy.entitySnapshots);
+		if (chunkToCopy.entities != null) {
+			this.entities = new ArrayList<EntitySnapshot>();
+			for (EntitySnapshot entity : chunkToCopy.entities)
+				this.entities.add(entity);
+		}
 	}
 	
-	public Chunk(ChunkData data) {
+	public Chunk(ChunkData data, ChunkCollisionData collisionData, EntityData entityData) {
 		this.x = data.x;
 		this.y = data.y;
 		this.tiles = data.tiles;
 		this.elements = data.elements;
-		this.entitySnapshots = data.entities;
 		
-		//Deserialize collision map
-		this.naturalCollisionMap = new boolean[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
-		if (data.collisionData != null && !data.collisionData.equals("")) {
-			int i = 0;
-	        for (int r = 0; r < naturalCollisionMap.length; r++) {
-	            for (int c = 0; c < naturalCollisionMap[0].length; c++) {
-	                naturalCollisionMap[r][c] = data.collisionData.charAt(i) == '1';
-	                i++;
-	            }
-	        }
+		if (collisionData != null) {
+			//Deserialize collision map
+			this.naturalCollisionMap = new boolean[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
+			if (collisionData.collisionData != null && !collisionData.collisionData.equals("")) {
+				int i = 0;
+		        for (int r = 0; r < naturalCollisionMap.length; r++) {
+		            for (int c = 0; c < naturalCollisionMap[0].length; c++) {
+		                naturalCollisionMap[r][c] = collisionData.collisionData.charAt(i) == '1';
+		                i++;
+		            }
+		        }
+			}
+			
+			this.overrideCollisionMap = new byte[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
+			if (collisionData.overrideCollisionData != null && !collisionData.overrideCollisionData.equals("")) {
+				int i = 0;
+		        for (int r = 0; r < naturalCollisionMap.length; r++) {
+		            for (int c = 0; c < naturalCollisionMap[0].length; c++) {
+		                this.overrideCollisionMap[r][c] = Byte.parseByte("" + collisionData.overrideCollisionData.charAt(i));
+		                i++;
+		            }
+		        }
+			}
 		}
 		
-		this.overrideCollisionMap = new byte[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
-		if (data.overrideCollisionData != null && !data.overrideCollisionData.equals("")) {
-			int i = 0;
-	        for (int r = 0; r < naturalCollisionMap.length; r++) {
-	            for (int c = 0; c < naturalCollisionMap[0].length; c++) {
-	                this.overrideCollisionMap[r][c] = Byte.parseByte("" + data.overrideCollisionData.charAt(i));
-	                i++;
-	            }
-	        }
+		if (entityData != null) {
+			this.entities = entityData.entities;
 		}
         
 		if (this.tiles == null)
@@ -113,13 +123,32 @@ public class Chunk {
 	 * Returns the chunk data to be saved to a file
 	 * @return
 	 */
-	public ChunkData getData() {
+	public ChunkData generateData() {
 		ChunkData data = new ChunkData();
 		data.x = this.x;
 		data.y = this.y;
 		data.tiles = this.tiles;
 		data.elements = this.elements;
-		data.entities = this.entitySnapshots;
+		
+		//Serialize collision data
+		String collisionData = "";
+        for (int r = 0; r < naturalCollisionMap.length; r++) {
+            for (int c = 0; c < naturalCollisionMap[0].length; c++) {
+            	if (overrideCollisionMap[r][c] == COLLISION_DEFAULT)
+            		collisionData += naturalCollisionMap[r][c] ? "1" : "0";
+            	else if (overrideCollisionMap[r][c] == COLLISION_NO)
+            		collisionData += "0";
+            	else if (overrideCollisionMap[r][c] == COLLISION_YES)
+            		collisionData += "1";
+            }
+        }
+		
+        data.collisionData = collisionData;
+		return data;
+	}
+	
+	public ChunkCollisionData generateChunkCollisionData() {
+		ChunkCollisionData data = new ChunkCollisionData();
 		
 		//Serialize collision data
 		String collisionData = "";
@@ -128,7 +157,6 @@ public class Chunk {
                 collisionData += naturalCollisionMap[r][c] ? "1" : "0";
             }
         }
-		
         data.collisionData = collisionData;
         
         //Serialize override collision data
@@ -138,8 +166,14 @@ public class Chunk {
                 collisionData += "" + overrideCollisionMap[r][c];
             }
         }
-        
         data.overrideCollisionData = collisionData;
+		
+		return data;
+	}
+	
+	public EntityData generateEntityData() {
+		EntityData data = new EntityData();
+		data.entities = this.entities;
 		return data;
 	}
 	
@@ -244,4 +278,9 @@ public class Chunk {
 	public byte[][] getOverrideCollisionMap() {
 		return overrideCollisionMap;
 	}
+	
+	public ArrayList<EntitySnapshot> getEntities() {
+		return entities;
+	}
+	
 }

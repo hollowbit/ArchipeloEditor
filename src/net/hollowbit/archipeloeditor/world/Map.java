@@ -14,6 +14,7 @@ import com.badlogic.gdx.utils.JsonWriter;
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.ChunkLocation;
+import net.hollowbit.archipeloshared.EntityData;
 import net.hollowbit.archipeloshared.InvalidMapFolderException;
 import net.hollowbit.archipeloshared.MapData;
 import net.hollowbit.archipeloshared.TileData;
@@ -280,16 +281,17 @@ public class Map implements Cloneable {
 	public void load(File folder) throws InvalidMapFolderException {
 		if (!folder.exists())
 			throw new InvalidMapFolderException("No folder selected");
-		
+
+		//Load map settings
 		File settingsFile = new File(folder, "settings.json");
 		if (!settingsFile.exists())
 			throw new InvalidMapFolderException("Settings file not found. There must be a settings.json file in the map's root directory.");
-			
+		
 		Json json = new Json();
 		MapData mapData;
 		FileReader reader = null;
 		try {
-			 reader = new FileReader(settingsFile);
+			reader = new FileReader(settingsFile);
 			mapData = (MapData) json.fromJson(MapData.class, reader);
 		} catch (Exception e) {
 			throw new InvalidMapFolderException("Settings file is invalid.");
@@ -307,25 +309,40 @@ public class Map implements Cloneable {
 		this.music = mapData.music;
 		
 		//Load in chunks now that we have the settings
-		File chunkFolder = new File(folder, "chunks/");
+		File chunksFolder = new File(folder, "chunks/");
 		for (ChunkLocation chunkLocation : mapData.chunks) {
 			//Get the chunk row folder
-			File chunkRowFolder = new File(chunkFolder, chunkLocation.y + "/");
-			if (!chunkRowFolder.exists())
-				throw new InvalidMapFolderException("Expected a chunk row folder called \"" + chunkLocation.y + "\" but it was not found.");
+			File chunkFolder = new File(chunksFolder, chunkLocation.y + "/" + chunkLocation.x + "/");
+			if (!chunkFolder.exists())
+				throw new InvalidMapFolderException("Expected a chunk folder called \"" + chunkLocation.y + "/" + chunkLocation.x + "\" but it was not found.");
 			
 			//Get the chunk file in folder
-			File chunkFile = new File(chunkRowFolder, chunkLocation.x + ".json");
+			File chunkFile = new File(chunkFolder, "data.json");
 			if (!chunkFile.exists())
-				throw new InvalidMapFolderException("Could not find the expected chunk file at \"" + chunkLocation.y + "/" + chunkLocation.x + ".json\"");
+				throw new InvalidMapFolderException("Could not find the expected chunk file at \"" + chunkLocation.y + "/" + chunkLocation.x + "/data.json\"");
+			
+			File chunkCollisionFile = new File(chunkFolder, "collisions.json");
+			if (!chunkCollisionFile.exists())
+				throw new InvalidMapFolderException("Could not find the expected chunk collision file at \"" + chunkLocation.y + "/" + chunkLocation.x + "/collisions.json\"");
+			
+			File chunkEntityFile = new File(chunkFolder, "entities.json");
+			if (!chunkEntityFile.exists())
+				throw new InvalidMapFolderException("Could not find the expected chunk entities file at \"" + chunkLocation.y + "/" + chunkLocation.x + "/entities.json\"");
 			
 			//Load data from chunk file
 			reader = null;
+			FileReader collisionReader = null;
+			FileReader entityReader = null;
 			try {
 				reader = new FileReader(chunkFile);
-				ChunkData data = (ChunkData) json.fromJson(ChunkData.class, reader);
+				collisionReader = new FileReader(chunkCollisionFile);
+				entityReader = new FileReader(chunkEntityFile);
 				
-				this.addChunk(chunkLocation.x, chunkLocation.y, new Chunk(data));
+				ChunkData data = json.fromJson(ChunkData.class, reader);
+				ChunkCollisionData collisionData = json.fromJson(ChunkCollisionData.class, collisionReader);
+				EntityData entityData = json.fromJson(EntityData.class, entityReader);
+				
+				this.addChunk(chunkLocation.x, chunkLocation.y, new Chunk(data, collisionData, entityData));
 				reader.close();
 			} catch (Exception e) {
 				throw new InvalidMapFolderException("Invalid chunk file at \"" + chunkLocation.y + "/" + chunkLocation.x + ".json\"");
@@ -362,9 +379,9 @@ public class Map implements Cloneable {
 		data.naturalLighting = this.naturalLighting;
 		data.music = this.music;
 		
-		File chunkFolder = new File(folder, "chunks/");
-		chunkFolder.mkdirs();
-		deleteFolderContents(chunkFolder);//Make sure chunk folder is empty before putting things in it
+		File chunksFolder = new File(folder, "chunks/");
+		chunksFolder.mkdirs();
+		deleteFolderContents(chunksFolder);//Make sure chunk folder is empty before putting things in it
 		
 		int numChunks = 0;
 		for (ChunkRow row : chunkRows.values()) {
@@ -373,7 +390,7 @@ public class Map implements Cloneable {
 		
 		int currentCount = 0;
 		for (ChunkRow row : chunkRows.values()) {
-			File rowFolder = new File(chunkFolder, row.getY() + "/");
+			File rowFolder = new File(chunksFolder, row.getY() + "/");
 			rowFolder.mkdirs();
 			deleteFolderContents(rowFolder);//Make sure row folder is empty
 			
@@ -382,9 +399,22 @@ public class Map implements Cloneable {
 				
 				System.out.println("Writing chunks..." + ((float) currentCount / numChunks * 100) + "%");
 				
-				FileWriter chunkFileWriter = new FileWriter(new File(rowFolder, chunk.getX() + ".json"));
-				json.toJson(chunk.getData(), chunkFileWriter);
+				File chunkFolder = new File(rowFolder, chunk.getX() + "/");
+				chunkFolder.mkdirs();
+				chunkFolder.createNewFile();
+				deleteFolderContents(chunkFolder);
+				
+				FileWriter chunkFileWriter = new FileWriter(new File(chunkFolder, "data.json"));
+				json.toJson(chunk.generateData(), chunkFileWriter);
 				chunkFileWriter.close();
+				
+				FileWriter chunkCollisionFileWriter = new FileWriter(new File(chunkFolder, "collisions.json"));
+				json.toJson(chunk.generateChunkCollisionData(), chunkCollisionFileWriter);
+				chunkCollisionFileWriter.close();
+				
+				FileWriter chunkEntityFileWriter = new FileWriter(new File(chunkFolder, "entities.json"));
+				json.toJson(chunk.generateEntityData(), chunkEntityFileWriter);
+				chunkEntityFileWriter.close();
 				
 				data.chunks.add(new ChunkLocation(chunk.getX(), chunk.getY()));
 			}

@@ -46,7 +46,7 @@ public class IslandGenerator extends Generator {
 			}
 		}
 		
-		return new Chunk(data);
+		return new Chunk(data, null, null);
 	}
 	
 	private float[][] generateOctavedSimplexNoise (int startX, int startY, int width, int height, int octaves, float roughness, float scale){

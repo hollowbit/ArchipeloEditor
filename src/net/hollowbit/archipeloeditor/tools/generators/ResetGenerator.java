@@ -13,7 +13,7 @@ public class ResetGenerator extends Generator {
 		data.x = x;
 		data.y = y;
 		
-		return new Chunk(data);
+		return new Chunk(data, null, null);
 	}
 	
 	@Override
