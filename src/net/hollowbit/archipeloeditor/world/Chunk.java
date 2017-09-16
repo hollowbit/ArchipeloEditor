@@ -131,19 +131,19 @@ public class Chunk {
 		data.elements = this.elements;
 		
 		//Serialize collision data
-		String collisionData = "";
+		StringBuilder collisionData = new StringBuilder("");
         for (int r = 0; r < naturalCollisionMap.length; r++) {
             for (int c = 0; c < naturalCollisionMap[0].length; c++) {
             	if (overrideCollisionMap[r][c] == COLLISION_DEFAULT)
-            		collisionData += naturalCollisionMap[r][c] ? "1" : "0";
+            		collisionData.append(naturalCollisionMap[r][c] ? "1" : "0");
             	else if (overrideCollisionMap[r][c] == COLLISION_NO)
-            		collisionData += "0";
+            		collisionData.append("0");
             	else if (overrideCollisionMap[r][c] == COLLISION_YES)
-            		collisionData += "1";
+            		collisionData.append("1");
             }
         }
 		
-        data.collisionData = collisionData;
+        data.collisionData = collisionData.toString();
 		return data;
 	}
 	
@@ -151,22 +151,22 @@ public class Chunk {
 		ChunkCollisionData data = new ChunkCollisionData();
 		
 		//Serialize collision data
-		String collisionData = "";
+		StringBuilder collisionData = new StringBuilder("");
         for (int r = 0; r < naturalCollisionMap.length; r++) {
             for (int c = 0; c < naturalCollisionMap[0].length; c++) {
-                collisionData += naturalCollisionMap[r][c] ? "1" : "0";
+                collisionData.append(naturalCollisionMap[r][c] ? "1" : "0");
             }
         }
-        data.collisionData = collisionData;
+        data.collisionData = collisionData.toString();
         
         //Serialize override collision data
-		collisionData = "";
+		collisionData = new StringBuilder("");
         for (int r = 0; r < overrideCollisionMap.length; r++) {
             for (int c = 0; c < overrideCollisionMap[0].length; c++) {
-                collisionData += "" + overrideCollisionMap[r][c];
+                collisionData.append(overrideCollisionMap[r][c]);
             }
         }
-        data.overrideCollisionData = collisionData;
+        data.overrideCollisionData = collisionData.toString();
 		
 		return data;
 	}
