@@ -3,6 +3,8 @@ package net.hollowbit.archipeloeditor.tools.editortools;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -11,6 +13,7 @@ import java.util.ArrayList;
 
 import javax.swing.Icon;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
@@ -31,11 +34,11 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloeditor.WorldEditor;
 import net.hollowbit.archipeloeditor.changes.MapChange;
 import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloeditor.world.MapElement;
 import net.hollowbit.archipeloeditor.world.MapTile;
-import net.hollowbit.archipeloeditor.world.worldrenderer.WorldRenderer;
 import net.hollowbit.archipeloshared.ChunkData;
 
 public class Pencil extends Tool {
@@ -50,12 +53,13 @@ public class Pencil extends Tool {
 	JTextField textFieldSearch;
 	JList<Object> list;
 	JLabel lblTileName;
+	JComboBox<String> tilesetComboBox;
 	
 	Icon iconHoveredOver = null;
 	
 	MapChange change;
 	
-	public Pencil(MainEditor editor, WorldRenderer worldRenderer) {
+	public Pencil(MainEditor editor, WorldEditor worldRenderer) {
 		super(editor, worldRenderer);
 	}
 
@@ -63,6 +67,7 @@ public class Pencil extends Tool {
 	public void render(SpriteBatch batch) {
 		
 	}
+	
 	
 	public void plot(int tileX, int tileY) {
 		if (selectedLayer == MainEditor.TILE_LAYER)
@@ -280,7 +285,7 @@ public class Pencil extends Tool {
 					lblListTitle.setText("Tiles:");
 					rdbtnElements.setSelected(false);
 					rdbtnTiles.setSelected(true);
-					reloadLists();
+					reload(editor.getAssetManager());
 				}
 			}
 		});
@@ -324,7 +329,7 @@ public class Pencil extends Tool {
 					lblListTitle.setText("Elements:");
 					rdbtnTiles.setSelected(false);
 					rdbtnElements.setSelected(true);
-					reloadLists();
+					reload(editor.getAssetManager());
 				}
 			}
 			
@@ -345,17 +350,17 @@ public class Pencil extends Tool {
 			
 			@Override
 			public void removeUpdate(DocumentEvent e) {
-				reloadLists();
+				reload(editor.getAssetManager());
 			}
 			
 			@Override
 			public void insertUpdate(DocumentEvent e) {
-				reloadLists();
+				reload(editor.getAssetManager());
 			}
 			
 			@Override
 			public void changedUpdate(DocumentEvent e) {
-				reloadLists();
+				reload(editor.getAssetManager());
 			}
 		});
 		
@@ -368,13 +373,38 @@ public class Pencil extends Tool {
 		panel.add(textFieldSearch, gbc_textFieldSearch);
 		textFieldSearch.setColumns(10);
 		
+		tilesetComboBox = new JComboBox<String>();
+		tilesetComboBox.setPreferredSize(new Dimension(300, 15));
+		
+		for (String category : editor.getAssetManager().getCategoryTiles().keySet())
+			tilesetComboBox.addItem(category);
+		tilesetComboBox.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (tilesetComboBox.getSelectedItem() != null)
+					reloadLists(tilesetComboBox.getSelectedItem().toString());
+			}
+			
+		});
+		
+		GridBagConstraints gbc_tilesetComboBox = new GridBagConstraints();
+		gbc_tilesetComboBox.gridwidth = 5;
+		gbc_tilesetComboBox.weightx = 40;
+		gbc_tilesetComboBox.anchor = GridBagConstraints.WEST;
+		gbc_tilesetComboBox.insets = new Insets(0, 0, 5, 5);
+		gbc_tilesetComboBox.fill = GridBagConstraints.HORIZONTAL;
+		gbc_tilesetComboBox.gridx = 0;
+		gbc_tilesetComboBox.gridy = 8;
+		panel.add(tilesetComboBox, gbc_tilesetComboBox);
+		
 		lblListTitle = new JLabel("Tiles:  ");
 		GridBagConstraints gbc_lblListTitle = new GridBagConstraints();
 		gbc_lblListTitle.weightx = 40;
 		gbc_lblListTitle.anchor = GridBagConstraints.WEST;
 		gbc_lblListTitle.insets = new Insets(0, 0, 5, 5);
 		gbc_lblListTitle.gridx = 0;
-		gbc_lblListTitle.gridy = 8;
+		gbc_lblListTitle.gridy = 9;
 		panel.add(lblListTitle, gbc_lblListTitle);
 		
 		lblTileName = new JLabel("");
@@ -385,7 +415,7 @@ public class Pencil extends Tool {
 		gbc_lblTileName.gridwidth = 4;
 		gbc_lblTileName.insets = new Insets(0, 0, 5, 5);
 		gbc_lblTileName.gridx = 1;
-		gbc_lblTileName.gridy = 8;
+		gbc_lblTileName.gridy = 9;
 		panel.add(lblTileName, gbc_lblTileName);
 		
 		//Load items to list
@@ -507,22 +537,22 @@ public class Pencil extends Tool {
 		gbc_list.gridwidth = 5;
 		gbc_list.fill = GridBagConstraints.BOTH;
 		gbc_list.gridx = 0;
-		gbc_list.gridy = 9;
+		gbc_list.gridy = 10;
 		panel.add(list, gbc_list);
 	}
 	
 	//Reloads the lists depending on the selected layer
-	public void reloadLists () {
+	public void reloadLists (String category) {
 		ArrayList<Icon> iconList = new ArrayList<Icon>();
 		switch (selectedLayer) {
 		case 0:
-			for (MapTile tile : editor.getAssetManager().getMapTiles()){
+			for (MapTile tile : editor.getAssetManager().getCategoryTiles().get(category)){
 				if(tile.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
 					iconList.add(tile);
 			}
 			break;
 		case 1:
-			for (MapElement element : editor.getAssetManager().getMapElements()){
+			for (MapElement element : editor.getAssetManager().getCategoryElements().get(category)){
 				if (element.name.toLowerCase().contains(textFieldSearch.getText().toLowerCase()))
 					iconList.add(element);
 			}
@@ -544,7 +574,17 @@ public class Pencil extends Tool {
 	
 	@Override
 	public void reload(AssetManager assetManager) {
-		reloadLists();
+		tilesetComboBox.removeAllItems();
+		if (selectedLayer == 0) {
+			for (String category : editor.getAssetManager().getCategoryTiles().keySet())
+				tilesetComboBox.addItem(category);
+		} else if (selectedLayer == 1) {
+			for (String category : editor.getAssetManager().getCategoryElements().keySet())
+				tilesetComboBox.addItem(category);
+		}
+		
+		reloadLists(tilesetComboBox.getSelectedItem().toString());
+		
 		super.reload(assetManager);
 	}
 	

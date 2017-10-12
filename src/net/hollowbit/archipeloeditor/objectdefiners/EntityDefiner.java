@@ -1,7 +1,9 @@
-package net.hollowbit.archipeloeditor;
+package net.hollowbit.archipeloeditor.objectdefiners;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 
@@ -17,12 +19,17 @@ import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.text.NumberFormatter;
 
+import com.badlogic.gdx.utils.Json;
+
+import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloeditor.entity.EntityType;
+import net.hollowbit.archipeloeditor.tools.StringCapsule;
+import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloshared.Direction;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.PropertyDefinition;
 
-public class EntityDefiner extends JFrame {
+public class EntityDefiner extends ObjectDefiner<EntitySnapshot> {
 	
 	private static final int SPACE_BETWEEN_ELEMENTS = 30;
 	private static final int SPACE_OF_LABELS = 110;
@@ -32,7 +39,8 @@ public class EntityDefiner extends JFrame {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	public EntityDefiner (MainEditor editor, EntityType entityType, float x, float y) {
+	public EntityDefiner (MainEditor editor, AssetManager assetManager, EntityType entityType, float x, float y, DefinitionCompleteListener<EntitySnapshot> listener) {
+		super(editor, assetManager, listener);
 		setAlwaysOnTop(true);
 		setResizable(false);
 		setTitle("Entity Definer");
@@ -41,10 +49,6 @@ public class EntityDefiner extends JFrame {
 		setIconImage(MainEditor.ICON);
 		setLocationRelativeTo(null);
 		getContentPane().setLayout(null);
-		
-		//TODO Add base entity settings
-		//TODO Add default properties
-		//TODO Add other properties
 		
 		JLabel requiredLabel = new JLabel("* Required");
 		requiredLabel.setBounds(10, 10, 200, 30);
@@ -80,6 +84,8 @@ public class EntityDefiner extends JFrame {
 		definitions.addAll(entityType.getData().properties);
 		
 		final ArrayList<SnapshotModifier> modifiers = new ArrayList<SnapshotModifier>();
+		
+		Json json = new Json();
 		
 		for (int i = 0; i < definitions.size(); i++) {
 			PropertyDefinition propertyDefinition = definitions.get(i);
@@ -141,12 +147,28 @@ public class EntityDefiner extends JFrame {
 				});
 				break;
 			case POINT:
-				String json4 = "";
+				final StringCapsule json4 = new StringCapsule();
+				
+				JTextField poViewFld = new JTextField();
+				poViewFld.setEnabled(false);
+				poViewFld.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200 - SPACE_BETWEEN_ELEMENTS, 20);
+				getContentPane().add(poViewFld);
+				
+				JButton poEditBtn = new JButton("...");
+				poEditBtn.setBounds(SPACE_OF_LABELS + poViewFld.getWidth(), i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 30, 20);
+				getContentPane().add(poEditBtn);
+				
+				poEditBtn.addMouseListener(new MouseAdapter() {
+					@Override
+					public void mouseClicked(MouseEvent e) {
+						
+					}
+				});
 				
 				modifiers.add(new SnapshotModifier() {
 					@Override
 					public void modify(EntitySnapshot snapshot) {
-						snapshot.putString(name, json4); 
+						snapshot.putString(name, json4.value); 
 					}
 				});
 				break;
@@ -210,12 +232,12 @@ public class EntityDefiner extends JFrame {
 				});
 				break;
 			case JSON:
-				String json = "";
+				String json0 = "";
 				
 				modifiers.add(new SnapshotModifier() {
 					@Override
 					public void modify(EntitySnapshot snapshot) {
-						snapshot.putString(name, json); 
+						snapshot.putString(name, json0);
 					}
 				});
 				break;
@@ -257,12 +279,11 @@ public class EntityDefiner extends JFrame {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				EntitySnapshot snapshot = new EntitySnapshot();
-				snapshot.name = idField.getText();
-				snapshot.putString("anim", animField.getText());
+				object.name = idField.getText();
+				object.putString("anim", animField.getText());
 				
 				for (SnapshotModifier mod : modifiers)
-					mod.modify(snapshot);
+					mod.modify(object);
 			}
 		});
 		getContentPane().add(confirm);
@@ -273,6 +294,11 @@ public class EntityDefiner extends JFrame {
 		
 		public abstract void modify(EntitySnapshot snapshot);
 		
+	}
+
+	@Override
+	protected EntitySnapshot createObject() {
+		return new EntitySnapshot();
 	}
 
 }

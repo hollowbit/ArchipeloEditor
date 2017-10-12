@@ -9,8 +9,8 @@ import java.awt.Insets;
 import java.awt.KeyboardFocusManager;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
@@ -31,7 +31,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JSplitPane;
 import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
@@ -49,7 +48,6 @@ import net.hollowbit.archipeloeditor.tools.editortools.Pencil;
 import net.hollowbit.archipeloeditor.tools.editortools.Tool;
 import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloeditor.world.Map;
-import net.hollowbit.archipeloeditor.world.worldrenderer.WorldRenderer;
 import net.hollowbit.archipeloshared.InvalidMapFolderException;
 
 public class MainEditor implements Runnable {
@@ -76,7 +74,7 @@ public class MainEditor implements Runnable {
 	private String saveLocation = null;
 	
 	private JLabel lblMapPath;
-	private WorldRenderer worldRenderer;
+	private WorldEditor worldEditor;
 	private LwjglCanvas lwjglCanvas;
 	private JMenuItem mntmSave;
 	private JMenuItem mntmSaveAs;
@@ -128,9 +126,9 @@ public class MainEditor implements Runnable {
 	public MainEditor() {
 		assetManager = new AssetManager();
 		//Map renderer
-		worldRenderer = new WorldRenderer(this, assetManager);
+		worldEditor = new WorldEditor(this, assetManager);
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-		lwjglCanvas = new LwjglCanvas(worldRenderer, config);
+		lwjglCanvas = new LwjglCanvas(worldEditor, config);
 		lwjglCanvas.setCursor(CURSOR);
 		
 		//Initialize
@@ -147,16 +145,36 @@ public class MainEditor implements Runnable {
 	private void initialize() {
 		MainEditor editor = this;
 		
+		//Map editor window
+		JFrame worldEditorWindow = new JFrame("Edit map...");
+		worldEditorWindow.setBounds(100, 100, 1300, 900);
+		worldEditorWindow.setLocationRelativeTo(null);
+		worldEditorWindow.setIconImage(ICON);
+		worldEditorWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		
+		worldEditorWindow.add(lwjglCanvas.getCanvas());
+		worldEditorWindow.addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentResized(ComponentEvent e) {
+				lwjglCanvas.getCanvas().setBounds(0, 0, e.getComponent().getSize().width, e.getComponent().getSize().height);
+				lwjglCanvas.getCanvas().revalidate();
+				super.componentResized(e);
+			}
+		});
+		
+		worldEditorWindow.setVisible(true);
+		
 		frame = new JFrame("Archipelo Map Editor v1.0");
-		frame.setBounds(100, 100, 1280, 720);
-		frame.setLocationRelativeTo(null);
+		frame.setBounds(100, 100, 300, 900);
+		frame.setLocationRelativeTo(worldEditorWindow);
+		frame.setLocation(worldEditorWindow.getLocation().x - frame.getWidth() - 5, worldEditorWindow.getLocation().y);
 		frame.setIconImage(ICON);
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		
 		KeyboardFocusManager manager = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		manager.setGlobalCurrentFocusCycleRoot(frame);
 		
-		frame.addWindowListener(new WindowListener() {
+		WindowListener mainWindowListener = new WindowListener() {
 			
 			//Event for window close, make sure user saved first before exiting
 			@Override
@@ -170,6 +188,7 @@ public class MainEditor implements Runnable {
 					}
 					lwjglCanvas.exit();
 					frame.dispose();
+					worldEditorWindow.dispose();
 					return;
 				}
 				
@@ -188,6 +207,7 @@ public class MainEditor implements Runnable {
 						}
 						lwjglCanvas.exit();
 						frame.dispose();
+						worldEditorWindow.dispose();
 					} else
 						break;
 				}
@@ -211,7 +231,10 @@ public class MainEditor implements Runnable {
 			@Override
 			public void windowOpened(WindowEvent e) {}
 			
-		});
+		};
+		
+		frame.addWindowListener(mainWindowListener);
+		worldEditorWindow.addWindowListener(mainWindowListener);
 		
 		JMenuBar menuBar = new JMenuBar();
 		frame.setJMenuBar(menuBar);
@@ -301,7 +324,7 @@ public class MainEditor implements Runnable {
 		mntmReload.addMouseListener(new MouseAdapter() {//Same as save but forces saving in a new location
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				worldRenderer.reloadAssets();
+				worldEditor.reloadAssets();
 			}
 		});
 		mnFile.add(mntmReload);
@@ -459,36 +482,10 @@ public class MainEditor implements Runnable {
 		lblMapPath.setHorizontalAlignment(SwingConstants.RIGHT);
 		menuBar.add(lblMapPath);
 		
-		//Divider to split tools from map
-		JSplitPane splitPane = new JSplitPane();
-		splitPane.setEnabled(false);
-		splitPane.setDividerLocation(282);
-		frame.getContentPane().add(splitPane, BorderLayout.CENTER);
-		
-		JPanel panel2 = new JPanel();
-		panel2.add(lwjglCanvas.getCanvas());
-		panel2.addComponentListener(new ComponentListener() {
-			
-			@Override
-			public void componentShown(ComponentEvent e) {}
-			
-			@Override
-			public void componentResized(ComponentEvent e) {
-				lwjglCanvas.getCanvas().setBounds(0, 0, e.getComponent().getSize().width, e.getComponent().getSize().height);
-				lwjglCanvas.getCanvas().revalidate();
-			}
-			 
-			@Override
-			public void componentMoved(ComponentEvent e) {}
-			
-			@Override
-			public void componentHidden(ComponentEvent e) {}
-		});
-		splitPane.setRightComponent(panel2);
-		
+		//Tools pane
 		JPanel panel = new JPanel();
+		frame.getContentPane().add(panel, BorderLayout.CENTER);
 		panel.setBorder(new EmptyBorder(5, 5, 5, 5));
-		splitPane.setLeftComponent(panel);
 		
 		GridBagLayout gbl_panel = new GridBagLayout();
 		gbl_panel.columnWidths = new int[] {29, 33, 33, 33, 33};
@@ -528,14 +525,14 @@ public class MainEditor implements Runnable {
 		//Pencil
 		final JToggleButton btnPencilTool = new JToggleButton(new ImageIcon(pencilIcon));
 		btnPencilTool.setSelected(true);
-		selectedTool = new Pencil(editor, worldRenderer);
+		selectedTool = new Pencil(editor, worldEditor);
 		btnPencilTool.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent arg0) {
 				btnBucketTool.setSelected(false);
 				btnEntityTool.setSelected(false);
 				btnChunkTool.setSelected(false);
-				setTool(new Pencil(editor, worldRenderer));
+				setTool(new Pencil(editor, worldEditor));
 			}
 		});
 		GridBagConstraints gbc_btnPencilTool = new GridBagConstraints();
@@ -551,7 +548,7 @@ public class MainEditor implements Runnable {
 				btnPencilTool.setSelected(false);
 				btnEntityTool.setSelected(false);
 				btnChunkTool.setSelected(false);
-				setTool(new Bucket(editor, worldRenderer));
+				setTool(new Bucket(editor, worldEditor));
 			}
 		});
 		GridBagConstraints gbc_btnBucketTool = new GridBagConstraints();
@@ -567,7 +564,7 @@ public class MainEditor implements Runnable {
 				btnPencilTool.setSelected(false);
 				btnBucketTool.setSelected(false);
 				btnChunkTool.setSelected(false);
-				setTool(new EntityAdderTool(editor, worldRenderer));
+				setTool(new EntityAdderTool(editor, worldEditor));
 			}
 		});
 		GridBagConstraints gbc_btnEntityTool = new GridBagConstraints();
@@ -583,7 +580,7 @@ public class MainEditor implements Runnable {
 				btnPencilTool.setSelected(false);
 				btnBucketTool.setSelected(false);
 				btnEntityTool.setSelected(false);
-				setTool(new ChunkTool(editor, worldRenderer));
+				setTool(new ChunkTool(editor, worldEditor));
 			}
 		});
 		GridBagConstraints gbc_btnChunkTool = new GridBagConstraints();
@@ -815,6 +812,14 @@ public class MainEditor implements Runnable {
 	
 	public void save() {
 		showMapSaveDialog(false);
+	}
+	
+	public JFrame getFrame() {
+		return frame;
+	}
+	
+	public WorldEditor getWorldEditor() {
+		return worldEditor;
 	}
 	
 }

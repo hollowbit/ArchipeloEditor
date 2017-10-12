@@ -16,7 +16,8 @@ public enum EntityType {
 	SIGN ("sign"),
 	BLOBBY_GRAVE ("blobby-grave"),
 	COMPUTER ("computer"),
-	WIZARD ("wizard");
+	WIZARD ("wizard"),
+	SPAWNER ("spawner");
 	
 	private String id;
 	private EntityTypeData data;

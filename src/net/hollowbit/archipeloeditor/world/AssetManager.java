@@ -28,6 +28,9 @@ public class AssetManager {
 	private HashMap<String, MapElement> elementMap;
 	private ArrayList<MapElement> elementList;
 	
+	private HashMap<String, ArrayList<MapTile>> categoryTiles;
+	private HashMap<String, ArrayList<MapElement>> categoryElements;
+	
 	private Texture grid;
 	private Texture invalid;
 	private Texture blank;
@@ -70,6 +73,8 @@ public class AssetManager {
 		tileList = new ArrayList<MapTile>();
 		elementMap = new HashMap<String, MapElement>();
 		elementList = new ArrayList<MapElement>();
+		categoryTiles = new HashMap<String, ArrayList<MapTile>>();
+		categoryElements = new HashMap<String, ArrayList<MapElement>>();
 	}
 	
 	public ArrayList<MapTile> getMapTiles() {
@@ -78,6 +83,14 @@ public class AssetManager {
 	
 	public ArrayList<MapElement> getMapElements() {
 		return elementList;
+	}
+	
+	public HashMap<String, ArrayList<MapTile>> getCategoryTiles() {
+		return categoryTiles;
+	}
+	
+	public HashMap<String, ArrayList<MapElement>> getCategoryElements() {
+		return categoryElements;
 	}
 	
 	public Texture getChunkTexture() {
@@ -96,9 +109,9 @@ public class AssetManager {
 		return blank;
 	}
 	
-	//////////////////////////
+	/////////////////////////////
 	/*Initiates all Elements!!!*/
-	//////////////////////////
+	/////////////////////////////
 	public void load () {
 		chunk = new Texture(Gdx.files.internal("chunk.png"), true);
 		grid = new Texture(Gdx.files.internal("grid.png"), true);
@@ -137,6 +150,16 @@ public class AssetManager {
 			MapTile tile = new MapTile(data, texture, icon);
 			tileMap.put(data.id, tile);
 			tileList.add(tile);
+			
+			//Get list of tiles in same category
+			ArrayList<MapTile> categoryTilesList = categoryTiles.get(data.category);
+			if (categoryTilesList == null) {//If no list exists, create one
+				categoryTilesList = new ArrayList<MapTile>();
+				categoryTiles.put(data.category, categoryTilesList);
+			}
+			
+			//Add the tile to the category list
+			categoryTilesList.add(tile);
 		}
 		
 		//Load elements now
@@ -168,6 +191,16 @@ public class AssetManager {
 			MapElement element = new MapElement(data, texture, icon);
 			elementMap.put(data.id, element);
 			elementList.add(element);
+
+			//Get list of elements in same category
+			ArrayList<MapElement> categoryElementsList = categoryElements.get(data.category);
+			if (categoryElementsList == null) {//If no list exists, create one
+				categoryElementsList = new ArrayList<MapElement>();
+				categoryElements.put(data.category, categoryElementsList);
+			}
+
+			//Add the element to the category list
+			categoryElementsList.add(element);
 		}
 	}
 	

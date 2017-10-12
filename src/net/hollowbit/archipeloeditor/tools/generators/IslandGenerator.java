@@ -10,7 +10,8 @@ public class IslandGenerator extends Generator {
 	OpenSimplexNoise noiseGen;
 	
 	public IslandGenerator(Map map) {
-		noiseGen = new OpenSimplexNoise(map.getName().hashCode());
+		if (map != null)
+			noiseGen = new OpenSimplexNoise(map.getName().hashCode());
 	}
 	
 	@Override

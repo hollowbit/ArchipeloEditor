@@ -9,16 +9,18 @@ import javax.swing.JPanel;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-import net.hollowbit.archipeloeditor.EntityDefiner;
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloeditor.WorldEditor;
 import net.hollowbit.archipeloeditor.entity.EntityType;
-import net.hollowbit.archipeloeditor.world.worldrenderer.WorldRenderer;
+import net.hollowbit.archipeloeditor.objectdefiners.EntityDefiner;
+import net.hollowbit.archipeloeditor.objectdefiners.ObjectDefiner.DefinitionCompleteListener;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public class EntityAdderTool extends Tool {
 	
 	JComboBox<EntityType> entityType;
 	
-	public EntityAdderTool(MainEditor editor, WorldRenderer worldRenderer) {
+	public EntityAdderTool(MainEditor editor, WorldEditor worldRenderer) {
 		super(editor, worldRenderer);
 	}
 
@@ -60,8 +62,14 @@ public class EntityAdderTool extends Tool {
 		if (tileX >= editor.getMap().getMaxTileX() || tileY >= editor.getMap().getMaxTileY() || tileX < editor.getMap().getMinTileX() || tileY < editor.getMap().getMinTileY())
 			return;
 		
-		EntityDefiner entityDefiner = new EntityDefiner(editor, (EntityType) entityType.getSelectedItem(), x, y);
-		entityDefiner.setVisible(true);
+		EntityDefiner entityDefiner = new EntityDefiner(editor, editor.getAssetManager(), (EntityType) entityType.getSelectedItem(), x, y, new DefinitionCompleteListener<EntitySnapshot>() {
+			
+			public void objectComplete(EntitySnapshot object) {
+				//TODO add entity to the map
+			};
+			
+		});
+		entityDefiner.open(null);
 	}
 
 	@Override

@@ -5,15 +5,15 @@ import javax.swing.JPanel;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloeditor.WorldEditor;
 import net.hollowbit.archipeloeditor.world.AssetManager;
-import net.hollowbit.archipeloeditor.world.worldrenderer.WorldRenderer;
 
 public abstract class Tool {
 	
 	protected MainEditor editor;
-	protected WorldRenderer worldRenderer;
+	protected WorldEditor worldRenderer;
 	
-	public Tool(MainEditor editor, WorldRenderer worldRenderer) {
+	public Tool(MainEditor editor, WorldEditor worldRenderer) {
 		this.editor = editor;
 		this.worldRenderer = worldRenderer;
 	}
