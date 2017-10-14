@@ -34,11 +34,11 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import net.hollowbit.archipeloeditor.MainEditor;
-import net.hollowbit.archipeloeditor.WorldEditor;
 import net.hollowbit.archipeloeditor.changes.MapChange;
 import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloeditor.world.MapElement;
 import net.hollowbit.archipeloeditor.world.MapTile;
+import net.hollowbit.archipeloeditor.worldeditor.WorldEditor;
 import net.hollowbit.archipeloshared.ChunkData;
 
 public class Pencil extends Tool {

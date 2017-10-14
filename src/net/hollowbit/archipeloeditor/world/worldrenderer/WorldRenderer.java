@@ -2,15 +2,15 @@ package net.hollowbit.archipeloeditor.world.worldrenderer;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
-import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloeditor.world.AssetManager;
+import net.hollowbit.archipeloeditor.world.Map;
 import net.hollowbit.archipeloshared.CollisionRect;
 
 public class WorldRenderer extends ApplicationAdapter implements InputProcessor {
@@ -42,19 +42,15 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 		super.create();
 	}
 	
-	@Override
-	public void render() {
+	public void render(Map map) {
 		if (paused)
 			return;
-		
-		Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
 		cam.update(Gdx.graphics.getDeltaTime());
 		
 		batch.setProjectionMatrix(cam.combined());
 		batch.begin();
-		if (editor.getMap() != null) {
+		if (map != null) {
 			Vector2 mouseLocation = cam.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
 			CollisionRect rect = cam.getViewRect();
 			
@@ -65,7 +61,7 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 				selectedLayer = editor.getSelectedTool().getSelectedLayer();
 			}
 			
-			editor.getMap().draw(editor.getAssetManager(), editor.showTiles(), editor.showMapElements(), editor.showGrid(), editor.showCollisionMap(), (int) (mouseLocation.x / MainEditor.TILE_SIZE), (int) (mouseLocation.y / MainEditor.TILE_SIZE), selectedLayer, selectedItem, batch, (int) (rect.xWithOffset() / MainEditor.TILE_SIZE), (int) (rect.yWithOffset() / MainEditor.TILE_SIZE), (int) (rect.width / MainEditor.TILE_SIZE), (int) (rect.height / MainEditor.TILE_SIZE));
+			map.draw(editor.getAssetManager(), editor.showTiles(), editor.showMapElements(), editor.showGrid(), editor.showCollisionMap(), (int) (mouseLocation.x / MainEditor.TILE_SIZE), (int) (mouseLocation.y / MainEditor.TILE_SIZE), selectedLayer, selectedItem, batch, (int) (rect.xWithOffset() / MainEditor.TILE_SIZE), (int) (rect.yWithOffset() / MainEditor.TILE_SIZE), (int) (rect.width / MainEditor.TILE_SIZE), (int) (rect.height / MainEditor.TILE_SIZE));
 		}
 		
 		//TODO render tile coordinate of mouse
@@ -116,13 +112,7 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 
 	@Override
 	public boolean scrolled(int amount) {
-		if (Gdx.input.isKeyPressed(Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Keys.CONTROL_RIGHT))
-			cam.zoom(amount * ZOOM_SCALE, Gdx.input.getX(), Gdx.input.getY());
-		else {
-			if (editor.getSelectedTool() != null)
-				editor.getSelectedTool().mouseScrolled(amount);
-		}
-		return true;
+		return false;
 	}
 	
 	public boolean controlPressed() {
@@ -135,6 +125,10 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 	
 	public boolean altPressed() {
 		return Gdx.input.isKeyPressed(Keys.ALT_LEFT) || Gdx.input.isKeyPressed(Keys.ALT_RIGHT);
+	}
+	
+	public GameCamera getCam() {
+		return cam;
 	}
 
 }

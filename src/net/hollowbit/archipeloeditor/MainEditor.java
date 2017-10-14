@@ -48,6 +48,7 @@ import net.hollowbit.archipeloeditor.tools.editortools.Pencil;
 import net.hollowbit.archipeloeditor.tools.editortools.Tool;
 import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloeditor.world.Map;
+import net.hollowbit.archipeloeditor.worldeditor.WorldEditor;
 import net.hollowbit.archipeloshared.InvalidMapFolderException;
 
 public class MainEditor implements Runnable {
@@ -86,6 +87,7 @@ public class MainEditor implements Runnable {
 	private JPanel toolSettingsPanel;
 	
 	private JFrame frame;
+	private JFrame worldEditorWindow;
 	
 	private Thread thread;
 	private boolean running = true;
@@ -126,6 +128,7 @@ public class MainEditor implements Runnable {
 	public MainEditor() {
 		assetManager = new AssetManager();
 		//Map renderer
+		worldEditorWindow = new JFrame("Edit map...");
 		worldEditor = new WorldEditor(this, assetManager);
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		lwjglCanvas = new LwjglCanvas(worldEditor, config);
@@ -146,7 +149,6 @@ public class MainEditor implements Runnable {
 		MainEditor editor = this;
 		
 		//Map editor window
-		JFrame worldEditorWindow = new JFrame("Edit map...");
 		worldEditorWindow.setBounds(100, 100, 1300, 900);
 		worldEditorWindow.setLocationRelativeTo(null);
 		worldEditorWindow.setIconImage(ICON);
@@ -814,8 +816,12 @@ public class MainEditor implements Runnable {
 		showMapSaveDialog(false);
 	}
 	
-	public JFrame getFrame() {
+	public JFrame getMainWindow() {
 		return frame;
+	}
+	
+	public JFrame getWorldEditorWindow() {
+		return worldEditorWindow;
 	}
 	
 	public WorldEditor getWorldEditor() {

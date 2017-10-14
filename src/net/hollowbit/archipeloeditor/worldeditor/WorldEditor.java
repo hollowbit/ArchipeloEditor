@@ -1,4 +1,6 @@
-package net.hollowbit.archipeloeditor;
+package net.hollowbit.archipeloeditor.worldeditor;
+
+import javax.swing.JFrame;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
@@ -13,10 +15,21 @@ import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.PixmapTextureData;
 import com.badlogic.gdx.math.Vector2;
 
+import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloeditor.world.AssetManager;
+import net.hollowbit.archipeloeditor.world.Map;
 import net.hollowbit.archipeloeditor.world.worldrenderer.WorldRenderer;
 
 public class WorldEditor extends WorldRenderer {
+	
+	protected static final WorldEditorMode<Object> DEFAULT_MODE = new WorldEditorMode<Object>("Edit map...", null, null) {
+		
+		@Override
+		public Map getMapToRender(MainEditor editor) {
+			return editor.getMap();
+		}
+		
+	};
 	
 	protected boolean assetsLoaded = false;
 	
@@ -26,6 +39,9 @@ public class WorldEditor extends WorldRenderer {
 	
 	protected boolean renderMapToFile = false;
 	
+	protected WorldEditorMode<?> mode = DEFAULT_MODE;
+	protected JFrame previousWindow;
+	
 	public WorldEditor(MainEditor editor, AssetManager assetManager) {
 		super(editor, assetManager);
 	}
@@ -33,6 +49,7 @@ public class WorldEditor extends WorldRenderer {
 	@Override
 	public void create() {
 		super.create();
+		editor.getWorldEditorWindow().setTitle(mode.getTitle());
 	}
 	
 	@Override
@@ -78,6 +95,8 @@ public class WorldEditor extends WorldRenderer {
 		Gdx.gl.glClearColor(0.2f, 0.2f, 0.2f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		
+		super.render(mode.getMapToRender(editor));
+		
 		if (Gdx.input.isKeyPressed(Keys.Z) && controlPressed() && !shiftPressed()) {
 			undoTimer -= Gdx.graphics.getDeltaTime();
 			if (undoTimer <= 0) {
@@ -97,12 +116,29 @@ public class WorldEditor extends WorldRenderer {
 			redoTimer = 0;
 		
 		batch.begin();
-		if (editor.getSelectedTool() != null)
+		if (editor.getSelectedTool() != null && mode == DEFAULT_MODE)
 			editor.getSelectedTool().render(batch);
 		
-		batch.end();
+		mode.render(batch, editor.getAssetManager());
 		
-		super.render();
+		batch.end();
+	}
+	
+	public void setMode(JFrame previousWindow, WorldEditorMode<?> mode) {
+		this.previousWindow = previousWindow;
+		this.mode = mode;
+		inputMultiplexer.addProcessor(mode);
+		editor.getWorldEditorWindow().requestFocus();
+		mode.setWorldEditor(this);
+		editor.getWorldEditorWindow().setTitle(mode.getTitle());
+	}
+	
+	public void resetModeToDefault() {
+		inputMultiplexer.removeProcessor(mode);
+		this.mode = DEFAULT_MODE;
+		previousWindow.requestFocus();
+		previousWindow = null;
+		editor.getWorldEditorWindow().setTitle(mode.getTitle());
 	}
 	
 	public void reloadAssets() {
@@ -119,7 +155,7 @@ public class WorldEditor extends WorldRenderer {
 		int tileX = (int) (mouseLocation.x / MainEditor.TILE_SIZE);
 		int tileY = (int) (mouseLocation.y / MainEditor.TILE_SIZE);
 		
-		if (editor.getSelectedTool() != null)
+		if (editor.getSelectedTool() != null && mode == DEFAULT_MODE)
 			editor.getSelectedTool().touchDown(mouseLocation.x, mouseLocation.y, tileX, tileY, button);
 		return super.touchDown(screenX, screenY, pointer, button);
 	}
@@ -131,7 +167,7 @@ public class WorldEditor extends WorldRenderer {
 		int tileX = (int) (mouseLocation.x / MainEditor.TILE_SIZE);
 		int tileY = (int) (mouseLocation.y / MainEditor.TILE_SIZE);
 	
-		if (editor.getSelectedTool() != null)
+		if (editor.getSelectedTool() != null && mode == DEFAULT_MODE)
 			editor.getSelectedTool().touchUp(mouseLocation.x, mouseLocation.y, tileX, tileY, button);
 		return super.touchUp(screenX, screenY, pointer, button);
 	}
@@ -147,13 +183,11 @@ public class WorldEditor extends WorldRenderer {
 		int tileY = (int) (mouseLocation.y / MainEditor.TILE_SIZE);
 		
 		if (!Gdx.input.isKeyPressed(Keys.SPACE)) {
-			if (editor.getSelectedTool() != null)
+			if (editor.getSelectedTool() != null && mode == DEFAULT_MODE)
 				editor.getSelectedTool().touchDragged(mouseLocation.x, mouseLocation.y, tileX, tileY);
 		}
 		return super.touchDragged(screenX, screenY, pointer);
 	}
-	
-	
 
 	@Override
 	public boolean mouseMoved(int screenX, int screenY) {
@@ -162,6 +196,13 @@ public class WorldEditor extends WorldRenderer {
 
 	@Override
 	public boolean scrolled(int amount) {
+		System.out.println("WorldEditor.java  TEST!!");
+		if (Gdx.input.isKeyPressed(Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Keys.CONTROL_RIGHT))
+			cam.zoom(amount * ZOOM_SCALE, Gdx.input.getX(), Gdx.input.getY());
+		else {
+			if (editor.getSelectedTool() != null && mode == DEFAULT_MODE)
+				editor.getSelectedTool().mouseScrolled(amount);
+		}
 		return super.scrolled(amount);
 	}
 	

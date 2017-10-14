@@ -1,7 +1,7 @@
 package net.hollowbit.archipeloeditor.tools;
 
-public class StringCapsule {
+public class ObjectCapsule<T> {
 	
-	public String value;
+	public T value;
 	
 }

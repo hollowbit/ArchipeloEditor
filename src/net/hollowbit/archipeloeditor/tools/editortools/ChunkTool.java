@@ -16,7 +16,6 @@ import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import net.hollowbit.archipeloeditor.MainEditor;
-import net.hollowbit.archipeloeditor.WorldEditor;
 import net.hollowbit.archipeloeditor.changes.ChunkAddChange;
 import net.hollowbit.archipeloeditor.changes.ChunkRemoveChange;
 import net.hollowbit.archipeloeditor.changes.MapChange;
@@ -25,6 +24,7 @@ import net.hollowbit.archipeloeditor.tools.generators.IslandGenerator;
 import net.hollowbit.archipeloeditor.tools.generators.ResetGenerator;
 import net.hollowbit.archipeloeditor.world.Chunk;
 import net.hollowbit.archipeloeditor.world.ChunkRow;
+import net.hollowbit.archipeloeditor.worldeditor.WorldEditor;
 import net.hollowbit.archipeloshared.ChunkData;
 
 public class ChunkTool extends Tool {

@@ -35,6 +35,7 @@ public class AssetManager {
 	private Texture invalid;
 	private Texture blank;
 	private Texture chunk;
+	private Texture locationIcon;
 	
 	//Manages tiles and elements
 	
@@ -109,6 +110,10 @@ public class AssetManager {
 		return blank;
 	}
 	
+	public Texture getLocationIcon() {
+		return locationIcon;
+	}
+	
 	/////////////////////////////
 	/*Initiates all Elements!!!*/
 	/////////////////////////////
@@ -117,6 +122,7 @@ public class AssetManager {
 		grid = new Texture(Gdx.files.internal("grid.png"), true);
 		invalid = new Texture(Gdx.files.internal("invalid.png"), true);
 		blank = new Texture(Gdx.files.internal("blank.png"), true);
+		locationIcon = new Texture(Gdx.files.internal("location_icon.png"), true);
 		
 		Json json = new Json();
 		String fileData = "";

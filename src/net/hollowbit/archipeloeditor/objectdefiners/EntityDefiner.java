@@ -23,10 +23,13 @@ import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloeditor.entity.EntityType;
-import net.hollowbit.archipeloeditor.tools.StringCapsule;
+import net.hollowbit.archipeloeditor.tools.ObjectCapsule;
 import net.hollowbit.archipeloeditor.world.AssetManager;
+import net.hollowbit.archipeloeditor.worldeditor.WorldEditorMode.WorldEditorModeListener;
+import net.hollowbit.archipeloeditor.worldeditor.modes.PointWorldEditorMode;
 import net.hollowbit.archipeloshared.Direction;
 import net.hollowbit.archipeloshared.EntitySnapshot;
+import net.hollowbit.archipeloshared.Point;
 import net.hollowbit.archipeloshared.PropertyDefinition;
 
 public class EntityDefiner extends ObjectDefiner<EntitySnapshot> {
@@ -39,9 +42,15 @@ public class EntityDefiner extends ObjectDefiner<EntitySnapshot> {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
+	private Json json;
+	
 	public EntityDefiner (MainEditor editor, AssetManager assetManager, EntityType entityType, float x, float y, DefinitionCompleteListener<EntitySnapshot> listener) {
 		super(editor, assetManager, listener);
-		setAlwaysOnTop(true);
+		json = new Json();
+		
+		//setAlwaysOnTop(true);
+		requestFocus();
 		setResizable(false);
 		setTitle("Entity Definer");
 		setBounds(100, 100, 325, 500);
@@ -82,10 +91,10 @@ public class EntityDefiner extends ObjectDefiner<EntitySnapshot> {
 		for (PropertyDefinition def : entityType.getData().defaultProperties)
 			definitions.add(def);
 		definitions.addAll(entityType.getData().properties);
+
+		JFrame entityDefiner = this;
 		
 		final ArrayList<SnapshotModifier> modifiers = new ArrayList<SnapshotModifier>();
-		
-		Json json = new Json();
 		
 		for (int i = 0; i < definitions.size(); i++) {
 			PropertyDefinition propertyDefinition = definitions.get(i);
@@ -147,7 +156,7 @@ public class EntityDefiner extends ObjectDefiner<EntitySnapshot> {
 				});
 				break;
 			case POINT:
-				final StringCapsule json4 = new StringCapsule();
+				final ObjectCapsule<String> json4 = new ObjectCapsule<String>();
 				
 				JTextField poViewFld = new JTextField();
 				poViewFld.setEnabled(false);
@@ -158,10 +167,26 @@ public class EntityDefiner extends ObjectDefiner<EntitySnapshot> {
 				poEditBtn.setBounds(SPACE_OF_LABELS + poViewFld.getWidth(), i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 30, 20);
 				getContentPane().add(poEditBtn);
 				
+				final ObjectCapsule<Point> point = new ObjectCapsule<Point>();
+				if (json4.value != null)
+					point.value = json.fromJson(Point.class, json4.value);
+				
 				poEditBtn.addMouseListener(new MouseAdapter() {
 					@Override
 					public void mouseClicked(MouseEvent e) {
-						
+						editor.getWorldEditor().setMode(entityDefiner, new PointWorldEditorMode(point.value, editor.getMap(), new WorldEditorModeListener<Point>() {
+							
+							@Override
+							public void valueReceived(Point object) {
+								json4.value = json.toJson(object);
+								point.value = json.fromJson(Point.class, json4.value);
+								poViewFld.setText(json4.value);
+							};
+							
+							@Override
+							public void canceled() {
+							}
+						}));
 					}
 				});
 				

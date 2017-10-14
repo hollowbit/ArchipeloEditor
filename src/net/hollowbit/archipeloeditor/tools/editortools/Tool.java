@@ -5,8 +5,8 @@ import javax.swing.JPanel;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import net.hollowbit.archipeloeditor.MainEditor;
-import net.hollowbit.archipeloeditor.WorldEditor;
 import net.hollowbit.archipeloeditor.world.AssetManager;
+import net.hollowbit.archipeloeditor.worldeditor.WorldEditor;
 
 public abstract class Tool {
 	

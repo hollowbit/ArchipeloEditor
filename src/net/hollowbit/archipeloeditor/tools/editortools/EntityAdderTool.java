@@ -10,10 +10,10 @@ import javax.swing.JPanel;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import net.hollowbit.archipeloeditor.MainEditor;
-import net.hollowbit.archipeloeditor.WorldEditor;
 import net.hollowbit.archipeloeditor.entity.EntityType;
 import net.hollowbit.archipeloeditor.objectdefiners.EntityDefiner;
 import net.hollowbit.archipeloeditor.objectdefiners.ObjectDefiner.DefinitionCompleteListener;
+import net.hollowbit.archipeloeditor.worldeditor.WorldEditor;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public class EntityAdderTool extends Tool {
