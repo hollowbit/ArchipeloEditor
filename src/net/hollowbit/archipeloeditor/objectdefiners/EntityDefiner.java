@@ -24,6 +24,12 @@ import com.badlogic.gdx.utils.Json;
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloeditor.entity.EntityType;
 import net.hollowbit.archipeloeditor.tools.ObjectCapsule;
+import net.hollowbit.archipeloeditor.tools.propertydefiners.DoublePropertyDefiner;
+import net.hollowbit.archipeloeditor.tools.propertydefiners.FloatPropertyDefiner;
+import net.hollowbit.archipeloeditor.tools.propertydefiners.IntegerPropertyDefiner;
+import net.hollowbit.archipeloeditor.tools.propertydefiners.JPropertyDefinitionComponent;
+import net.hollowbit.archipeloeditor.tools.propertydefiners.PointPropertyDefiner;
+import net.hollowbit.archipeloeditor.tools.propertydefiners.StylePropertyDefiner;
 import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloeditor.worldeditor.WorldEditorMode.WorldEditorModeListener;
 import net.hollowbit.archipeloeditor.worldeditor.modes.PointWorldEditorMode;
@@ -35,7 +41,6 @@ import net.hollowbit.archipeloshared.PropertyDefinition;
 public class EntityDefiner extends ObjectDefiner<EntitySnapshot> {
 	
 	private static final int SPACE_BETWEEN_ELEMENTS = 30;
-	private static final int SPACE_OF_LABELS = 110;
 	private static final int SPACE_FOR_DEFAULT_VALUES = 150;
 	
 	/**
@@ -99,103 +104,36 @@ public class EntityDefiner extends ObjectDefiner<EntitySnapshot> {
 		for (int i = 0; i < definitions.size(); i++) {
 			PropertyDefinition propertyDefinition = definitions.get(i);
 			final String name = propertyDefinition.name;
-			JLabel label = new JLabel(propertyDefinition.name + (propertyDefinition.required ? "*": "") + ":");
-			label.setBounds(10, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
-			getContentPane().add(label);
+			
+			JPropertyDefinitionComponent<?> component = null;
 			
 			switch (propertyDefinition.getType()) {
 			case INTEGER:
-				SpinnerModel model = new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1);
-				JSpinner spinner = new JSpinner(model);
-				spinner.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
-				getContentPane().add(spinner);
-				
-				modifiers.add(new SnapshotModifier() {
-					@Override
-					public void modify(EntitySnapshot snapshot) {
-						snapshot.putInt(name, (Integer) spinner.getValue());
-					}
-				});
+				component = new IntegerPropertyDefiner(this, name, 10, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, "", propertyDefinition.required, editor);
 				break;
 			case FLOAT:
-				NumberFormat format = NumberFormat.getInstance();
-				NumberFormatter formatter = new NumberFormatter(format);
-				formatter.setValueClass(Float.class);
-				formatter.setMinimum(Float.MIN_VALUE);
-				formatter.setMaximum(Float.MAX_VALUE);
-				formatter.setAllowsInvalid(false);
-				formatter.setCommitsOnValidEdit(true);
-				JFormattedTextField field = new JFormattedTextField(formatter);
-				field.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
-				getContentPane().add(field);
-				
-				modifiers.add(new SnapshotModifier() {
-					@Override
-					public void modify(EntitySnapshot snapshot) {
-						snapshot.putFloat(name, (Float) field.getValue());
-					}
-				});
+				component = new FloatPropertyDefiner(this, name, 10, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, "", propertyDefinition.required, editor);
 				break;
 			case DOUBLE:
-				NumberFormat format2 = NumberFormat.getInstance();
-				NumberFormatter formatter2 = new NumberFormatter(format2);
-				formatter2.setValueClass(Double.class);
-				formatter2.setMinimum(Double.MIN_VALUE);
-				formatter2.setMaximum(Double.MAX_VALUE);
-				formatter2.setAllowsInvalid(false);
-				formatter2.setCommitsOnValidEdit(true);
-				JFormattedTextField field2 = new JFormattedTextField(formatter2);
-				field2.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
-				getContentPane().add(field2);
-				
-				modifiers.add(new SnapshotModifier() {
-					@Override
-					public void modify(EntitySnapshot snapshot) {
-						snapshot.putString(name, "" + (Double) field2.getValue()); 
-					}
-				});
+				component = new DoublePropertyDefiner(this, name, 10, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, "", propertyDefinition.required, editor);
 				break;
 			case POINT:
-				final ObjectCapsule<String> json4 = new ObjectCapsule<String>();
+				component = new PointPropertyDefiner(this, name, 10, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, "", propertyDefinition.required, editor);
+				break;
+			case STYLE:
+				component = new StylePropertyDefiner(entityType.getData().numberOfStyles, this, name, 10, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, "", propertyDefinition.required, editor);
+				break;
+			default:
+				component = null;
+			}
+			
+			/*switch (propertyDefinition.getType()) {
+			
+			case DOUBLE:
 				
-				JTextField poViewFld = new JTextField();
-				poViewFld.setEnabled(false);
-				poViewFld.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200 - SPACE_BETWEEN_ELEMENTS, 20);
-				getContentPane().add(poViewFld);
+				break;
+			case POINT:
 				
-				JButton poEditBtn = new JButton("...");
-				poEditBtn.setBounds(SPACE_OF_LABELS + poViewFld.getWidth(), i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 30, 20);
-				getContentPane().add(poEditBtn);
-				
-				final ObjectCapsule<Point> point = new ObjectCapsule<Point>();
-				if (json4.value != null)
-					point.value = json.fromJson(Point.class, json4.value);
-				
-				poEditBtn.addMouseListener(new MouseAdapter() {
-					@Override
-					public void mouseClicked(MouseEvent e) {
-						editor.getWorldEditor().setMode(entityDefiner, new PointWorldEditorMode(point.value, editor.getMap(), new WorldEditorModeListener<Point>() {
-							
-							@Override
-							public void valueReceived(Point object) {
-								json4.value = json.toJson(object);
-								point.value = json.fromJson(Point.class, json4.value);
-								poViewFld.setText(json4.value);
-							};
-							
-							@Override
-							public void canceled() {
-							}
-						}));
-					}
-				});
-				
-				modifiers.add(new SnapshotModifier() {
-					@Override
-					public void modify(EntitySnapshot snapshot) {
-						snapshot.putString(name, json4.value); 
-					}
-				});
 				break;
 			case LOCATION:
 				String json5 = "";
@@ -267,19 +205,7 @@ public class EntityDefiner extends ObjectDefiner<EntitySnapshot> {
 				});
 				break;
 			case STYLE:
-				JComboBox<Integer> comboBox2 = new JComboBox<Integer>();
-				for (int u = 0; u < entityType.getData().numberOfStyles; u++)
-					comboBox2.addItem(u);
-				comboBox2.setSelectedIndex(0);
-				comboBox2.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
-				getContentPane().add(comboBox2);
 				
-				modifiers.add(new SnapshotModifier() {
-					@Override
-					public void modify(EntitySnapshot snapshot) {
-						snapshot.putInt(name, comboBox2.getSelectedIndex()); 
-					}
-				});
 				break;
 			case ITEM:
 				String json2 = "";
@@ -295,7 +221,7 @@ public class EntityDefiner extends ObjectDefiner<EntitySnapshot> {
 				break;
 			default:
 				break;
-			}
+			}*/
 		}
 		
 		JButton confirm = new JButton("Create");
