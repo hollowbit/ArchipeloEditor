@@ -39,7 +39,8 @@ public class PointWorldEditorMode extends WorldEditorMode<Point> {
 		
 		if (worldEditor != null) {
 			Vector2 mouseLocation = worldEditor.getCam().unproject(new Vector2(screenX, screenY));
-			object = new Point((int) mouseLocation.x, (int) mouseLocation.y);
+			if (mouseLocation.x >= map.getMinPixelX() && mouseLocation.x <= map.getMaxPixelX() && mouseLocation.y >= map.getMinPixelY() && mouseLocation.y <= map.getMaxPixelY())
+				object = new Point((int) mouseLocation.x, (int) mouseLocation.y);
 		}
 		return super.touchUp(screenX, screenY, pointer, button);
 	}

@@ -24,11 +24,14 @@ import com.badlogic.gdx.utils.Json;
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloeditor.entity.EntityType;
 import net.hollowbit.archipeloeditor.tools.ObjectCapsule;
+import net.hollowbit.archipeloeditor.tools.propertydefiners.DirectionPropertyDefiner;
 import net.hollowbit.archipeloeditor.tools.propertydefiners.DoublePropertyDefiner;
 import net.hollowbit.archipeloeditor.tools.propertydefiners.FloatPropertyDefiner;
+import net.hollowbit.archipeloeditor.tools.propertydefiners.HealthPropertyDefiner;
 import net.hollowbit.archipeloeditor.tools.propertydefiners.IntegerPropertyDefiner;
 import net.hollowbit.archipeloeditor.tools.propertydefiners.JPropertyDefinitionComponent;
 import net.hollowbit.archipeloeditor.tools.propertydefiners.PointPropertyDefiner;
+import net.hollowbit.archipeloeditor.tools.propertydefiners.StringPropertyDefiner;
 import net.hollowbit.archipeloeditor.tools.propertydefiners.StylePropertyDefiner;
 import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloeditor.worldeditor.WorldEditorMode.WorldEditorModeListener;
@@ -118,10 +121,19 @@ public class EntityDefiner extends ObjectDefiner<EntitySnapshot> {
 				component = new DoublePropertyDefiner(this, name, 10, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, "", propertyDefinition.required, editor);
 				break;
 			case POINT:
-				component = new PointPropertyDefiner(this, name, 10, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, "", propertyDefinition.required, editor);
+				component = new PointPropertyDefiner(this, editor.getMap(), name, 10, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, "", propertyDefinition.required, editor);
 				break;
 			case STYLE:
 				component = new StylePropertyDefiner(entityType.getData().numberOfStyles, this, name, 10, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, "", propertyDefinition.required, editor);
+				break;
+			case DIRECTION:
+				component = new DirectionPropertyDefiner(this, name, 10, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, "", propertyDefinition.required, editor);
+				break;
+			case HEALTH:
+				component = new HealthPropertyDefiner(entityType.getData().maxHealth, this, name, 10, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, "", propertyDefinition.required, editor);
+				break;
+			case STRING:
+				component = new StringPropertyDefiner(this, name, 10, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, "", propertyDefinition.required, editor);
 				break;
 			default:
 				component = null;
@@ -155,32 +167,8 @@ public class EntityDefiner extends ObjectDefiner<EntitySnapshot> {
 					}
 				});
 				break;
-			case DIRECTION:
-				JComboBox<Direction> comboBox = new JComboBox<Direction>();
-				for (Direction direction : Direction.values())
-					comboBox.addItem(direction);
-				comboBox.setSelectedIndex(0);
-				comboBox.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
-				getContentPane().add(comboBox);
-				
-				modifiers.add(new SnapshotModifier() {
-					@Override
-					public void modify(EntitySnapshot snapshot) {
-						snapshot.putInt(name, ((Direction) comboBox.getSelectedItem()).ordinal()); 
-					}
-				});
-				break;
 			case STRING:
-				JTextField field3 = new JTextField();
-				field3.setBounds(SPACE_OF_LABELS, i * SPACE_BETWEEN_ELEMENTS + SPACE_FOR_DEFAULT_VALUES, 200, 20);
-				getContentPane().add(field3);
 				
-				modifiers.add(new SnapshotModifier() {
-					@Override
-					public void modify(EntitySnapshot snapshot) {
-						snapshot.putString(name, field3.getText()); 
-					}
-				});
 				break;
 			case BOOLEAN:
 				JCheckBox checkBox = new JCheckBox();

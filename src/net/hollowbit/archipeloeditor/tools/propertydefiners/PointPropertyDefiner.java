@@ -17,6 +17,7 @@ import javax.swing.event.DocumentListener;
 import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloeditor.world.Map;
 import net.hollowbit.archipeloeditor.worldeditor.WorldEditorMode.WorldEditorModeListener;
 import net.hollowbit.archipeloeditor.worldeditor.modes.PointWorldEditorMode;
 import net.hollowbit.archipeloshared.Point;
@@ -29,9 +30,8 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 	protected JFrame frame2;
 	protected Json json;
 	
-	public PointPropertyDefiner(JFrame frame, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
+	public PointPropertyDefiner(JFrame frame, Map map, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
 		super(frame, name, x, y, defaultValue, required, editor);
-		System.out.println("PointPropertyDefiner:  HEYYYYY!");
 		json = new Json();
 		
 		field = new JTextField();
@@ -68,7 +68,7 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 				frame2 = new JFrame("Point Object Definer");
 				frame2.requestFocus();
 				frame2.setResizable(false);
-				frame2.setBounds(0, 0, 325, 200);
+				frame2.setBounds(0, 0, 325, 140);
 				frame2.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 				frame2.setIconImage(MainEditor.ICON);
 				frame2.setLocationRelativeTo(null);
@@ -76,25 +76,31 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 				frame2.setVisible(true);
 				
 				JLabel xLabel = new JLabel("X:");
-				xLabel.setBounds(2, 40, 40, 20);
+				xLabel.setBounds(25, 15, 30, 20);
 				frame2.getContentPane().add(xLabel);
 				
-				SpinnerModel xModel = new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1);
+				int minPixelX = map.getMinPixelX();
+				int maxPixelX = map.getMaxPixelX();
+				
+				SpinnerModel xModel = new SpinnerNumberModel((minPixelX + maxPixelX) / 2, minPixelX, maxPixelX, 1);
 				JSpinner xField = new JSpinner(xModel);
-				xField.setBounds(60, 40, 200, 20);
+				xField.setBounds(70, 15, 200, 20);
 				frame2.getContentPane().add(xField);
 				
 				JLabel yLabel = new JLabel("Y:");
-				yLabel.setBounds(2, 70, 40, 20);
+				yLabel.setBounds(25, 50, 30, 20);
 				frame2.getContentPane().add(yLabel);
+
+				int minPixelY = map.getMinPixelY();
+				int maxPixelY = map.getMaxPixelY();
 				
-				SpinnerModel yModel = new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1);
+				SpinnerModel yModel = new SpinnerNumberModel((minPixelY + maxPixelY) / 2, minPixelY, maxPixelY, 1);
 				JSpinner yField = new JSpinner(yModel);
-				yField.setBounds(60, 70, 200, 20);
+				yField.setBounds(70, 50, 200, 20);
 				frame2.getContentPane().add(yField);
 				
 				JButton selectBtn = new JButton("Select");
-				selectBtn.setBounds(15, 90, 150, 20);
+				selectBtn.setBounds(15, 80, 75, 20);
 				selectBtn.addMouseListener(new MouseAdapter() {
 					@Override
 					public void mouseClicked(MouseEvent e) {
@@ -104,8 +110,8 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 							
 							@Override
 							public void valueReceived(Point object) {
-								xField.setValue(object.x);
-								yField.setValue(object.y);
+								xField.setValue((int) object.x);
+								yField.setValue((int) object.y);
 							};
 							
 							@Override
@@ -118,15 +124,15 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 				frame2.getContentPane().add(selectBtn);
 				
 				JButton confirmBtn = new JButton("Confirm");
-				confirmBtn.setBounds(200, 90, 150, 20);
+				confirmBtn.setBounds(200, 80, 110, 20);
 				confirmBtn.addMouseListener(new MouseAdapter() {
 					@Override
 					public void mouseClicked(MouseEvent e) {
-						frame.setVisible(false);
-						
+						frame2.setVisible(false);
 						int x = ((Integer) xField.getValue()).intValue();
 						int y = ((Integer) yField.getValue()).intValue();
 						field.setText(json.toJson(new Point(x, y)));
+						frame.requestFocus();
 						super.mouseClicked(e);
 					}
 				});
@@ -135,8 +141,8 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 				//Set value if text field json is good
 				if (isJsonValid()) {
 					Point point = json.fromJson(Point.class, field.getText());
-					xField.setValue(point.x);
-					yField.setValue(point.y);
+					xField.setValue((int) point.x);
+					yField.setValue((int) point.y);
 				}
 			}
 		});
@@ -173,8 +179,8 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 	
 	protected boolean isJsonValid(String jsonText) {
 		try {
-			json.fromJson(Point.class, jsonText);
-			return true;
+			Point p = json.fromJson(Point.class, jsonText);
+			return p != null;
 		} catch (Exception e) {
 			return false;
 		}

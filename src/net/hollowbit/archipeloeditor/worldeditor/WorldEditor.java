@@ -196,7 +196,6 @@ public class WorldEditor extends WorldRenderer {
 
 	@Override
 	public boolean scrolled(int amount) {
-		System.out.println("WorldEditor.java  TEST!!");
 		if (Gdx.input.isKeyPressed(Keys.CONTROL_LEFT) || Gdx.input.isKeyPressed(Keys.CONTROL_RIGHT))
 			cam.zoom(amount * ZOOM_SCALE, Gdx.input.getX(), Gdx.input.getY());
 		else {

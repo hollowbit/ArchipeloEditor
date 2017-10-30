@@ -17,7 +17,8 @@ public enum EntityType {
 	BLOBBY_GRAVE ("blobby-grave"),
 	COMPUTER ("computer"),
 	WIZARD ("wizard"),
-	SPAWNER ("spawner");
+	SPAWNER ("spawner"),
+	SLIME("slime");
 	
 	private String id;
 	private EntityTypeData data;

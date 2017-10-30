@@ -4,7 +4,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 import net.hollowbit.archipeloeditor.MainEditor;
-import net.hollowbit.archipeloshared.PropertyDefinition;
 
 public abstract class JPropertyDefinitionComponent<T> {
 	
@@ -24,7 +23,7 @@ public abstract class JPropertyDefinitionComponent<T> {
 		
 		if (name != null) {
 			nameLabel = new JLabel(name + (required ? "*": "") + ":");
-			nameLabel.setBounds(x, y, 50, 20);
+			nameLabel.setBounds(x, y, 75, 20);
 			frame.add(nameLabel);
 		}
 		

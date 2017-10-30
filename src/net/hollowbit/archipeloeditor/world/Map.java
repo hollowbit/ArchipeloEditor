@@ -479,6 +479,22 @@ public class Map implements Cloneable {
 		return maxTileY;
 	}
 	
+	public int getMinPixelX() {
+		return minTileX * MainEditor.TILE_SIZE;
+	}
+	
+	public int getMinPixelY() {
+		return minTileY * MainEditor.TILE_SIZE;
+	}
+
+	public int getMaxPixelX() {
+		return maxTileX * MainEditor.TILE_SIZE + MainEditor.TILE_SIZE;
+	}
+
+	public int getMaxPixelY() {
+		return maxTileY * MainEditor.TILE_SIZE + MainEditor.TILE_SIZE;
+	}
+	
 	/**
 	 * Recalculates the width and height of the map. Since it is a fairly costly calculation, this should only be done when necessary.
 	 */
