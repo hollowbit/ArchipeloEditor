@@ -5,13 +5,14 @@ import javax.swing.JFrame;
 
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloshared.Direction;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public class DirectionPropertyDefiner extends JPropertyDefinitionComponent<Direction> {
 
 	protected JComboBox<Direction> comboBox;
 	
-	public DirectionPropertyDefiner(JFrame frame, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
-		super(frame, name, x, y, defaultValue, required, editor);
+	public DirectionPropertyDefiner(JFrame frame, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
+		super(frame, label, name, x, y, defaultValue, required, editor);
 		
 		comboBox = new JComboBox<Direction>();
 		for (Direction direction : Direction.values())
@@ -35,7 +36,17 @@ public class DirectionPropertyDefiner extends JPropertyDefinitionComponent<Direc
 
 	@Override
 	public String getValueAsString() {
-		return ((Direction) comboBox.getSelectedItem()).name();
+		return "" + ((Direction) comboBox.getSelectedItem()).ordinal();
+	}
+
+	@Override
+	public void modify(EntitySnapshot snapshot) {
+		snapshot.putInt(name, ((Direction) comboBox.getSelectedItem()).ordinal());
+	}
+
+	@Override
+	public boolean isValid() {
+		return hasValue();
 	}
 
 }

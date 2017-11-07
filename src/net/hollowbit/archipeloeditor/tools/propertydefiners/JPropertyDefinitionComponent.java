@@ -4,8 +4,9 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloeditor.objectdefiners.EntityDefiner.SnapshotModifier;
 
-public abstract class JPropertyDefinitionComponent<T> {
+public abstract class JPropertyDefinitionComponent<T> implements SnapshotModifier {
 	
 	protected static final int SPACE_OF_LABELS = 75;
 	
@@ -19,7 +20,7 @@ public abstract class JPropertyDefinitionComponent<T> {
 	
 	protected MainEditor editor;
 	
-	public JPropertyDefinitionComponent(JFrame frame, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
+	public JPropertyDefinitionComponent(JFrame frame, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
 		
 		if (name != null) {
 			nameLabel = new JLabel(name + (required ? "*": "") + ":");
@@ -29,10 +30,6 @@ public abstract class JPropertyDefinitionComponent<T> {
 		
 		if (defaultValue != null && !defaultValue.trim().equals(""))
 			this.setValueFromString(defaultValue);
-	}
-	
-	public JPropertyDefinitionComponent(JFrame frame, int x, int y, String defaultValue, boolean required, MainEditor editor) {
-		this(frame, null, x, y, defaultValue, required, editor);
 	}
 	
 	public abstract void setValueFromString(String valueAsString);

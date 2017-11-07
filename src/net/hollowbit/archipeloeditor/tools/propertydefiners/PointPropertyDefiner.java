@@ -20,6 +20,7 @@ import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloeditor.world.Map;
 import net.hollowbit.archipeloeditor.worldeditor.WorldEditorMode.WorldEditorModeListener;
 import net.hollowbit.archipeloeditor.worldeditor.modes.PointWorldEditorMode;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.Point;
 
 public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
@@ -30,8 +31,8 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 	protected JFrame frame2;
 	protected Json json;
 	
-	public PointPropertyDefiner(JFrame frame, Map map, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
-		super(frame, name, x, y, defaultValue, required, editor);
+	public PointPropertyDefiner(JFrame frame, Map map, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
+		super(frame, label, name, x, y, defaultValue, required, editor);
 		json = new Json();
 		
 		field = new JTextField();
@@ -186,4 +187,13 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 		}
 	}
 
+	@Override
+	public void modify(EntitySnapshot snapshot) {
+		snapshot.putString(name, field.getText());
+	}
+
+	@Override
+	public boolean isValid() {
+		return hasValue();
+	}
 }

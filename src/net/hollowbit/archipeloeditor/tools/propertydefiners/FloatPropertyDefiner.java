@@ -7,13 +7,14 @@ import javax.swing.JFrame;
 import javax.swing.text.NumberFormatter;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public class FloatPropertyDefiner extends JPropertyDefinitionComponent<Float> {
 	
 	protected JFormattedTextField field;
 	
-	public FloatPropertyDefiner(JFrame frame, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
-		super(frame, name, x, y, defaultValue, required, editor);
+	public FloatPropertyDefiner(JFrame frame, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
+		super(frame, label, name, x, y, defaultValue, required, editor);
 		NumberFormat format = NumberFormat.getInstance();
 		NumberFormatter formatter = new NumberFormatter(format);
 		formatter.setValueClass(Float.class);
@@ -39,6 +40,16 @@ public class FloatPropertyDefiner extends JPropertyDefinitionComponent<Float> {
 	@Override
 	public String getValueAsString() {
 		return field.getText();
+	}
+
+	@Override
+	public void modify(EntitySnapshot snapshot) {
+		snapshot.putFloat(name, ((Float) field.getValue()).floatValue());
+	}
+
+	@Override
+	public boolean isValid() {
+		return hasValue();
 	}
 
 }

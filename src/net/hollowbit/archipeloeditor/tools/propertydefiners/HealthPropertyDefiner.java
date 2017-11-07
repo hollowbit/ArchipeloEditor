@@ -6,13 +6,14 @@ import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public class HealthPropertyDefiner extends JPropertyDefinitionComponent<Integer> {
 
 	protected JSpinner spinner;
 	
-	public HealthPropertyDefiner(int maxHealth, JFrame frame, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
-		super(frame, name, x, y, defaultValue, required, editor);
+	public HealthPropertyDefiner(int maxHealth, JFrame frame, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
+		super(frame, label, name, x, y, defaultValue, required, editor);
 		
 		SpinnerModel model = new SpinnerNumberModel(maxHealth, 1, maxHealth, 1);
 		spinner = new JSpinner(model);
@@ -33,6 +34,16 @@ public class HealthPropertyDefiner extends JPropertyDefinitionComponent<Integer>
 	@Override
 	public void setValueFromString(String valueAsString) {
 		spinner.setValue(new Integer(Integer.parseInt(valueAsString)));
+	}
+
+	@Override
+	public void modify(EntitySnapshot snapshot) {
+		snapshot.putInt(name, ((Integer) spinner.getValue()).intValue());
+	}
+
+	@Override
+	public boolean isValid() {
+		return hasValue();
 	}
 
 }

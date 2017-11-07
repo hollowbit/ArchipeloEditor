@@ -7,13 +7,14 @@ import javax.swing.JFrame;
 import javax.swing.text.NumberFormatter;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public class DoublePropertyDefiner extends JPropertyDefinitionComponent<Double> {
 	
 	protected JFormattedTextField field;
 	
-	public DoublePropertyDefiner(JFrame frame, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
-		super(frame, name, x, y, defaultValue, required, editor);
+	public DoublePropertyDefiner(JFrame frame, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
+		super(frame, label, name, x, y, defaultValue, required, editor);
 		
 		NumberFormat format2 = NumberFormat.getInstance();
 		NumberFormatter formatter2 = new NumberFormatter(format2);
@@ -41,6 +42,16 @@ public class DoublePropertyDefiner extends JPropertyDefinitionComponent<Double> 
 	@Override
 	public String getValueAsString() {
 		return field.getText();
+	}
+
+	@Override
+	public void modify(EntitySnapshot snapshot) {
+		snapshot.putDouble(name, ((Double) field.getValue()).doubleValue());
+	}
+
+	@Override
+	public boolean isValid() {
+		return hasValue();
 	}
 
 }

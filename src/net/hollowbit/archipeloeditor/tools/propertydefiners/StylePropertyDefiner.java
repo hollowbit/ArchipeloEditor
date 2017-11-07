@@ -4,14 +4,15 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloshared.EntitySnapshot;
 
 public class StylePropertyDefiner extends JPropertyDefinitionComponent<Integer> {
 	
 	protected int numberOfStyles;
 	protected JComboBox<Integer> comboBox;
 	
-	public StylePropertyDefiner(int numberOfStyles, JFrame frame, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
-		super(frame, name, x, y, defaultValue, required, editor);
+	public StylePropertyDefiner(int numberOfStyles, JFrame frame, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
+		super(frame, label, name, x, y, defaultValue, required, editor);
 		this.numberOfStyles = numberOfStyles;
 		
 		comboBox = new JComboBox<Integer>();
@@ -39,6 +40,16 @@ public class StylePropertyDefiner extends JPropertyDefinitionComponent<Integer> 
 	@Override
 	public String getValueAsString() {
 		return "" + comboBox.getSelectedIndex();
+	}
+
+	@Override
+	public void modify(EntitySnapshot snapshot) {
+		snapshot.putInt(name, comboBox.getSelectedIndex());
+	}
+
+	@Override
+	public boolean isValid() {
+		return hasValue();
 	}
 
 }
