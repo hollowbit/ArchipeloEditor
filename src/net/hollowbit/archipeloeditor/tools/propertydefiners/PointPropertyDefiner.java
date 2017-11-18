@@ -1,6 +1,7 @@
 package net.hollowbit.archipeloeditor.tools.propertydefiners;
 
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -13,8 +14,6 @@ import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-
-import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloeditor.world.Map;
@@ -29,16 +28,14 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 	protected JTextField field;
 	protected JButton editBtn;
 	protected JFrame frame2;
-	protected Json json;
 	
-	public PointPropertyDefiner(JFrame frame, Map map, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
-		super(frame, label, name, x, y, defaultValue, required, editor);
-		json = new Json();
+	public PointPropertyDefiner(Container container, Map map, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
+		super(container, label, name, x, y, required, editor);
 		
 		field = new JTextField();
 		//field.setEnabled(false);
-		field.setBounds(getValueModifierX(x), y, 190, 20);
-		frame.add(field);
+		field.setBounds(getValueModifierX(x), y, 260, 20);
+		container.add(field);
 		
 		//Update field background on every update of this field
 		field.getDocument().addDocumentListener(new DocumentListener() {
@@ -60,8 +57,8 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 		});
 		
 		editBtn = new JButton("...");
-		editBtn.setBounds(getValueModifierX(x) + field.getWidth(), y, 40, 20);
-		frame.add(editBtn);
+		editBtn.setBounds(getValueModifierX(x) + field.getWidth() + 5, y, 40, 20);
+		container.add(editBtn);
 		
 		editBtn.addMouseListener(new MouseAdapter() {
 			@Override
@@ -133,7 +130,7 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 						int x = ((Integer) xField.getValue()).intValue();
 						int y = ((Integer) yField.getValue()).intValue();
 						field.setText(json.toJson(new Point(x, y)));
-						frame.requestFocus();
+						container.requestFocus();
 						super.mouseClicked(e);
 					}
 				});
@@ -147,6 +144,9 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 				}
 			}
 		});
+		
+		//Set default value
+		this.setValueFromString(defaultValue);
 	}
 
 	@Override
@@ -180,7 +180,8 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 	
 	protected boolean isJsonValid(String jsonText) {
 		try {
-			Point p = json.fromJson(Point.class, jsonText);
+			Point p = json.
+					fromJson(Point.class, jsonText);
 			return p != null;
 		} catch (Exception e) {
 			return false;

@@ -1,6 +1,7 @@
 package net.hollowbit.archipeloeditor.tools.propertydefiners;
 
-import javax.swing.JFrame;
+import java.awt.Container;
+
 import javax.swing.JTextField;
 
 import net.hollowbit.archipeloeditor.MainEditor;
@@ -10,12 +11,15 @@ public class StringPropertyDefiner extends JPropertyDefinitionComponent<String> 
 
 	protected JTextField field;
 	
-	public StringPropertyDefiner(JFrame frame, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
-		super(frame, label, name, x, y, defaultValue, required, editor);
+	public StringPropertyDefiner(Container container, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
+		super(container, label, name, x, y, required, editor);
 
 		field = new JTextField();
-		field.setBounds(getValueModifierX(x), y, 200, 20);
-		frame.add(field);
+		field.setBounds(getValueModifierX(x), y, 300, 20);
+		container.add(field);
+		
+		//Set default value
+		this.setValueFromString(defaultValue);
 	}
 
 	@Override

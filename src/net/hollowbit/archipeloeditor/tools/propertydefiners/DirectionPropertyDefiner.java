@@ -1,7 +1,8 @@
 package net.hollowbit.archipeloeditor.tools.propertydefiners;
 
+import java.awt.Container;
+
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
 
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloshared.Direction;
@@ -11,15 +12,18 @@ public class DirectionPropertyDefiner extends JPropertyDefinitionComponent<Direc
 
 	protected JComboBox<Direction> comboBox;
 	
-	public DirectionPropertyDefiner(JFrame frame, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
-		super(frame, label, name, x, y, defaultValue, required, editor);
+	public DirectionPropertyDefiner(Direction[] allowedDirections, Container container, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
+		super(container, label, name, x, y, required, editor);
 		
 		comboBox = new JComboBox<Direction>();
-		for (Direction direction : Direction.values())
+		for (Direction direction : allowedDirections)
 			comboBox.addItem(direction);
 		comboBox.setSelectedIndex(0);
-		comboBox.setBounds(getValueModifierX(x), y, 230, 20);
-		frame.add(comboBox);
+		comboBox.setBounds(getValueModifierX(x), y, 300, 20);
+		container.add(comboBox);
+		
+		//Set default value
+		this.setValueFromString(defaultValue);
 	}
 
 	@Override

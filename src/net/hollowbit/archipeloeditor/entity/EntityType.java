@@ -1,6 +1,7 @@
 package net.hollowbit.archipeloeditor.entity;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import net.hollowbit.archipeloeditor.tools.FileReader;
 import net.hollowbit.archipeloeditor.tools.StaticTools;
@@ -49,6 +50,18 @@ public enum EntityType {
 	
 	public ArrayList<PropertyDefinition> getProperties () {
 		return data.properties;
+	}
+	
+	private static HashMap<String, EntityType> typeMap;
+	
+	static {
+		typeMap = new HashMap<String, EntityType>();
+		for (EntityType type : EntityType.values())
+			typeMap.put(type.id, type);
+	}
+	
+	public static EntityType getById(String id) {
+		return typeMap.get(id);
 	}
 	
 }

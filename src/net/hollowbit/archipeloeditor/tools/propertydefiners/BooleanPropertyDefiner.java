@@ -1,7 +1,8 @@
 package net.hollowbit.archipeloeditor.tools.propertydefiners;
 
+import java.awt.Container;
+
 import javax.swing.JCheckBox;
-import javax.swing.JFrame;
 
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloshared.EntitySnapshot;
@@ -10,13 +11,16 @@ public class BooleanPropertyDefiner extends JPropertyDefinitionComponent<Boolean
 
 	protected JCheckBox checkBox;
 	
-	public BooleanPropertyDefiner(JFrame frame, String label, String name, int x, int y, String defaultValue, boolean required,
+	public BooleanPropertyDefiner(Container container, String label, String name, int x, int y, String defaultValue, boolean required,
 			MainEditor editor) {
-		super(frame, label, name, x, y, defaultValue, required, editor);
+		super(container, label, name, x, y, required, editor);
 
 		checkBox = new JCheckBox();
-		checkBox.setBounds(getValueModifierX(x), y, 230, 20);
-		frame.add(checkBox);
+		checkBox.setBounds(getValueModifierX(x), y, 300, 20);
+		container.add(checkBox);
+		
+		//Set default value
+		this.setValueFromString(defaultValue);
 	}
 
 	@Override

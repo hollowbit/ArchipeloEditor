@@ -1,9 +1,9 @@
 package net.hollowbit.archipeloeditor.tools.propertydefiners;
 
+import java.awt.Container;
 import java.text.NumberFormat;
 
 import javax.swing.JFormattedTextField;
-import javax.swing.JFrame;
 import javax.swing.text.NumberFormatter;
 
 import net.hollowbit.archipeloeditor.MainEditor;
@@ -13,8 +13,8 @@ public class DoublePropertyDefiner extends JPropertyDefinitionComponent<Double> 
 	
 	protected JFormattedTextField field;
 	
-	public DoublePropertyDefiner(JFrame frame, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
-		super(frame, label, name, x, y, defaultValue, required, editor);
+	public DoublePropertyDefiner(Container container, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
+		super(container, label, name, x, y, required, editor);
 		
 		NumberFormat format2 = NumberFormat.getInstance();
 		NumberFormatter formatter2 = new NumberFormatter(format2);
@@ -25,13 +25,18 @@ public class DoublePropertyDefiner extends JPropertyDefinitionComponent<Double> 
 		formatter2.setCommitsOnValidEdit(true);
 		
 		this.field = new JFormattedTextField(formatter2);
-		field.setBounds(getValueModifierX(x), y, 230, 20);
-		frame.add(field);
+		field.setBounds(getValueModifierX(x), y, 300, 20);
+		container.add(field);
+		
+		//Set default value
+		this.setValueFromString(defaultValue);
 	}
 
 	@Override
 	public void setValueFromString(String valueAsString) {
-		field.setValue(new Double(Double.parseDouble(valueAsString)));
+		try {
+			field.setValue(new Double(Double.parseDouble(valueAsString)));
+		} catch (Exception e) {}
 	}
 
 	@Override
