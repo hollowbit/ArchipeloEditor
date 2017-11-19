@@ -170,8 +170,8 @@ public class PointPropertyDefiner extends JPropertyDefinitionComponent<Point> {
 	}
 
 	@Override
-	public String getValueAsString() {
-		return field.getText();
+	public Point getValue() {
+		return json.fromJson(Point.class, field.getText());
 	}
 	
 	protected boolean isJsonValid() {

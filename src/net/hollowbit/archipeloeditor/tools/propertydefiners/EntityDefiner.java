@@ -99,8 +99,8 @@ public class EntityDefiner extends JPropertyDefinitionComponent<EntitySnapshot> 
 	}
 
 	@Override
-	public String getValueAsString() {
-		return field.getText();
+	public EntitySnapshot getValue() {
+		return json.fromJson(EntitySnapshot.class, field.getText());
 	}
 	
 	protected boolean isJsonValid() {

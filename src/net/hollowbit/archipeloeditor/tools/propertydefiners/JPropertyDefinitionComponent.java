@@ -38,7 +38,7 @@ public abstract class JPropertyDefinitionComponent<T> implements SnapshotModifie
 	
 	public abstract void setValueFromString(String valueAsString);
 	public abstract boolean hasValue();
-	public abstract String getValueAsString();
+	public abstract T getValue();
 	
 	public boolean hasNameLabel() {
 		return nameLabel != null;

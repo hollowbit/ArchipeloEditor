@@ -134,7 +134,7 @@ public class EntityDefinerWindow extends JFrame {
 		
 		final JFrame frame = this;
 		
-		JButton confirm = new JButton("Create");
+		JButton confirm = new JButton("Finish");
 		confirm.setBounds(this.getWidth() - 10 - 80, this.getHeight() - 10 - 60, 80, 30);
 		confirm.addActionListener(new ActionListener() {
 					

@@ -16,16 +16,20 @@ public class DoublePropertyDefiner extends JPropertyDefinitionComponent<Double> 
 	public DoublePropertyDefiner(Container container, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
 		super(container, label, name, x, y, required, editor);
 		
-		NumberFormat format2 = NumberFormat.getInstance();
-		NumberFormatter formatter2 = new NumberFormatter(format2);
-		formatter2.setValueClass(Double.class);
-		formatter2.setMinimum(Double.MIN_VALUE);
-		formatter2.setMaximum(Double.MAX_VALUE);
-		formatter2.setAllowsInvalid(false);
-		formatter2.setCommitsOnValidEdit(true);
+		NumberFormat format = NumberFormat.getInstance();
+		format.setParseIntegerOnly(false);
+		format.setMinimumFractionDigits(1);
 		
-		this.field = new JFormattedTextField(formatter2);
+		NumberFormatter formatter = new NumberFormatter(format);
+		formatter.setValueClass(Double.class);
+		formatter.setMinimum(Double.MIN_VALUE);
+		formatter.setMaximum(Double.MAX_VALUE);
+		formatter.setAllowsInvalid(true);
+		formatter.setCommitsOnValidEdit(true);
+		
+		this.field = new JFormattedTextField(formatter);
 		field.setBounds(getValueModifierX(x), y, 300, 20);
+		field.setText("0.0");
 		container.add(field);
 		
 		//Set default value
@@ -45,8 +49,8 @@ public class DoublePropertyDefiner extends JPropertyDefinitionComponent<Double> 
 	}
 
 	@Override
-	public String getValueAsString() {
-		return field.getText();
+	public Double getValue() {
+		return (Double) field.getValue();
 	}
 
 	@Override

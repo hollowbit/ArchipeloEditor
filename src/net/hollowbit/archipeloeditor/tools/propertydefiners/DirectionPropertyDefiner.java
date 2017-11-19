@@ -8,7 +8,7 @@ import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloshared.Direction;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 
-public class DirectionPropertyDefiner extends JPropertyDefinitionComponent<Direction> {
+public class DirectionPropertyDefiner extends JPropertyDefinitionComponent<Integer> {
 
 	protected JComboBox<Direction> comboBox;
 	
@@ -39,8 +39,8 @@ public class DirectionPropertyDefiner extends JPropertyDefinitionComponent<Direc
 	}
 
 	@Override
-	public String getValueAsString() {
-		return "" + ((Direction) comboBox.getSelectedItem()).ordinal();
+	public Integer getValue() {
+		return ((Direction) comboBox.getSelectedItem()).ordinal();
 	}
 
 	@Override

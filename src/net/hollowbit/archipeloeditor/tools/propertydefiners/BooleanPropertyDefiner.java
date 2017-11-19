@@ -36,8 +36,8 @@ public class BooleanPropertyDefiner extends JPropertyDefinitionComponent<Boolean
 	}
 
 	@Override
-	public String getValueAsString() {
-		return "" + checkBox.isSelected();
+	public Boolean getValue() {
+		return checkBox.isSelected();
 	}
 
 	@Override

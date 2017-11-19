@@ -31,8 +31,8 @@ public class IntegerPropertyDefiner extends JPropertyDefinitionComponent<Integer
 	}
 
 	@Override
-	public String getValueAsString() {
-		return ((Integer) spinner.getValue()).intValue() + "";
+	public Integer getValue() {
+		return (Integer) spinner.getValue();
 	}
 
 	@Override

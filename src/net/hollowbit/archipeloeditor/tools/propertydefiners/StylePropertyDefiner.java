@@ -42,8 +42,8 @@ public class StylePropertyDefiner extends JPropertyDefinitionComponent<Integer> 
 	}
 
 	@Override
-	public String getValueAsString() {
-		return "" + comboBox.getSelectedIndex();
+	public Integer getValue() {
+		return comboBox.getSelectedIndex();
 	}
 
 	@Override

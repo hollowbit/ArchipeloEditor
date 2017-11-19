@@ -16,13 +16,18 @@ public class FloatPropertyDefiner extends JPropertyDefinitionComponent<Float> {
 	public FloatPropertyDefiner(Container container, String label, String name, int x, int y, String defaultValue, boolean required, MainEditor editor) {
 		super(container, label, name, x, y, required, editor);
 		NumberFormat format = NumberFormat.getInstance();
+		format.setParseIntegerOnly(false);
+		format.setMinimumFractionDigits(1);
+		
 		NumberFormatter formatter = new NumberFormatter(format);
 		formatter.setValueClass(Float.class);
 		formatter.setMinimum(Float.MIN_VALUE);
 		formatter.setMaximum(Float.MAX_VALUE);
-		formatter.setAllowsInvalid(false);
+		formatter.setAllowsInvalid(true);
 		formatter.setCommitsOnValidEdit(true);
+		
 		field = new JFormattedTextField(formatter);
+		field.setText("0.0");
 		field.setBounds(getValueModifierX(x), y, 300, 20);
 		container.add(field);
 		
@@ -43,8 +48,8 @@ public class FloatPropertyDefiner extends JPropertyDefinitionComponent<Float> {
 	}
 
 	@Override
-	public String getValueAsString() {
-		return field.getText();
+	public Float getValue() {
+		return (Float) field.getValue();
 	}
 
 	@Override

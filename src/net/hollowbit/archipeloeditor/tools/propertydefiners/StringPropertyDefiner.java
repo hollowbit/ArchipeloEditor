@@ -33,7 +33,7 @@ public class StringPropertyDefiner extends JPropertyDefinitionComponent<String> 
 	}
 
 	@Override
-	public String getValueAsString() {
+	public String getValue() {
 		return field.getText();
 	}
 
