@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloeditor.entity.Entity;
 import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.EntityData;
 import net.hollowbit.archipeloshared.EntitySnapshot;
@@ -21,22 +22,25 @@ public class Chunk {
 	private String[][] elements;
 	private boolean[][] naturalCollisionMap;
 	private byte[][] overrideCollisionMap;
-	private ArrayList<EntitySnapshot> entities;
+	private ArrayList<Entity> entities;
+	private Map map;
 	
-	public Chunk(int x, int y) {
+	public Chunk(int x, int y, Map map) {
 		super();
 		this.x = x;
 		this.y = y;
+		this.map = map;
 		this.tiles = new String[ChunkData.SIZE][ChunkData.SIZE];
 		this.elements = new String[ChunkData.SIZE][ChunkData.SIZE];
 		this.naturalCollisionMap = new boolean[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
 		this.overrideCollisionMap = new byte[ChunkData.SIZE * TileData.COLLISION_MAP_SCALE][ChunkData.SIZE * TileData.COLLISION_MAP_SCALE];
-		this.entities = new ArrayList<EntitySnapshot>();
+		this.entities = new ArrayList<Entity>();
 	}
 	
-	public Chunk(Chunk chunkToCopy) {
+	public Chunk(Chunk chunkToCopy, Map map) {
 		this.x = chunkToCopy.x;
 		this.y = chunkToCopy.y;
+		this.map = map;
 		
 		if (chunkToCopy.tiles != null) {
 			this.tiles = new String[ChunkData.SIZE][ChunkData.SIZE];
@@ -71,17 +75,18 @@ public class Chunk {
 		}
 		
 		if (chunkToCopy.entities != null) {
-			this.entities = new ArrayList<EntitySnapshot>();
-			for (EntitySnapshot entity : chunkToCopy.entities)
+			this.entities = new ArrayList<Entity>();
+			for (Entity entity : chunkToCopy.entities)
 				this.entities.add(entity);
 		}
 	}
 	
-	public Chunk(ChunkData data, ChunkCollisionData collisionData, EntityData entityData) {
+	public Chunk(ChunkData data, ChunkCollisionData collisionData, EntityData entityData, Map map) {
 		this.x = data.x;
 		this.y = data.y;
 		this.tiles = data.tiles;
 		this.elements = data.elements;
+		this.map = map;
 		
 		if (collisionData != null) {
 			//Deserialize collision map
@@ -109,7 +114,9 @@ public class Chunk {
 		}
 		
 		if (entityData != null) {
-			this.entities = entityData.entities;
+			this.entities = new ArrayList<Entity>();
+			for (EntitySnapshot snapshot : entityData.entities)
+				this.entities.add(new Entity(snapshot, this.map));
 		}
         
 		if (this.tiles == null)
@@ -173,7 +180,12 @@ public class Chunk {
 	
 	public EntityData generateEntityData() {
 		EntityData data = new EntityData();
-		data.entities = this.entities;
+		
+		ArrayList<EntitySnapshot> snapshots = new ArrayList<EntitySnapshot>();
+		for (Entity entity : this.entities)
+			snapshots.add(entity.getSnapshot());
+		
+		data.entities = snapshots;
 		return data;
 	}
 	
@@ -279,7 +291,7 @@ public class Chunk {
 		return overrideCollisionMap;
 	}
 	
-	public ArrayList<EntitySnapshot> getEntities() {
+	public ArrayList<Entity> getEntities() {
 		return entities;
 	}
 	

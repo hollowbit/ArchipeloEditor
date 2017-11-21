@@ -82,7 +82,7 @@ public class ChunkTool extends Tool {
 		
 		//Add generators
 		generatorComboBox.addItem(new IslandGenerator(editor.getMap()));
-		generatorComboBox.addItem(new ResetGenerator());
+		generatorComboBox.addItem(new ResetGenerator(editor.getMap()));
 		
 		GridBagConstraints gbc_generatorComboBox = new GridBagConstraints();
 		gbc_generatorComboBox.insets = new Insets(0, 0, 5, 5);

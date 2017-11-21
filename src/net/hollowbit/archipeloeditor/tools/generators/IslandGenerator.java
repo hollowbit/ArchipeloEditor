@@ -8,8 +8,10 @@ import net.hollowbit.archipeloshared.ChunkData;
 public class IslandGenerator extends Generator {
 	
 	OpenSimplexNoise noiseGen;
+	Map map;
 	
 	public IslandGenerator(Map map) {
+		this.map = map;
 		if (map != null)
 			noiseGen = new OpenSimplexNoise(map.getName().hashCode());
 	}
@@ -47,7 +49,7 @@ public class IslandGenerator extends Generator {
 			}
 		}
 		
-		return new Chunk(data, null, null);
+		return new Chunk(data, null, null, map);
 	}
 	
 	private float[][] generateOctavedSimplexNoise (int startX, int startY, int width, int height, int octaves, float roughness, float scale){

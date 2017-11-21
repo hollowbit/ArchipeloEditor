@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.JsonValue.PrettyPrintSettings;
 import com.badlogic.gdx.utils.JsonWriter;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloeditor.entity.Entity;
 import net.hollowbit.archipeloeditor.entity.EntityType;
 import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.ChunkLocation;
@@ -252,7 +253,7 @@ public class Map implements Cloneable {
 	}
 	
 	public void addChunk(int x, int y) {
-		Chunk chunk = new Chunk(x, y);
+		Chunk chunk = new Chunk(x, y, this);
 		this.addChunk(x, y, chunk);
 	}
 	
@@ -346,7 +347,7 @@ public class Map implements Cloneable {
 				ChunkCollisionData collisionData = json.fromJson(ChunkCollisionData.class, collisionReader);
 				EntityData entityData = json.fromJson(EntityData.class, entityReader);
 				
-				this.addChunk(chunkLocation.x, chunkLocation.y, new Chunk(data, collisionData, entityData));
+				this.addChunk(chunkLocation.x, chunkLocation.y, new Chunk(data, collisionData, entityData, this));
 				reader.close();
 			} catch (Exception e) {
 				throw new InvalidMapFolderException("Invalid chunk file at \"" + chunkLocation.y + "/" + chunkLocation.x + ".json\"");
@@ -505,15 +506,15 @@ public class Map implements Cloneable {
 	 * @param y
 	 * @return
 	 */
-	public ArrayList<EntitySnapshot> getEntitiesAtPos(int x, int y) {
+	public ArrayList<EntitySnapshot> getEntitySnapshotsAtPos(int x, int y) {
 		ArrayList<EntitySnapshot> snapshots = new ArrayList<EntitySnapshot>();
 		for (ChunkRow chunkRow : chunkRows.values()) {
 			for (Chunk chunk : chunkRow.getChunks().values()) {
-				for (EntitySnapshot entity : chunk.getEntities()) {
-					EntityType type = EntityType.getById(entity.type);
-					Point p = entity.getObject("pos", new Point(), Point.class);
+				for (Entity entity : chunk.getEntities()) {
+					EntityType type = entity.getType();
+					Point p = entity.getPos();
 					if (x >= p.x && x < p.x + type.getData().imgWidth && y >= p.y && y < p.y + type.getData().imgHeight) {
-						snapshots.add(entity);
+						snapshots.add(entity.getSnapshot());
 						break;
 					}
 				}
@@ -687,8 +688,8 @@ public class Map implements Cloneable {
 	public boolean doesEntityExist(String name) {
 		for (ChunkRow chunkRow : chunkRows.values()) {
 			for (Chunk chunk : chunkRow.getChunks().values()) {
-				for (EntitySnapshot entity : chunk.getEntities()) {
-					if (entity.name.equalsIgnoreCase(name))
+				for (Entity entity : chunk.getEntities()) {
+					if (entity.getName().equalsIgnoreCase(name))
 						return true;
 				}
 			}
@@ -706,15 +707,15 @@ public class Map implements Cloneable {
 		int chunkX = (int) Math.floor((float) pos.x / MainEditor.TILE_SIZE / ChunkData.SIZE);
 		int chunkY = (int) Math.floor((float) pos.y / MainEditor.TILE_SIZE / ChunkData.SIZE);
 		Chunk chunk = this.getChunk(chunkX, chunkY);
-		chunk.getEntities().add(snapshot);
+		chunk.getEntities().add(new Entity(snapshot, this));
 	}
 	
 	public void removeEntity(String name) {
 		for (ChunkRow chunkRow : chunkRows.values()) {
 			for (Chunk chunk : chunkRow.getChunks().values()) {
-				EntitySnapshot entityToRemove = null;
-				for (EntitySnapshot entity : chunk.getEntities()) {
-					if (entity.name.equalsIgnoreCase(name)) {
+				Entity entityToRemove = null;
+				for (Entity entity : chunk.getEntities()) {
+					if (entity.getName().equalsIgnoreCase(name)) {
 						entityToRemove = entity;
 						break;
 					}

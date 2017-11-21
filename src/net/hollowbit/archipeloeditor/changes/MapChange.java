@@ -26,7 +26,7 @@ public class MapChange extends Change {
 		if (!finishedEditing) {
 			if (chunk != null && !doesChunkExist(chunk)) {
 				chunks.add(chunk);
-				editChunks.add(new Chunk(chunk));
+				editChunks.add(new Chunk(chunk, map));
 			}
 		}
 	}
@@ -47,7 +47,7 @@ public class MapChange extends Change {
 		//Copy chunks to redo
 		redoChunks = new ArrayList<Chunk>();
 		for (Chunk chunk : chunks)
-			redoChunks.add(new Chunk(chunk));
+			redoChunks.add(new Chunk(chunk, map));
 		
 		//Undo changes to chunks
 		for (int i = 0; i < chunks.size(); i++)

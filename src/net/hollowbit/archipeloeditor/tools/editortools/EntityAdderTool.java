@@ -111,6 +111,7 @@ public class EntityAdderTool extends Tool {
 				@Override
 				public void mouseClicked(MouseEvent e) {
 					if (isJsonValid()) {
+						//TODO validate type and name of entity before adding
 						removeBtn.setEnabled(true);
 						updatedJson = jsonEditingArea.getText();
 						refreshJsonField();

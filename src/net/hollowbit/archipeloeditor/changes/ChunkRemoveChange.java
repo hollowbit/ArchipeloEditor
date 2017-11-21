@@ -11,7 +11,7 @@ public class ChunkRemoveChange extends Change {
 	public ChunkRemoveChange(Map map, Chunk chunk) {
 		super();
 		this.map = map;
-		this.chunk = new Chunk(chunk);
+		this.chunk = new Chunk(chunk, map);
 	}
 
 	@Override
