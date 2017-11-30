@@ -2,6 +2,9 @@ package net.hollowbit.archipeloeditor.world;
 
 import java.util.TreeMap;
 
+import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloshared.ChunkData;
+
 public class ChunkRow {
 	
 	private int y;
@@ -23,6 +26,10 @@ public class ChunkRow {
 	
 	public TreeMap<Integer, Chunk> getChunks() {
 		return chunks;
+	}
+	
+	public float getPixelY() {
+		return y * ChunkData.SIZE * MainEditor.TILE_SIZE;
 	}
 	
 }

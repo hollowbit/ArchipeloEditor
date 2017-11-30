@@ -97,12 +97,15 @@ public enum EntityType {
 		String defaultAnim = null;
 		for (EntityAnimationData anim : data.animations) {
 			if (anim.id.contains("default")) {
-				defaultAnim = anim.id;
+				defaultAnim = anim.fileName;
 				break;
 			}
 		}
 		
 		if (defaultAnim == null)
+			defaultAnim = data.animations.get(0).fileName;
+		
+		if (defaultAnim.equals(""))
 			defaultAnim = data.animations.get(0).id;
 		
 		for (int style = 0; style < data.numberOfStyles; style++) {

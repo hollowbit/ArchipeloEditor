@@ -14,6 +14,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Json;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloeditor.entity.EntityType;
 import net.hollowbit.archipeloeditor.tools.FileReader;
 import net.hollowbit.archipeloshared.ElementData;
 import net.hollowbit.archipeloshared.ElementList;
@@ -208,6 +209,9 @@ public class AssetManager {
 			//Add the element to the category list
 			categoryElementsList.add(element);
 		}
+		
+		//Load entity textures
+		EntityType.loadAllImages();
 	}
 	
 }

@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.TreeMap;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -17,8 +18,8 @@ import net.hollowbit.archipeloeditor.entity.Entity;
 import net.hollowbit.archipeloeditor.entity.EntityType;
 import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.ChunkLocation;
+import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.EntityData;
-import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.InvalidMapFolderException;
 import net.hollowbit.archipeloshared.MapData;
 import net.hollowbit.archipeloshared.Point;
@@ -52,7 +53,7 @@ public class Map implements Cloneable {
 		this.addChunk(0, 0);
 	}
 	
-	public void draw (AssetManager assetManager, boolean showTiles, boolean showElements, boolean showGrid, boolean showCollisionMap, int tileX, int tileY, int selectedLayer, Object selectedListValue, SpriteBatch batch, int visibleX, int visibleY, int visibleWidth, int visibleHeight ){
+	public void draw (AssetManager assetManager, boolean showTiles, boolean showElements, boolean showGrid, boolean showCollisionMap, int tileX, int tileY, int selectedLayer, Object selectedListValue, SpriteBatch batch, int visibleX, int visibleY, int visibleWidth, int visibleHeight, CollisionRect visibleRect){
 		int visibleChunkX = (int) Math.floor((float) visibleX / ChunkData.SIZE);
 		int visibleChunkY = (int) Math.floor((float) visibleY / ChunkData.SIZE);
 		
@@ -89,15 +90,22 @@ public class Map implements Cloneable {
 			}
 		}
 		
+		
 		//If show elements and elements exist, draw them
 		if (showElements) {
 			MapElement hoverElement = null;
 			if (selectedLayer == MainEditor.ELEMENT_LAYER && selectedListValue != null)
 				hoverElement = (MapElement) selectedListValue;
 			
+			ArrayList<Entity> allEntities = this.getEntities();
+			
 			for (ChunkRow chunkRow : chunkRows.descendingMap().values()) {
 				if (chunkRow.getY() < visibleChunkY - 1 || chunkRow.getY() > visibleChunkY + (visibleHeight / ChunkData.SIZE) + 1)
 					continue;
+				
+				ArrayList<Entity> entitiesInChunkRow = new ArrayList<Entity>();
+				for (Chunk chunk : chunkRow.getChunks().values())
+					entitiesInChunkRow.addAll(chunk.getEntities());
 				
 				for (int row = ChunkData.SIZE - 1; row >= 0; row--) {
 					for (Chunk chunk : chunkRow.getChunks().values()) {
@@ -108,6 +116,24 @@ public class Map implements Cloneable {
 							chunk.drawElements(batch, assetManager, row, hoverElement, xWithinChunk, yWithinChunk);
 						else
 							chunk.drawElements(batch, assetManager, row, null, -1, -1);
+					}
+					
+					//Render objects for row
+					ArrayList<RenderableGameWorldObject> objectsInThisTileRow = new ArrayList<RenderableGameWorldObject>();
+					
+					//Add entities
+					for (Entity entity : allEntities) {
+						float y = entity.getRenderY();
+						if (y > (row - 1) * MainEditor.TILE_SIZE + chunkRow.getPixelY() && y <= row * MainEditor.TILE_SIZE + chunkRow.getPixelY())
+							objectsInThisTileRow.add(entity);
+					}
+					
+					Collections.sort(objectsInThisTileRow, new RenderableGameWorldObjectComparator());
+					
+					//Render entities in tile row
+					for (RenderableGameWorldObject object : objectsInThisTileRow) {
+						if (visibleRect.collidesWith(object.getViewRect()))
+							object.renderObject(batch);
 					}
 				}
 			}
@@ -501,29 +527,6 @@ public class Map implements Cloneable {
 	}
 	
 	/**
-	 * Returns a list of the entities who's rectangles intersect the given position.
-	 * @param x
-	 * @param y
-	 * @return
-	 */
-	public ArrayList<EntitySnapshot> getEntitySnapshotsAtPos(int x, int y) {
-		ArrayList<EntitySnapshot> snapshots = new ArrayList<EntitySnapshot>();
-		for (ChunkRow chunkRow : chunkRows.values()) {
-			for (Chunk chunk : chunkRow.getChunks().values()) {
-				for (Entity entity : chunk.getEntities()) {
-					EntityType type = entity.getType();
-					Point p = entity.getPos();
-					if (x >= p.x && x < p.x + type.getData().imgWidth && y >= p.y && y < p.y + type.getData().imgHeight) {
-						snapshots.add(entity.getSnapshot());
-						break;
-					}
-				}
-			}
-		}
-		return snapshots;
-	}
-	
-	/**
 	 * Recalculates the width and height of the map. Since it is a fairly costly calculation, this should only be done when necessary.
 	 */
 	protected void recalculateSizes() {
@@ -685,6 +688,45 @@ public class Map implements Cloneable {
 		return chunkRows;
 	}
 	
+	/**
+	 * Returns a list of the entities who's rectangles intersect the given position.
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public ArrayList<Entity> getEntitiesAtPos(int x, int y) {
+		ArrayList<Entity> entities = new ArrayList<Entity>();
+		for (ChunkRow chunkRow : chunkRows.values()) {
+			for (Chunk chunk : chunkRow.getChunks().values()) {
+				for (Entity entity : chunk.getEntities()) {
+					EntityType type = entity.getType();
+					Point p = entity.getPos();
+					if (x >= p.x && x < p.x + type.getData().imgWidth && y >= p.y && y < p.y + type.getData().imgHeight) {
+						entities.add(entity);
+						break;
+					}
+				}
+			}
+		}
+		return entities;
+	}
+	
+	/**
+	 * Returns a list of the entities who's rectangles intersect the given position.
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public ArrayList<Entity> getEntities() {
+		ArrayList<Entity> entities = new ArrayList<Entity>();
+		for (ChunkRow chunkRow : chunkRows.values()) {
+			for (Chunk chunk : chunkRow.getChunks().values()) {
+				entities.addAll(chunk.getEntities());
+			}
+		}
+		return entities;
+	}
+	
 	public boolean doesEntityExist(String name) {
 		for (ChunkRow chunkRow : chunkRows.values()) {
 			for (Chunk chunk : chunkRow.getChunks().values()) {
@@ -697,31 +739,28 @@ public class Map implements Cloneable {
 		return false;
 	}
 	
-	public void addUpdateEntity(EntitySnapshot snapshot) {
-		Point pos = snapshot.getObject("pos", null, Point.class);
-		if (pos == null)
+	public void addEntity(Entity entity) {
+		if (entity.getPos() == null)
 			return;
 		
-		this.removeEntity(snapshot.name);
-		
-		int chunkX = (int) Math.floor((float) pos.x / MainEditor.TILE_SIZE / ChunkData.SIZE);
-		int chunkY = (int) Math.floor((float) pos.y / MainEditor.TILE_SIZE / ChunkData.SIZE);
+		int chunkX = (int) Math.floor((float) entity.getPos().x / MainEditor.TILE_SIZE / ChunkData.SIZE);
+		int chunkY = (int) Math.floor((float) entity.getPos().y / MainEditor.TILE_SIZE / ChunkData.SIZE);
 		Chunk chunk = this.getChunk(chunkX, chunkY);
-		chunk.getEntities().add(new Entity(snapshot, this));
+		chunk.getEntities().add(entity);
 	}
 	
-	public void removeEntity(String name) {
+	public void removeEntity(Entity entityToRemove) {
 		for (ChunkRow chunkRow : chunkRows.values()) {
 			for (Chunk chunk : chunkRow.getChunks().values()) {
-				Entity entityToRemove = null;
+				boolean entityFound = false;
 				for (Entity entity : chunk.getEntities()) {
-					if (entity.getName().equalsIgnoreCase(name)) {
-						entityToRemove = entity;
+					if (entity.getName().equalsIgnoreCase(entityToRemove.getName())) {
+						entityFound = true;
 						break;
 					}
 				}
 				
-				if (entityToRemove != null) {
+				if (entityFound) {
 					chunk.getEntities().remove(entityToRemove);
 					return;
 				}

@@ -1,6 +1,10 @@
 package net.hollowbit.archipeloeditor.entity;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+
 import net.hollowbit.archipeloeditor.world.Map;
+import net.hollowbit.archipeloeditor.world.RenderableGameWorldObject;
+import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.EntitySnapshot;
 import net.hollowbit.archipeloshared.Point;
 
@@ -9,12 +13,13 @@ import net.hollowbit.archipeloshared.Point;
  * @author vedi0boy
  *
  */
-public class Entity {
+public class Entity implements RenderableGameWorldObject {
 	
 	private String name;
 	private EntityType type;
 	private int style;
 	private Point pos;
+	private CollisionRect rect;
 	private Map map;
 	private EntitySnapshot snapshot;
 	
@@ -29,6 +34,17 @@ public class Entity {
 		this.type = EntityType.getById(snapshot.type);
 		this.style = snapshot.getInt("style", 0);
 		this.pos = snapshot.getObject("pos", new Point(), Point.class);
+		this.rect = new CollisionRect(pos.x, pos.y, getWidth(), getHeight());
+	}
+	
+	public int getWidth() {
+		//TODO add exceptions for entities like slimes, etc
+		return type.getData().imgWidth;
+	}
+	
+	public int getHeight() {
+		//TODO add exceptions for entities like slimes, etc
+		return type.getData().imgHeight;
 	}
 
 	public String getName() {
@@ -53,6 +69,21 @@ public class Entity {
 
 	public EntitySnapshot getSnapshot() {
 		return snapshot;
+	}
+
+	@Override
+	public float getRenderY() {
+		return type.getDrawOrderY(pos.y);
+	}
+
+	@Override
+	public CollisionRect getViewRect() {
+		return rect;
+	}
+
+	@Override
+	public void renderObject(SpriteBatch batch) {
+		batch.draw(type.getEditorTexture(style), pos.x, pos.y, getWidth(), getHeight());
 	}
 	
 }

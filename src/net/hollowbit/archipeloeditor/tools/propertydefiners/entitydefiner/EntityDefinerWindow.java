@@ -148,8 +148,10 @@ public class EntityDefinerWindow extends JFrame {
 				
 				//TODO Add check to make sure all modifiers are valid before creating the object
 				
-				for (SnapshotModifier mod : modifiers)
-					mod.modify(snapshot);
+				for (SnapshotModifier mod : modifiers) {
+					if (mod != null)
+						mod.modify(snapshot);
+				}
 				
 				listener.complete(snapshot);
 				frame.setVisible(false);

@@ -61,7 +61,7 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 				selectedLayer = editor.getSelectedTool().getSelectedLayer();
 			}
 			
-			map.draw(editor.getAssetManager(), editor.showTiles(), editor.showMapElements(), editor.showGrid(), editor.showCollisionMap(), (int) (mouseLocation.x / MainEditor.TILE_SIZE), (int) (mouseLocation.y / MainEditor.TILE_SIZE), selectedLayer, selectedItem, batch, (int) (rect.xWithOffset() / MainEditor.TILE_SIZE), (int) (rect.yWithOffset() / MainEditor.TILE_SIZE), (int) (rect.width / MainEditor.TILE_SIZE), (int) (rect.height / MainEditor.TILE_SIZE));
+			map.draw(editor.getAssetManager(), editor.showTiles(), editor.showMapElements(), editor.showGrid(), editor.showCollisionMap(), (int) (mouseLocation.x / MainEditor.TILE_SIZE), (int) (mouseLocation.y / MainEditor.TILE_SIZE), selectedLayer, selectedItem, batch, (int) (rect.xWithOffset() / MainEditor.TILE_SIZE), (int) (rect.yWithOffset() / MainEditor.TILE_SIZE), (int) (rect.width / MainEditor.TILE_SIZE), (int) (rect.height / MainEditor.TILE_SIZE), rect);
 		}
 		
 		//TODO render tile coordinate of mouse
