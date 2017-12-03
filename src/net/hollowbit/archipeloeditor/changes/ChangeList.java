@@ -10,11 +10,14 @@ public class ChangeList {
 	
 	private int index = -1;
 	private MainEditor editor;
+	private ArrayList<ChangeListener> listeners;
 	
 	public ChangeList (MainEditor editor) {
 		this.editor = editor;
 		index = -1;
 		changeList = new ArrayList<Change[]>();
+		
+		listeners = new ArrayList<ChangeListener>();
 	}
 	
 	//Adds a change to the list, makes sure index is good as well
@@ -41,6 +44,9 @@ public class ChangeList {
 		}
 		if(index > -1)
 			index--;
+		
+		for (ChangeListener listener : listeners)
+			listener.undoOccured();
 	}
 	
 	//redo a previously undone change
@@ -49,6 +55,9 @@ public class ChangeList {
 		index++;
 		for(Change change : changeList.get(index))
 			change.redoChanges();
+		
+		for (ChangeListener listener : listeners)
+			listener.redoOccured();
 	}
 	
 	//Clear all changes
@@ -63,6 +72,21 @@ public class ChangeList {
 			index = changeList.size() - 1;
 		if (index < -1)
 			index = -1;
+	}
+	
+	public void addListener(ChangeListener listener) {
+		this.listeners.add(listener);
+	}
+	
+	public void removeListener(ChangeListener listener) {
+		this.listeners.remove(listener);
+	}
+	
+	public interface ChangeListener {
+		
+		public abstract void undoOccured();
+		public abstract void redoOccured();
+		
 	}
 	
 }

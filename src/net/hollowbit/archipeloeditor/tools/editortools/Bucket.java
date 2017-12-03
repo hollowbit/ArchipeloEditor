@@ -84,7 +84,7 @@ public class Bucket extends Tool {
 				int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
 				change.addChunk(editor.getMap().getChunk(chunkX, chunkY));
 				
-				editor.getChangeList().addChanges(change);
+				editor.getMapChangeList().addChanges(change);
 				editor.setJustSaved(false);
 				startFill(tileX, tileY);
 			}

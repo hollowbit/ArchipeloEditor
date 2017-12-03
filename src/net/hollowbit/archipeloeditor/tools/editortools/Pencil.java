@@ -198,7 +198,7 @@ public class Pencil extends Tool {
 				int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
 				change = new MapChange(editor.getMap());
 				change.addChunk(editor.getMap().getChunk(chunkX, chunkY));
-				editor.getChangeList().addChanges(change);
+				editor.getMapChangeList().addChanges(change);
 				editor.setJustSaved(false);
 				
 				if (worldRenderer.shiftPressed())

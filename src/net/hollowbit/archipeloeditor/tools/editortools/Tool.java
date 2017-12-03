@@ -5,6 +5,7 @@ import javax.swing.JPanel;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloeditor.changes.ChangeList;
 import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloeditor.worldeditor.WorldEditor;
 
@@ -35,6 +36,10 @@ public abstract class Tool {
 	
 	public int getSelectedLayer() {
 		return -1;
+	}
+	
+	public ChangeList getChangeList() {
+		return editor.getMapChangeList();
 	}
 	
 }

@@ -97,7 +97,8 @@ public class MainEditor implements Runnable {
 	long startTime = 0;
 	
 	private AssetManager assetManager;
-	private ChangeList changeList;
+	private ChangeList mapChangeList;
+	private ChangeList entityChangeList;
 	
 	public boolean justSaved = true;
 	
@@ -135,7 +136,8 @@ public class MainEditor implements Runnable {
 		lwjglCanvas.setCursor(CURSOR);
 		
 		//Initialize
-		changeList = new ChangeList(this);
+		mapChangeList = new ChangeList(this);
+		entityChangeList = new ChangeList(this);
 		openWindows = new HashMap<String, Boolean>();
 		initialize();
 		
@@ -361,7 +363,8 @@ public class MainEditor implements Runnable {
 				}
 				map.close();
 				map = null;
-				changeList.reset();
+				mapChangeList.reset();
+				entityChangeList.reset();
 				lblMapPath.setText("");
 			}
 			
@@ -376,7 +379,7 @@ public class MainEditor implements Runnable {
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				changeList.undo();
+				selectedTool.getChangeList().undo();
 			}
 			
 		});
@@ -387,7 +390,7 @@ public class MainEditor implements Runnable {
 			
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				changeList.redo();
+				selectedTool.getChangeList().redo();
 			}
 			
 		});
@@ -633,7 +636,8 @@ public class MainEditor implements Runnable {
 			startTime = System.currentTimeMillis();
 
 			//Makes sure everything is properly set
-			changeList.update();
+			mapChangeList.update();
+			entityChangeList.update();
 			mntmSave.setEnabled(map != null);
 			mntmSaveAs.setEnabled(map != null);
 			mntmClose.setEnabled(map != null);
@@ -729,8 +733,12 @@ public class MainEditor implements Runnable {
 		return map;
 	}
 	
-	public ChangeList getChangeList () {
-		return changeList;
+	public ChangeList getMapChangeList () {
+		return mapChangeList;
+	}
+	
+	public ChangeList getEntityChangeList () {
+		return entityChangeList;
 	}
 	
 	public void addOpenWindow(String type) {
@@ -805,11 +813,11 @@ public class MainEditor implements Runnable {
 	}
 	
 	public void undo() {
-		changeList.undo();
+		selectedTool.getChangeList().undo();
 	}
 	
 	public void redo() {
-		changeList.redo();
+		selectedTool.getChangeList().redo();
 	}
 	
 	public void save() {

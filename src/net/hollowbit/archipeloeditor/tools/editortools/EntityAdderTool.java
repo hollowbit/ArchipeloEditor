@@ -19,6 +19,10 @@ import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonWriter.OutputType;
 
 import net.hollowbit.archipeloeditor.MainEditor;
+import net.hollowbit.archipeloeditor.changes.ChangeList;
+import net.hollowbit.archipeloeditor.changes.ChangeList.ChangeListener;
+import net.hollowbit.archipeloeditor.changes.EntityAddUpdateChange;
+import net.hollowbit.archipeloeditor.changes.EntityRemoveChange;
 import net.hollowbit.archipeloeditor.entity.Entity;
 import net.hollowbit.archipeloeditor.entity.EntityType;
 import net.hollowbit.archipeloeditor.tools.Wrapper;
@@ -45,6 +49,9 @@ public class EntityAdderTool extends Tool {
 	private Json json;
 	
 	private final Wrapper<Entity> entity;
+	
+	private float x, y;
+	private boolean locationDefined = false;
 	
 	public EntityAdderTool(MainEditor editor, WorldEditor worldRenderer) {
 		super(editor, worldRenderer);
@@ -73,24 +80,49 @@ public class EntityAdderTool extends Tool {
 		if (editor.getMap() == null || tileX >= editor.getMap().getMaxTileX() || tileY >= editor.getMap().getMaxTileY() || tileX < editor.getMap().getMinTileX() || tileY < editor.getMap().getMinTileY())
 			return;
 		
+		locationDefined = true;
+		this.x = x;
+		this.y = y;
+		
+		this.performClickOnLocation();
+	}
+	
+	private void performClickOnLocation() {
+		if (!locationDefined)
+			return;
+		
 		ArrayList<Entity> entitiesTouched = editor.getMap().getEntitiesAtPos((int) x, (int) y);
 		if (entitiesTouched.isEmpty()) {//Add new entity
 			EntitySnapshot newSnapshot = new EntitySnapshot();
 			newSnapshot.name = "entity-name";
 			newSnapshot.type = EntityType.WIZARD.getId();
 			newSnapshot.putObject("pos", new Point(Math.round(x), Math.round(y)));
-			entity.set(new Entity(newSnapshot, editor.getMap()));
-			initializeEditingComponents(x, y, true);
+			initializeEditingComponents(new Entity(newSnapshot, editor.getMap()), x, y, true);
 		} else {
-			entity.set(entitiesTouched.get(0));
-			initializeEditingComponents(x, y, false);
+			initializeEditingComponents(entitiesTouched.get(0), x, y, false);
 		}
 	}
 	
-	private void initializeEditingComponents(float x, float y, boolean isNew) {
-		EntitySnapshot entitySnapshot = entity.get().getSnapshot();
+	private void initializeEditingComponents(Entity entityToEdit, float x, float y, boolean isNew) {
+		EntitySnapshot entitySnapshot = entityToEdit.getSnapshot();
+		
+		if (!isNew)
+			entity.set(entityToEdit);
 		
 		if (!componentsAdded) {
+			getChangeList().addListener(new ChangeListener() {
+				
+				@Override
+				public void undoOccured() {
+					performClickOnLocation();
+				}
+				
+				@Override
+				public void redoOccured() {
+					performClickOnLocation();
+				}
+			});
+			
 			removeBtn = new JButton("Remove");
 			GridBagConstraints gbc = new GridBagConstraints();
 			gbc.insets = new Insets(0, 0, 5, 5);
@@ -105,6 +137,7 @@ public class EntityAdderTool extends Tool {
 						removeBtn.setEnabled(false);
 						refreshJsonField();
 						editor.getMap().removeEntity(entity.get());
+						getChangeList().addChanges(new EntityRemoveChange(editor.getMap(), entity.get()));
 					super.mouseClicked(e);
 				}
 			});
@@ -126,12 +159,16 @@ public class EntityAdderTool extends Tool {
 						updatedJson = jsonEditingArea.getText();
 						refreshJsonField();
 						
+						Entity entityToRemove = entity.get();
+						
 						//Remove entity
 						editor.getMap().removeEntity(entity.get());
 						
 						//Add and update current entity
 						entity.set(new Entity(json.fromJson(EntitySnapshot.class, jsonEditingArea.getText()), editor.getMap()));
 						editor.getMap().addEntity(entity.get());
+						
+						getChangeList().addChanges(new EntityAddUpdateChange(editor.getMap(), entityToRemove, entity.get()));
 					}
 					super.mouseClicked(e);
 				}
@@ -242,5 +279,10 @@ public class EntityAdderTool extends Tool {
 
 	@Override
 	public void mouseScrolled(int amount) {}
-
+	
+	@Override
+	public ChangeList getChangeList() {
+		return editor.getEntityChangeList();
+	}
+	
 }

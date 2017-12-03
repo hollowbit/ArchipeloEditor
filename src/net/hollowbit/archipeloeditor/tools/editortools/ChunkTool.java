@@ -122,7 +122,7 @@ public class ChunkTool extends Tool {
 				MapChange change = new MapChange(editor.getMap());
 				change.addChunk(mapChunk);
 				
-				editor.getChangeList().addChanges(change);
+				editor.getMapChangeList().addChanges(change);
 				editor.setJustSaved(false);
 				
 				Chunk chunk = ((Generator) generatorComboBox.getSelectedItem()).generate(selectedChunkX, selectedChunkY);
@@ -135,11 +135,11 @@ public class ChunkTool extends Tool {
 		if (editor.getMap() != null && isChunkSelected) {
 			Chunk chunk = editor.getMap().getChunk(selectedChunkX, selectedChunkY);
 			if (chunk != null) {
-				editor.getChangeList().addChanges(new ChunkRemoveChange(editor.getMap(), editor.getMap().getChunk(selectedChunkX, selectedChunkY)));
+				editor.getMapChangeList().addChanges(new ChunkRemoveChange(editor.getMap(), editor.getMap().getChunk(selectedChunkX, selectedChunkY)));
 				editor.setJustSaved(false);
 				editor.getMap().removeChunk(selectedChunkX, selectedChunkY);
 			} else {
-				editor.getChangeList().addChanges(new ChunkAddChange(editor.getMap(), selectedChunkX, selectedChunkY));
+				editor.getMapChangeList().addChanges(new ChunkAddChange(editor.getMap(), selectedChunkX, selectedChunkY));
 				editor.setJustSaved(false);
 				editor.getMap().addChunk(selectedChunkX, selectedChunkY);
 			}
