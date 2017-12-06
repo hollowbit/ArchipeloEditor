@@ -36,6 +36,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloeditor.changes.MapChange;
 import net.hollowbit.archipeloeditor.world.AssetManager;
+import net.hollowbit.archipeloeditor.world.Chunk;
 import net.hollowbit.archipeloeditor.world.MapElement;
 import net.hollowbit.archipeloeditor.world.MapTile;
 import net.hollowbit.archipeloeditor.worldeditor.WorldEditor;
@@ -225,11 +226,15 @@ public class Pencil extends Tool {
 		if(list.getSelectedValue() != null) {
 			int chunkX = (int) Math.floor((float) tileX / ChunkData.SIZE);
 			int chunkY = (int) Math.floor((float) tileY / ChunkData.SIZE);
-			change.addChunk(editor.getMap().getChunk(chunkX, chunkY));
+			Chunk chunkEdited = editor.getMap().getChunk(chunkX, chunkY);
 			
-			drawLine(lastX, lastY, tileX, tileY);
-			lastX = tileX;
-			lastY = tileY;
+			if (chunkEdited != null) {
+				change.addChunk(chunkEdited);
+			
+				drawLine(lastX, lastY, tileX, tileY);
+				lastX = tileX;
+				lastY = tileY;
+			}
 		}
 	}
 
