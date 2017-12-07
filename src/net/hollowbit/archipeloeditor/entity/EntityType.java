@@ -137,7 +137,15 @@ public enum EntityType {
 	}
 	
 	public static EntityType getById(String id) {
-		return typeMap.get(id);
+		return typeMap.get(processId(id));
+	}
+	
+	public static boolean doesTypeExist(String id) {
+		return typeMap.containsKey(processId(id));
+	}
+	
+	private static String processId(String id) {
+		return id.replaceAll("_", "-").toLowerCase();
 	}
 	
 }

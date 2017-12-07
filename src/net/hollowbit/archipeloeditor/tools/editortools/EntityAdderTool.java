@@ -9,6 +9,7 @@ import java.util.ArrayList;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.event.DocumentEvent;
@@ -108,6 +109,8 @@ public class EntityAdderTool extends Tool {
 		
 		if (!isNew)
 			entity.set(entityToEdit);
+		else
+			entity.set(null);
 		
 		if (!componentsAdded) {
 			getChangeList().addListener(new ChangeListener() {
@@ -154,7 +157,32 @@ public class EntityAdderTool extends Tool {
 				@Override
 				public void mouseClicked(MouseEvent e) {
 					if (isJsonValid()) {
-						//TODO validate type and name of entity before adding
+						EntitySnapshot snapshot = json.fromJson(EntitySnapshot.class, jsonEditingArea.getText());
+						
+						//Validate type and name of entity before adding
+						if (!EntityType.doesTypeExist(snapshot.type)) {
+							JOptionPane.showMessageDialog(editor.getMainWindow(), "Invalid entity type specified: \"" + snapshot.type + "\"", "Could Not Add Entity", JOptionPane.ERROR_MESSAGE);
+							return;
+						}
+						
+						if (entity.get() == null || !snapshot.name.equals(entity.get().getName())) {
+							boolean newNameAlreadyExists = false;
+							for (Entity ent : editor.getMap().getEntities()) {
+								if (ent.getName().equals(snapshot.name)) {
+									newNameAlreadyExists = true;
+									break;
+								}
+							}
+							
+							if (newNameAlreadyExists) {
+								JOptionPane.showMessageDialog(editor.getMainWindow(), "An entity with this name already exists: \"" + snapshot.name + "\"", "Could Not Add Entity", JOptionPane.ERROR_MESSAGE);
+								return;
+							}
+						}
+						
+
+						Entity entityToAdd = new Entity(snapshot, editor.getMap());
+						
 						removeBtn.setEnabled(true);
 						updatedJson = jsonEditingArea.getText();
 						refreshJsonField();
@@ -162,10 +190,11 @@ public class EntityAdderTool extends Tool {
 						Entity entityToRemove = entity.get();
 						
 						//Remove entity
-						editor.getMap().removeEntity(entity.get());
+						if (entity.get() != null)
+							editor.getMap().removeEntity(entity.get());
 						
 						//Add and update current entity
-						entity.set(new Entity(json.fromJson(EntitySnapshot.class, jsonEditingArea.getText()), editor.getMap()));
+						entity.set(entityToAdd);
 						editor.getMap().addEntity(entity.get());
 						
 						getChangeList().addChanges(new EntityAddUpdateChange(editor.getMap(), entityToRemove, entity.get()));
