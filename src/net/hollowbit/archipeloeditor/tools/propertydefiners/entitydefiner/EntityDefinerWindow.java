@@ -11,6 +11,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -26,7 +27,9 @@ import net.hollowbit.archipeloeditor.tools.propertydefiners.EntityDefiner;
 import net.hollowbit.archipeloeditor.tools.propertydefiners.FloatPropertyDefiner;
 import net.hollowbit.archipeloeditor.tools.propertydefiners.HealthPropertyDefiner;
 import net.hollowbit.archipeloeditor.tools.propertydefiners.IntegerPropertyDefiner;
+import net.hollowbit.archipeloeditor.tools.propertydefiners.LocationPropertyDefiner;
 import net.hollowbit.archipeloeditor.tools.propertydefiners.PointPropertyDefiner;
+import net.hollowbit.archipeloeditor.tools.propertydefiners.RectanglePropertyDefiner;
 import net.hollowbit.archipeloeditor.tools.propertydefiners.StringPropertyDefiner;
 import net.hollowbit.archipeloeditor.tools.propertydefiners.StylePropertyDefiner;
 import net.hollowbit.archipeloshared.Direction;
@@ -102,7 +105,10 @@ public class EntityDefinerWindow extends JFrame {
 		for (EntityType type : EntityType.values())//Add all entity types
 			entityTypeCboBox.addItem(type);
 		
-		EntityType defaultType = EntityType.getById(snapshot.type);
+		EntityType defaultType = null;
+		if (snapshot.type != null)
+			defaultType = EntityType.getById(snapshot.type);
+		
 		if (defaultType != null)
 			entityTypeCboBox.setSelectedItem(defaultType);
 		
@@ -149,6 +155,11 @@ public class EntityDefinerWindow extends JFrame {
 				//TODO Add check to make sure all modifiers are valid before creating the object
 				
 				for (SnapshotModifier mod : modifiers) {
+					if (mod.isRequired() && ! mod.isValid()) {
+						JOptionPane.showMessageDialog(frame, "You are missing the following required value: " + mod.getName(), "Missing Required Value", JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+					
 					if (mod != null)
 						mod.modify(snapshot);
 				}
@@ -221,32 +232,21 @@ public class EntityDefinerWindow extends JFrame {
 				break;
 			case ENTITY_SNAPSHOT:
 				modifier = new EntityDefiner(propertiesPanel, name, name, 10, i * SPACE_BETWEEN_ELEMENTS + 10, defaultValue, propertyDefinition.required, editor);
+				break;
+			case RECTANGLE:
+				modifier = new RectanglePropertyDefiner(propertiesPanel, editor.getMap(), name, name, 10, i * SPACE_BETWEEN_ELEMENTS + 10, (posString == null || posString.equals("") ? defaultValue : posString), propertyDefinition.required, editor);
+				break;
+			case LOCATION:
+				modifier = new LocationPropertyDefiner(propertiesPanel, name, name, 10, i * SPACE_BETWEEN_ELEMENTS + 10, defaultValue, propertyDefinition.required, editor);
+				break;
 			default:
 				modifier = null;
 			}
-			modifiers.add(modifier);
+			
+			if (modifier != null)
+				modifiers.add(modifier);
 					
 					/*switch (propertyDefinition.getType()) {
-					case LOCATION:
-						String json5 = "";
-						
-						modifiers.add(new SnapshotModifier() {
-							@Override
-							public void modify(EntitySnapshot snapshot) {
-								snapshot.putString(name, json5); 
-							}
-						});
-						break;
-					case RECTANGLE:
-						String json3 = "";
-						
-						modifiers.add(new SnapshotModifier() {
-							@Override
-							public void modify(EntitySnapshot snapshot) {
-								snapshot.putString(name, json3); 
-							}
-						});
-						break;
 					case JSON:
 						String json0 = "";
 						
@@ -284,6 +284,8 @@ public class EntityDefinerWindow extends JFrame {
 		
 		public abstract void modify(EntitySnapshot snapshot);
 		public abstract boolean isValid();
+		public abstract boolean isRequired();
+		public abstract String getName();
 		
 	}
 	

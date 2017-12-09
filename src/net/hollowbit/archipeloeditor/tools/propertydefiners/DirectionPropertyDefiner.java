@@ -19,7 +19,7 @@ public class DirectionPropertyDefiner extends JPropertyDefinitionComponent<Integ
 		for (Direction direction : allowedDirections)
 			comboBox.addItem(direction);
 		comboBox.setSelectedIndex(0);
-		comboBox.setBounds(getValueModifierX(x), y, 300, 20);
+		comboBox.setBounds(getValueModifierX(x), y, 100, 20);
 		container.add(comboBox);
 		
 		//Set default value

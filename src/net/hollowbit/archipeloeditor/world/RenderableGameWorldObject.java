@@ -8,6 +8,6 @@ public interface RenderableGameWorldObject {
 	
 	public abstract float getRenderY();
 	public abstract CollisionRect getViewRect();
-	public abstract void renderObject(SpriteBatch batch);
+	public abstract void renderObject(AssetManager assetManager, SpriteBatch batch);
 	
 }

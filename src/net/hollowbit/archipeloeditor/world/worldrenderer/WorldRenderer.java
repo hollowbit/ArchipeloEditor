@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input.Keys;
 import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 
@@ -23,8 +24,11 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 	protected AssetManager assetManager;
 	protected SpriteBatch batch;
 	protected GameCamera cam;
+	protected UiCamera uiCam;
 	protected InputMultiplexer inputMultiplexer;
 	protected boolean paused = false;
+	
+	protected BitmapFont font;
 	
 	public WorldRenderer(MainEditor editor, AssetManager assetManager) {
 		this.editor = editor;
@@ -39,6 +43,10 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 		Gdx.input.setInputProcessor(inputMultiplexer);
 		
 		this.cam = new GameCamera();
+		this.uiCam = new UiCamera();
+		
+		this.font = new BitmapFont();
+		
 		super.create();
 	}
 	
@@ -68,6 +76,16 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 		
 		batch.end();
 		
+		batch.setProjectionMatrix(uiCam.combined());
+		batch.begin();
+		Vector2 pos = cam.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+		font.draw(batch, "x: " + ((int) pos.x), 10, 40);
+		font.draw(batch, "y: " + ((int) pos.y), 10, 20);
+		batch.end();
+		
+		//Set batch back for any child classes
+		batch.setProjectionMatrix(cam.combined());
+		
 		super.render();
 	}
 	
@@ -86,6 +104,7 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 	@Override
 	public void resize(int width, int height) {
 		cam.resize(width, height);
+		uiCam.resize(width, height);
 		super.resize(width, height);
 	}
 	

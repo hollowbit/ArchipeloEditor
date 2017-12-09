@@ -19,7 +19,6 @@ public class NewMapMenu extends JFrame {
 	private static final long serialVersionUID = 1L;
 
 	private JTextField textFieldName;
-	private JTextField textFieldDisplayName;
 	private JTextField textFieldMusic;
 	
 	//Dialog to create a new map
@@ -56,15 +55,6 @@ public class NewMapMenu extends JFrame {
 		textFieldName.setColumns(10);
 		getContentPane().add(textFieldName);
 		
-		JLabel lblDisplayName = new JLabel("Display Name:");
-		lblDisplayName.setBounds(10, 70, 198, 14);
-		getContentPane().add(lblDisplayName);
-		
-		textFieldDisplayName = new JTextField();
-		textFieldDisplayName.setBounds(10, 90, 198, 20);
-		textFieldDisplayName.setColumns(10);
-		getContentPane().add(textFieldDisplayName);
-		
 		JLabel lblNaturalLighting = new JLabel("Natural Lighting:");
 		lblNaturalLighting.setBounds(10, 213, 110, 14);
 		getContentPane().add(lblNaturalLighting);
@@ -89,13 +79,13 @@ public class NewMapMenu extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				//Makes sure that required fields aren't empty
-				if (textFieldName.getText().equals("") || textFieldDisplayName.getText().equals("")) {
-					JOptionPane.showMessageDialog(frame, "Some fields are empty. Required fields are: Name and display name", "Error", JOptionPane.WARNING_MESSAGE);
+				if (textFieldName.getText().equals("")) {
+					JOptionPane.showMessageDialog(frame, "Please give the map a name. Ex: archipelo-world", "Error", JOptionPane.WARNING_MESSAGE);
 					return;
 				}
 				
 				//If it all checks out, create a new map
-				Map map = new Map(textFieldName.getText(), textFieldDisplayName.getText(), textFieldMusic.getText(), chckbxYesno.isSelected());
+				Map map = new Map(textFieldName.getText(), textFieldMusic.getText(), chckbxYesno.isSelected());
 				listener.newMapCreated(map);
 				
 				setVisible(false);

@@ -9,6 +9,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 
@@ -16,7 +17,6 @@ public class MapSettingsEditor extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	private JTextField textFieldName;
-	private JTextField textFieldDisplayName;
 	private JTextField textFieldMusic;
 	
 	//Editor for changing map settings
@@ -54,16 +54,6 @@ public class MapSettingsEditor extends JFrame {
 		getContentPane().add(textFieldName);
 		textFieldName.setColumns(10);
 		
-		JLabel lblDisplayName = new JLabel("Display Name:");
-		lblDisplayName.setBounds(10, 70, 198, 14);
-		getContentPane().add(lblDisplayName);
-		
-		textFieldDisplayName = new JTextField();
-		textFieldDisplayName.setText(new String(editor.getMap().getDisplayName()));
-		textFieldDisplayName.setBounds(10, 90, 198, 20);
-		textFieldDisplayName.setColumns(10);
-		getContentPane().add(textFieldDisplayName);
-		
 		JLabel lblNaturalLighting = new JLabel("Natural Lighting:");
 		lblNaturalLighting.setBounds(10, 213, 86, 14);
 		getContentPane().add(lblNaturalLighting);
@@ -81,14 +71,21 @@ public class MapSettingsEditor extends JFrame {
 		getContentPane().add(textFieldMusic);
 		textFieldMusic.setColumns(10);
 		
+		JFrame frame = this;
+		
 		JButton btnSave = new JButton("Save");
 		btnSave.addActionListener(new ActionListener() {//Save changes to map
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				//Makes sure that required fields aren't empty
+				if (textFieldName.getText().equals("")) {
+					JOptionPane.showMessageDialog(frame, "Please give the map a name. Ex: archipelo-world", "Error", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+				
 				//Applies settings to map
 				editor.getMap().setName(textFieldName.getText());
-				editor.getMap().setDisplayName(textFieldDisplayName.getText());
 				editor.getMap().setMusic(textFieldMusic.getText());
 				
 				listener.mapSettingsChanged();

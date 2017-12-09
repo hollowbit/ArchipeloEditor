@@ -15,7 +15,6 @@ import com.badlogic.gdx.utils.JsonWriter;
 
 import net.hollowbit.archipeloeditor.MainEditor;
 import net.hollowbit.archipeloeditor.entity.Entity;
-import net.hollowbit.archipeloeditor.entity.EntityType;
 import net.hollowbit.archipeloshared.ChunkData;
 import net.hollowbit.archipeloshared.ChunkLocation;
 import net.hollowbit.archipeloshared.CollisionRect;
@@ -27,7 +26,6 @@ import net.hollowbit.archipeloshared.TileData;
 
 public class Map implements Cloneable {
 	
-	private String displayName = "";
 	private String music = "";
 	private String name;
 	private boolean naturalLighting;
@@ -42,9 +40,8 @@ public class Map implements Cloneable {
 	}
 	
 	//Create map from editor
-	public Map(String name, String displayName, String music, boolean naturalLighting) {
+	public Map(String name, String music, boolean naturalLighting) {
 		this.name = name;
-		this.displayName = displayName;
 		this.music = music;
 		this.naturalLighting = naturalLighting;
 		
@@ -92,22 +89,22 @@ public class Map implements Cloneable {
 		
 		
 		//If show elements and elements exist, draw them
-		if (showElements) {
-			MapElement hoverElement = null;
-			if (selectedLayer == MainEditor.ELEMENT_LAYER && selectedListValue != null)
-				hoverElement = (MapElement) selectedListValue;
+		MapElement hoverElement = null;
+		if (selectedLayer == MainEditor.ELEMENT_LAYER && selectedListValue != null)
+			hoverElement = (MapElement) selectedListValue;
+		
+		ArrayList<Entity> allEntities = this.getEntities();
+		
+		for (ChunkRow chunkRow : chunkRows.descendingMap().values()) {
+			if (chunkRow.getY() < visibleChunkY - 1 || chunkRow.getY() > visibleChunkY + (visibleHeight / ChunkData.SIZE) + 1)
+				continue;
 			
-			ArrayList<Entity> allEntities = this.getEntities();
+			ArrayList<Entity> entitiesInChunkRow = new ArrayList<Entity>();
+			for (Chunk chunk : chunkRow.getChunks().values())
+				entitiesInChunkRow.addAll(chunk.getEntities());
 			
-			for (ChunkRow chunkRow : chunkRows.descendingMap().values()) {
-				if (chunkRow.getY() < visibleChunkY - 1 || chunkRow.getY() > visibleChunkY + (visibleHeight / ChunkData.SIZE) + 1)
-					continue;
-				
-				ArrayList<Entity> entitiesInChunkRow = new ArrayList<Entity>();
-				for (Chunk chunk : chunkRow.getChunks().values())
-					entitiesInChunkRow.addAll(chunk.getEntities());
-				
-				for (int row = ChunkData.SIZE - 1; row >= 0; row--) {
+			for (int row = ChunkData.SIZE - 1; row >= 0; row--) {
+				if (showElements) {
 					for (Chunk chunk : chunkRow.getChunks().values()) {
 						if (chunk.getX() < visibleChunkX - 1 || chunk.getX() > visibleChunkX + (visibleWidth / ChunkData.SIZE) + 1)
 							continue;
@@ -117,24 +114,24 @@ public class Map implements Cloneable {
 						else
 							chunk.drawElements(batch, assetManager, row, null, -1, -1);
 					}
-					
-					//Render objects for row
-					ArrayList<RenderableGameWorldObject> objectsInThisTileRow = new ArrayList<RenderableGameWorldObject>();
-					
-					//Add entities
-					for (Entity entity : allEntities) {
-						float y = entity.getRenderY();
-						if (y > (row - 1) * MainEditor.TILE_SIZE + chunkRow.getPixelY() && y <= row * MainEditor.TILE_SIZE + chunkRow.getPixelY())
-							objectsInThisTileRow.add(entity);
-					}
-					
-					Collections.sort(objectsInThisTileRow, new RenderableGameWorldObjectComparator());
-					
-					//Render entities in tile row
-					for (RenderableGameWorldObject object : objectsInThisTileRow) {
-						if (visibleRect.collidesWith(object.getViewRect()))
-							object.renderObject(batch);
-					}
+				}
+				
+				//Render objects for row
+				ArrayList<RenderableGameWorldObject> objectsInThisTileRow = new ArrayList<RenderableGameWorldObject>();
+				
+				//Add entities
+				for (Entity entity : allEntities) {
+					float y = entity.getRenderY();
+					if (y > (row - 1) * MainEditor.TILE_SIZE + chunkRow.getPixelY() && y <= row * MainEditor.TILE_SIZE + chunkRow.getPixelY())
+						objectsInThisTileRow.add(entity);
+				}
+				
+				Collections.sort(objectsInThisTileRow, new RenderableGameWorldObjectComparator());
+				
+				//Render entities in tile row
+				for (RenderableGameWorldObject object : objectsInThisTileRow) {
+					if (visibleRect.collidesWith(object.getViewRect()))
+						object.renderObject(assetManager, batch);
 				}
 			}
 		}
@@ -335,7 +332,6 @@ public class Map implements Cloneable {
 		}
 		
 		this.name = mapData.name;
-		this.displayName = mapData.displayName;
 		this.naturalLighting = mapData.naturalLighting;
 		this.music = mapData.music;
 		
@@ -406,7 +402,6 @@ public class Map implements Cloneable {
 		FileWriter settingsWriter = new FileWriter(settingsFile);
 		MapData data = new MapData();
 		data.name = this.name;
-		data.displayName = this.displayName;
 		data.naturalLighting = this.naturalLighting;
 		data.music = this.music;
 		
@@ -467,7 +462,6 @@ public class Map implements Cloneable {
 	
 	//Close map
 	public void close(){
-		displayName = "";
 		music = "";
 		name = "";
 		for (ChunkRow row : chunkRows.values())
@@ -476,14 +470,6 @@ public class Map implements Cloneable {
 		width = 0;
 		height = 0;
 		minTileX = minTileY = maxTileX = maxTileY = 0;
-	}
-
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	public void setDisplayName(String displayName) {
-		this.displayName = displayName;
 	}
 	
 	public int getWidth() {
@@ -699,9 +685,7 @@ public class Map implements Cloneable {
 		for (ChunkRow chunkRow : chunkRows.values()) {
 			for (Chunk chunk : chunkRow.getChunks().values()) {
 				for (Entity entity : chunk.getEntities()) {
-					EntityType type = entity.getType();
-					Point p = entity.getPos();
-					if (x >= p.x && x < p.x + type.getData().imgWidth && y >= p.y && y < p.y + type.getData().imgHeight) {
+					if (x >= entity.getX() && x < entity.getX() + entity.getWidth() && y >= entity.getY() && y < entity.getY() + entity.getHeight()) {
 						entities.add(entity);
 						break;
 					}

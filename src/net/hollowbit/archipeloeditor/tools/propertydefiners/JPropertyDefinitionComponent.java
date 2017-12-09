@@ -17,6 +17,7 @@ public abstract class JPropertyDefinitionComponent<T> implements SnapshotModifie
 	public static final int HEIGHT = 40;
 	
 	protected String name;
+	protected String label;
 	protected boolean required;
 	
 	protected JLabel nameLabel;
@@ -26,6 +27,7 @@ public abstract class JPropertyDefinitionComponent<T> implements SnapshotModifie
 	
 	public JPropertyDefinitionComponent(Container container, String label, String name, int x, int y, boolean required, MainEditor editor) {
 		this.name = name;
+		this.label = label;
 		this.required = required;
 		this.json = new Json();
 		
@@ -46,6 +48,16 @@ public abstract class JPropertyDefinitionComponent<T> implements SnapshotModifie
 	
 	protected int getValueModifierX(int x) {
 		return hasNameLabel() ? SPACE_OF_LABELS + x : x;
+	}
+	
+	@Override
+	public boolean isRequired() {
+		return required;
+	}
+	
+	@Override
+	public String getName() {	
+		return label == null ? name : label;
 	}
 	
 }
