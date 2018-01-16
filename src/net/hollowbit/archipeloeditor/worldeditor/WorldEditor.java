@@ -145,8 +145,8 @@ public class WorldEditor extends WorldRenderer {
 			
 		Vector2 mouseLocation = cam.unproject(new Vector2(screenX, screenY));
 		
-		int tileX = (int) (mouseLocation.x / MainEditor.TILE_SIZE);
-		int tileY = (int) (mouseLocation.y / MainEditor.TILE_SIZE);
+		int tileX = (int) (mouseLocation.x / MainEditor.TILE_SIZE) - (mouseLocation.x < 0 ? 1 : 0);
+		int tileY = (int) (mouseLocation.y / MainEditor.TILE_SIZE) - (mouseLocation.y < 0 ? 1 : 0);
 		
 		if (editor.getSelectedTool() != null && mode == DEFAULT_MODE)
 			editor.getSelectedTool().touchDown(mouseLocation.x, mouseLocation.y, tileX, tileY, button);
@@ -157,8 +157,8 @@ public class WorldEditor extends WorldRenderer {
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
 		Vector2 mouseLocation = cam.unproject(new Vector2(screenX, screenY));
 		
-		int tileX = (int) (mouseLocation.x / MainEditor.TILE_SIZE);
-		int tileY = (int) (mouseLocation.y / MainEditor.TILE_SIZE);
+		int tileX = (int) (mouseLocation.x / MainEditor.TILE_SIZE) - (mouseLocation.x < 0 ? 1 : 0);
+		int tileY = (int) (mouseLocation.y / MainEditor.TILE_SIZE) - (mouseLocation.y < 0 ? 1 : 0);
 	
 		if (editor.getSelectedTool() != null && mode == DEFAULT_MODE)
 			editor.getSelectedTool().touchUp(mouseLocation.x, mouseLocation.y, tileX, tileY, button);
@@ -172,8 +172,8 @@ public class WorldEditor extends WorldRenderer {
 			
 		Vector2 mouseLocation = cam.unproject(new Vector2(screenX, screenY));
 		
-		int tileX = (int) (mouseLocation.x / MainEditor.TILE_SIZE);
-		int tileY = (int) (mouseLocation.y / MainEditor.TILE_SIZE);
+		int tileX = (int) (mouseLocation.x / MainEditor.TILE_SIZE) - (mouseLocation.x < 0 ? 1 : 0);
+		int tileY = (int) (mouseLocation.y / MainEditor.TILE_SIZE) - (mouseLocation.y < 0 ? 1 : 0);
 		
 		if (!Gdx.input.isKeyPressed(Keys.SPACE)) {
 			if (editor.getSelectedTool() != null && mode == DEFAULT_MODE)

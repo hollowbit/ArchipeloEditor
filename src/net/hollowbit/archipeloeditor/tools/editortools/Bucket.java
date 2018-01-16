@@ -103,6 +103,9 @@ public class Bucket extends Tool {
 
 	@Override
 	public void touchDragged(float x, float y, int tileX, int tileY) {
+		if (change == null)//Good indication that this is a right click
+			return;
+		
 		if (tileX >= editor.getMap().getMaxTileX() || tileY >= editor.getMap().getMaxTileY() || tileX < editor.getMap().getMinTileX() || tileY < editor.getMap().getMinTileY())
 			return;
 		
@@ -112,6 +115,7 @@ public class Bucket extends Tool {
 			Chunk chunkEdited = editor.getMap().getChunk(chunkX, chunkY);
 			
 			if (chunkEdited != null) {
+				
 				change.addChunk(chunkEdited);
 				startFill(tileX, tileY);
 			}

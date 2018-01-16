@@ -32,6 +32,9 @@ public class AssetManager {
 	private HashMap<String, ArrayList<MapTile>> categoryTiles;
 	private HashMap<String, ArrayList<MapElement>> categoryElements;
 	
+	//Inner->Outer->Position
+	private HashMap<String, HashMap<String, HashMap<Byte, MapTile>>> tileTransitionMap;
+	
 	private Texture grid;
 	private Texture invalid;
 	private Texture blank;
@@ -77,6 +80,7 @@ public class AssetManager {
 		elementList = new ArrayList<MapElement>();
 		categoryTiles = new HashMap<String, ArrayList<MapTile>>();
 		categoryElements = new HashMap<String, ArrayList<MapElement>>();
+		tileTransitionMap = new HashMap<String, HashMap<String, HashMap<Byte, MapTile>>>();
 	}
 	
 	public ArrayList<MapTile> getMapTiles() {
@@ -93,6 +97,18 @@ public class AssetManager {
 	
 	public HashMap<String, ArrayList<MapElement>> getCategoryElements() {
 		return categoryElements;
+	}
+	
+	public MapTile getTransitionTile(String inner, String outer, byte code) {
+		HashMap<String, HashMap<Byte, MapTile>> outerMap = tileTransitionMap.get(inner);
+		if (outerMap == null)
+			return null;
+		
+		HashMap<Byte, MapTile> codeMap = outerMap.get(outer);
+		if (codeMap == null)
+			return null;
+		
+		return codeMap.get(code);
 	}
 	
 	public Texture getChunkTexture() {
@@ -157,6 +173,23 @@ public class AssetManager {
 			MapTile tile = new MapTile(data, texture, icon);
 			tileMap.put(data.id, tile);
 			tileList.add(tile);
+			
+			//If this is a transition tile, put it in the map
+			if (data.transitionCode != -1) {
+				HashMap<String, HashMap<Byte, MapTile>> outerMap = tileTransitionMap.get(data.transitionInner);
+				if (outerMap == null) {
+					outerMap = new HashMap<String, HashMap<Byte, MapTile>>();
+					tileTransitionMap.put(data.transitionInner, outerMap);
+				}
+				
+				HashMap<Byte, MapTile> positionMap = outerMap.get(data.transitionOuter);
+				if (positionMap == null) {
+					positionMap = new HashMap<Byte, MapTile>();
+					outerMap.put(data.transitionOuter, positionMap);
+				}
+				
+				positionMap.put(data.transitionCode, tile);
+			}
 			
 			//Get list of tiles in same category
 			ArrayList<MapTile> categoryTilesList = categoryTiles.get(data.category);

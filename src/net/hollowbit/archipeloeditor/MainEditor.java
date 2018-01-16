@@ -46,6 +46,7 @@ import net.hollowbit.archipeloeditor.tools.editortools.ChunkTool;
 import net.hollowbit.archipeloeditor.tools.editortools.EntityAdderTool;
 import net.hollowbit.archipeloeditor.tools.editortools.Pencil;
 import net.hollowbit.archipeloeditor.tools.editortools.Tool;
+import net.hollowbit.archipeloeditor.tools.editortools.TransitionPlacer;
 import net.hollowbit.archipeloeditor.world.AssetManager;
 import net.hollowbit.archipeloeditor.world.Map;
 import net.hollowbit.archipeloeditor.worldeditor.WorldEditor;
@@ -62,6 +63,8 @@ public class MainEditor implements Runnable {
 	public static final int PENCIL_TOOL = 0;
 	public static final int BUCKET_TOOL = 1;
 	public static final int ENTITY_TOOL = 2;
+	public static final int CHUNK_TOOL = 3;
+	public static final int TRANSITION_TOOL = 4;
 	
 	public static BufferedImage ICON;
 	public static Cursor CURSOR;
@@ -116,7 +119,7 @@ public class MainEditor implements Runnable {
 					//Load basic images for editor
 					ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 					ICON = ImageIO.read(classLoader.getResourceAsStream("images/icon.png"));
-					CURSOR = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(classLoader.getResourceAsStream("images/cursor.png")), new Point(16, 8), "blank");
+					CURSOR = Toolkit.getDefaultToolkit().createCustomCursor(ImageIO.read(classLoader.getResourceAsStream("images/cursor.png")), new Point(8, 8), "blank");
 					MainEditor window = new MainEditor();
 					window.frame.setVisible(true);
 				} catch (Exception e) {
@@ -526,6 +529,7 @@ public class MainEditor implements Runnable {
 		btnBucketTool = new JToggleButton(new ImageIcon(bucketIcon));
 		final JToggleButton btnEntityTool = new JToggleButton(new ImageIcon(entityIcon));
 		final JToggleButton btnChunkTool = new JToggleButton(new ImageIcon(chunkIcon));
+		final JToggleButton btnTransitionTool = new JToggleButton(new ImageIcon(chunkIcon));
 		
 		//Pencil
 		final JToggleButton btnPencilTool = new JToggleButton(new ImageIcon(pencilIcon));
@@ -537,6 +541,7 @@ public class MainEditor implements Runnable {
 				btnBucketTool.setSelected(false);
 				btnEntityTool.setSelected(false);
 				btnChunkTool.setSelected(false);
+				btnTransitionTool.setSelected(false);
 				setTool(new Pencil(editor, worldEditor));
 			}
 		});
@@ -553,6 +558,7 @@ public class MainEditor implements Runnable {
 				btnPencilTool.setSelected(false);
 				btnEntityTool.setSelected(false);
 				btnChunkTool.setSelected(false);
+				btnTransitionTool.setSelected(false);
 				setTool(new Bucket(editor, worldEditor));
 			}
 		});
@@ -569,6 +575,7 @@ public class MainEditor implements Runnable {
 				btnPencilTool.setSelected(false);
 				btnBucketTool.setSelected(false);
 				btnChunkTool.setSelected(false);
+				btnTransitionTool.setSelected(false);
 				setTool(new EntityAdderTool(editor, worldEditor));
 			}
 		});
@@ -585,6 +592,7 @@ public class MainEditor implements Runnable {
 				btnPencilTool.setSelected(false);
 				btnBucketTool.setSelected(false);
 				btnEntityTool.setSelected(false);
+				btnTransitionTool.setSelected(false);
 				setTool(new ChunkTool(editor, worldEditor));
 			}
 		});
@@ -593,6 +601,23 @@ public class MainEditor implements Runnable {
 		gbc_btnChunkTool.gridx = 3;
 		gbc_btnChunkTool.gridy = 1;
 		panel.add(btnChunkTool, gbc_btnChunkTool);
+		
+		//Transitions
+		btnTransitionTool.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+				btnPencilTool.setSelected(false);
+				btnBucketTool.setSelected(false);
+				btnEntityTool.setSelected(false);
+				btnChunkTool.setSelected(false);
+				setTool(new TransitionPlacer(editor, worldEditor));
+			}
+		});
+		GridBagConstraints gbc_btnTransitionTool = new GridBagConstraints();
+		gbc_btnTransitionTool.insets = new Insets(0, 0, 5, 5);
+		gbc_btnTransitionTool.gridx = 4;
+		gbc_btnTransitionTool.gridy = 1;
+		panel.add(btnTransitionTool, gbc_btnTransitionTool);
 		
 		//Tool Settings
 		toolSettingsPanel = new JPanel();

@@ -24,7 +24,7 @@ public class IslandGenerator extends Generator {
 		data.x = x;
 		data.y = y;
 		
-		float[][] noise = generateOctavedSimplexNoise(x * ChunkData.SIZE, y * ChunkData.SIZE, ChunkData.SIZE, ChunkData.SIZE, 3, 0.6f, 0.001f);
+		float[][] noise = generateOctavedSimplexNoise(x * ChunkData.SIZE, y * ChunkData.SIZE, ChunkData.SIZE, ChunkData.SIZE, 3, 0.6f, 0.006f);
 		
 		for (int r = 0; r < ChunkData.SIZE; r++) {
 			for (int c = 0; c < ChunkData.SIZE; c++) {

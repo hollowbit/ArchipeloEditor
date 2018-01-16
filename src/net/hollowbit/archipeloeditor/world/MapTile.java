@@ -38,6 +38,10 @@ public class MapTile implements Icon{
 	public TextureRegion texture = null;
 	public BufferedImage icon = null;
 	
+	public String transitionInner;
+	public String transitionOuter;
+	public byte transitionCode;
+	
 	public MapTile(TileData data, TextureRegion texture, BufferedImage icon){
 		//Apply data from file
 		this.id = data.id;
@@ -54,6 +58,10 @@ public class MapTile implements Icon{
 		//To be implemented:
 		//this.damageSpeed = data.damageSpeed;
 		//this.damage = data.damage;
+		
+		this.transitionInner = data.transitionInner;
+		this.transitionOuter = data.transitionOuter;
+		this.transitionCode = data.transitionCode;
 		
 		//TODO HANDLE ROTATION AND FLIP                     
 		this.texture = texture;

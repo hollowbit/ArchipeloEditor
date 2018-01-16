@@ -12,7 +12,7 @@ import net.hollowbit.archipeloshared.CollisionRect;
 
 public class GameCamera {
 	
-	public static final float MAX_ZOOM = 15;
+	public static final float MAX_ZOOM = 30;
 	public static final float MIN_ZOOM = 0.1f;
 	
 	private OrthographicCamera cam;
