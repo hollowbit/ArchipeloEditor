@@ -21,7 +21,6 @@ import net.hollowbit.archipeloshared.CollisionRect;
 import net.hollowbit.archipeloshared.EntityData;
 import net.hollowbit.archipeloshared.InvalidMapFolderException;
 import net.hollowbit.archipeloshared.MapData;
-import net.hollowbit.archipeloshared.Point;
 import net.hollowbit.archipeloshared.TileData;
 
 public class Map implements Cloneable {

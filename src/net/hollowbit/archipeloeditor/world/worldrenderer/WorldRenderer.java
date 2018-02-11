@@ -79,8 +79,12 @@ public class WorldRenderer extends ApplicationAdapter implements InputProcessor 
 		batch.setProjectionMatrix(uiCam.combined());
 		batch.begin();
 		Vector2 pos = cam.unproject(new Vector2(Gdx.input.getX(), Gdx.input.getY()));
+		int tileX = (int) (pos.x / MainEditor.TILE_SIZE) - (pos.x < 0 ? 1 : 0);
+		int tileY = (int) (pos.y / MainEditor.TILE_SIZE) - (pos.y < 0 ? 1 : 0);
 		font.draw(batch, "x: " + ((int) pos.x), 10, 40);
 		font.draw(batch, "y: " + ((int) pos.y), 10, 20);
+		font.draw(batch, "tileX: " + tileX, 10, 80);
+		font.draw(batch, "tileY: " + tileY, 10, 60);
 		batch.end();
 		
 		//Set batch back for any child classes

@@ -1,8 +1,11 @@
 package net.hollowbit.archipeloeditor.tools.editortools;
 
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 
 import com.badlogic.gdx.Gdx;
@@ -21,12 +24,21 @@ public class TransitionPlacer extends Tool {
 
 	MapChange change;
 	
+	JCheckBox cleanupCheckBox;
+	
 	public TransitionPlacer(MainEditor editor, WorldEditor worldRenderer) {
 		super(editor, worldRenderer);
 	}
 
 	@Override
 	public void addComponents(JPanel panel) {
+		cleanupCheckBox = new JCheckBox("Clean up?");
+
+		GridBagConstraints gbc_cleanupCheckBox = new GridBagConstraints();
+		gbc_cleanupCheckBox.insets = new Insets(0, 0, 5, 5);
+		gbc_cleanupCheckBox.gridx = 0;
+		gbc_cleanupCheckBox.gridy = 1;
+		panel.add(cleanupCheckBox, gbc_cleanupCheckBox);
 	}
 
 	@Override
@@ -139,49 +151,52 @@ public class TransitionPlacer extends Tool {
 		
 		boolean placed = false;
 		
+		boolean cleanup = cleanupCheckBox.isSelected();
+		
 		//Sides
 		if (north && south) {
 			if (west) {
-				placed = placeEast(inner, tileX, tileY);
+				placed = placeEast(inner, tileX, tileY, cleanup);
 			} else if (east) {
-				placed = placeWest(inner, tileX, tileY);
+				placed = placeWest(inner, tileX, tileY, cleanup);
 			}
 		} else if (east && west) {
 			if (north) {
-				placed = placeSouth(inner, tileX, tileY);
+				placed = placeSouth(inner, tileX, tileY, cleanup);
 			} else if (south) {
-				placed = placeNorth(inner, tileX, tileY);
+				placed = placeNorth(inner, tileX, tileY, cleanup);
 			}
 		}
 		
 		//Inners
 		if (!placed && north && west && !northWest)
-			placed = placeNorthWestInner(inner, tileX, tileY);
+			placed = placeNorthWestInner(inner, tileX, tileY, cleanup);
 		
 		if (!placed && north && east && !northEast)
-			placed = placeNorthEastInner(inner, tileX, tileY);
+			placed = placeNorthEastInner(inner, tileX, tileY, cleanup);
 		
 		if (!placed && south && west && !southWest)
-			placed = placeSouthWestInner(inner, tileX, tileY);
+			placed = placeSouthWestInner(inner, tileX, tileY, cleanup);
 		
 		if (!placed && south && east && !southEast)
-			placed = placeSouthEastInner(inner, tileX, tileY);
+			placed = placeSouthEastInner(inner, tileX, tileY, cleanup);
 			
 		//Outers
 		if (!placed && north && west && northWest)
-			placed = placeSouthEastOuter(inner, tileX, tileY);
+			placed = placeSouthEastOuter(inner, tileX, tileY, cleanup);
 		
 		if (!placed && north && east &&northEast)
-				placed = placeSouthWestOuter(inner, tileX, tileY);
+				placed = placeSouthWestOuter(inner, tileX, tileY, cleanup);
 		
 		if (!placed && south && west && southWest)
-				placed = placeNorthEastOuter(inner, tileX, tileY);
+				placed = placeNorthEastOuter(inner, tileX, tileY, cleanup);
 		
 		if (!placed && south && east && southEast)
-				placed = placeNorthWestOuter(inner, tileX, tileY);
+				placed = placeNorthWestOuter(inner, tileX, tileY, cleanup);
 		
 		if (!placed) {
-			cleanup(inner, tileX, tileY);
+			if (cleanup)
+				cleanup(inner, tileX, tileY);
 		}
 	}
 	
@@ -189,9 +204,6 @@ public class TransitionPlacer extends Tool {
 		HashMap<String, Integer> countTracker = new HashMap<String, Integer>();
 		for (int r = -1; r <= 1; r++) {
 			for (int c = -1; c <= 1; c++) {
-				if (r == 0 && c == 0)//Skip the tile itself
-					continue;
-				
 				MapTile tile = editor.getAssetManager().getTileByID(editor.getMap().getTile(tileX + c, tileY + r));
 				
 				if (tile != null) {
@@ -224,47 +236,51 @@ public class TransitionPlacer extends Tool {
 		editor.getMap().setTile(tileX, tileY, highestId);
 	}
 	
-	private boolean placeEast(String inner, int tileX, int tileY) {
+	private boolean placeEast(String inner, int tileX, int tileY, boolean cleanup) {
 		String outer = editor.getMap().getTile(tileX + 1, tileY);
 		MapTile tile = editor.getAssetManager().getTransitionTile(inner, outer, (byte) 3);
 		if (tile != null) {
-			editor.getMap().setTile(tileX, tileY, tile.id);
+			if (!cleanup)
+				editor.getMap().setTile(tileX, tileY, tile.id);
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean placeWest(String inner, int tileX, int tileY) {
+	private boolean placeWest(String inner, int tileX, int tileY, boolean cleanup) {
 		String outer = editor.getMap().getTile(tileX - 1, tileY);
 		MapTile tile = editor.getAssetManager().getTransitionTile(inner, outer, (byte) 0);
 		if (tile != null) {
-			editor.getMap().setTile(tileX, tileY, tile.id);
+			if (!cleanup)
+				editor.getMap().setTile(tileX, tileY, tile.id);
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean placeNorth(String inner, int tileX, int tileY) {
+	private boolean placeNorth(String inner, int tileX, int tileY, boolean cleanup) {
 		String outer = editor.getMap().getTile(tileX, tileY + 1);
 		MapTile tile = editor.getAssetManager().getTransitionTile(inner, outer, (byte) 1);
 		if (tile != null) {
-			editor.getMap().setTile(tileX, tileY, tile.id);
+			if (!cleanup)
+				editor.getMap().setTile(tileX, tileY, tile.id);
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean placeSouth(String inner, int tileX, int tileY) {
+	private boolean placeSouth(String inner, int tileX, int tileY, boolean cleanup) {
 		String outer = editor.getMap().getTile(tileX, tileY - 1);
 		MapTile tile = editor.getAssetManager().getTransitionTile(inner, outer, (byte) 2);
 		if (tile != null) {
-			editor.getMap().setTile(tileX, tileY, tile.id);
+			if (!cleanup)
+				editor.getMap().setTile(tileX, tileY, tile.id);
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean placeNorthEastOuter(String inner, int tileX, int tileY) {
+	private boolean placeNorthEastOuter(String inner, int tileX, int tileY, boolean cleanup) {
 		String outer = editor.getMap().getTile(tileX, tileY + 1);
 		MapTile tile = editor.getAssetManager().getTransitionTile(inner, outer, (byte) 4);
 		
@@ -274,13 +290,14 @@ public class TransitionPlacer extends Tool {
 		}
 		
 		if (tile != null) {
-			editor.getMap().setTile(tileX, tileY, tile.id);
+			if (!cleanup)
+				editor.getMap().setTile(tileX, tileY, tile.id);
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean placeNorthWestOuter(String inner, int tileX, int tileY) {
+	private boolean placeNorthWestOuter(String inner, int tileX, int tileY, boolean cleanup) {
 		String outer = editor.getMap().getTile(tileX, tileY + 1);
 		MapTile tile = editor.getAssetManager().getTransitionTile(inner, outer, (byte) 5);
 		
@@ -290,13 +307,14 @@ public class TransitionPlacer extends Tool {
 		}
 		
 		if (tile != null) {
-			editor.getMap().setTile(tileX, tileY, tile.id);
+			if (!cleanup)
+				editor.getMap().setTile(tileX, tileY, tile.id);
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean placeSouthEastOuter(String inner, int tileX, int tileY) {
+	private boolean placeSouthEastOuter(String inner, int tileX, int tileY, boolean cleanup) {
 		String outer = editor.getMap().getTile(tileX, tileY -1);
 		MapTile tile = editor.getAssetManager().getTransitionTile(inner, outer, (byte) 6);
 		
@@ -306,13 +324,14 @@ public class TransitionPlacer extends Tool {
 		}
 		
 		if (tile != null) {
-			editor.getMap().setTile(tileX, tileY, tile.id);
+			if (!cleanup)
+				editor.getMap().setTile(tileX, tileY, tile.id);
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean placeSouthWestOuter(String inner, int tileX, int tileY) {
+	private boolean placeSouthWestOuter(String inner, int tileX, int tileY, boolean cleanup) {
 		String outer = editor.getMap().getTile(tileX, tileY - 1);
 		MapTile tile = editor.getAssetManager().getTransitionTile(inner, outer, (byte) 7);
 		
@@ -322,51 +341,56 @@ public class TransitionPlacer extends Tool {
 		}
 		
 		if (tile != null) {
-			editor.getMap().setTile(tileX, tileY, tile.id);
+			if (!cleanup)
+				editor.getMap().setTile(tileX, tileY, tile.id);
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean placeNorthEastInner(String inner, int tileX, int tileY) {
+	private boolean placeNorthEastInner(String inner, int tileX, int tileY, boolean cleanup) {
 		String outer = editor.getMap().getTile(tileX + 1, tileY + 1);
 		MapTile tile = editor.getAssetManager().getTransitionTile(inner, outer, (byte) 11);
 		
 		if (tile != null) {
-			editor.getMap().setTile(tileX, tileY, tile.id);
+			if (!cleanup)
+				editor.getMap().setTile(tileX, tileY, tile.id);
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean placeNorthWestInner(String inner, int tileX, int tileY) {
+	private boolean placeNorthWestInner(String inner, int tileX, int tileY, boolean cleanup) {
 		String outer = editor.getMap().getTile(tileX - 1, tileY + 1);
 		MapTile tile = editor.getAssetManager().getTransitionTile(inner, outer, (byte) 10);
 		
 		if (tile != null) {
-			editor.getMap().setTile(tileX, tileY, tile.id);
+			if (!cleanup)
+				editor.getMap().setTile(tileX, tileY, tile.id);
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean placeSouthEastInner(String inner, int tileX, int tileY) {
+	private boolean placeSouthEastInner(String inner, int tileX, int tileY, boolean cleanup) {
 		String outer = editor.getMap().getTile(tileX + 1, tileY - 1);
 		MapTile tile = editor.getAssetManager().getTransitionTile(inner, outer, (byte) 9);
 		
 		if (tile != null) {
-			editor.getMap().setTile(tileX, tileY, tile.id);
+			if (!cleanup)
+				editor.getMap().setTile(tileX, tileY, tile.id);
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean placeSouthWestInner(String inner, int tileX, int tileY) {
+	private boolean placeSouthWestInner(String inner, int tileX, int tileY, boolean cleanup) {
 		String outer = editor.getMap().getTile(tileX - 1, tileY - 1);
 		MapTile tile = editor.getAssetManager().getTransitionTile(inner, outer, (byte) 8);
 		
 		if (tile != null) {
-			editor.getMap().setTile(tileX, tileY, tile.id);
+			if (!cleanup)
+				editor.getMap().setTile(tileX, tileY, tile.id);
 			return true;
 		}
 		return false;
