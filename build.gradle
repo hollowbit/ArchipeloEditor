@@ -2,8 +2,10 @@ apply plugin: "java"
 apply plugin: 'eclipse'
 
 //mainClassName = 'net.hollowbit.archipeloeditor.MainEditor'
-sourceSets.main.java.srcDirs = [ "src/" ]
-project.ext.assetsDir = new File("../../core/assets");
+sourceSets.main.java.srcDirs = [ "src/main/java", "../ArchipeloClient/src-shared/" ]
+sourceSets.main.resources.srcDirs = [ "src/main/resources/" ]
+project.ext.assetsDir = new File("../ArchipeloClient/core/assets");
+project.ext.mainClassName = 'net.hollowbit.archipeloeditor.MainEditor'
 
 sourceCompatibility = 1.8
 version = '1.0'
@@ -12,6 +14,18 @@ jar {
     manifest {
         attributes 'Implementation-Title': 'Gradle Quickstart',
                    'Implementation-Version': version
+    }
+}
+
+task run(dependsOn: classes, type: JavaExec) {
+    main = project.mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    classpath +=sourceSets.main.resources
+    standardInput = System.in
+    //workingDir = project.assetsDir
+    ignoreExitValue = true
+    doFirst {
+        println("Assets: $project.assetsDir.absolutePath")
     }
 }
 

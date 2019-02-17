@@ -1,0 +1,168 @@
+{
+"tileList": [
+	{
+		"no": 0,
+		"id": "grass",
+		"name": "Grass",
+		"category": "grasslands",
+		"footstepSound": "grass"
+	},
+	{
+		"no": 1,
+		"id": "water",
+		"x": 1,
+		"name": "Water",
+		"category": "grasslands",
+		collisionTable: [[true, true],
+						[true, true]]
+	},
+	{
+		"no": 2,
+		"id": "dirt",
+		"x": 3,
+		"y": 1,
+		"name": "Dirt",
+		"category": "grasslands",
+		"footstepSound": "stone"
+	},
+	{
+		"no": 3,
+		"id": "dirt_grass_north_west",
+		"x": 2,
+		"name": "Dirt to Grass (North West)",
+		"category": "grasslands",
+		"transitionCode": 5,
+		"transitionInner": "dirt",
+		"transitionOuter": "grass",
+		"footstepSound": "stone"
+	},
+	{
+		"no": 4,
+		"id": "dirt_grass_north",
+		"x": 3,
+		"name": "Dirt to Grass (North)",
+		"category": "grasslands",
+		"transitionCode": 1,
+		"transitionInner": "dirt",
+		"transitionOuter": "grass",
+		"footstepSound": "stone"
+	},
+	{
+		"no": 5,
+		"id": "dirt_grass_north_east",
+		"x": 4,
+		"name": "Dirt to Grass (North East)",
+		"category": "grasslands",
+		"transitionCode": 4,
+		"transitionInner": "dirt",
+		"transitionOuter": "grass",
+		"footstepSound": "stone"
+	},
+	{
+		"no": 6,
+		"id": "dirt_grass_west",
+		"x": 2,
+		"y": 1,
+		"name": "Dirt to Grass (West)",
+		"category": "grasslands",
+		"transitionCode": 0,
+		"transitionInner": "dirt",
+		"transitionOuter": "grass",
+		"footstepSound": "stone"
+	},
+	{
+		"no": 7,
+		"id": "dirt_grass_south_west",
+		"x": 2,
+		"y": 2,
+		"name": "Dirt to Grass (South West)",
+		"category": "grasslands",
+		"transitionCode": 7,
+		"transitionInner": "dirt",
+		"transitionOuter": "grass",
+		"footstepSound": "stone"
+	},
+	{
+		"no": 8,
+		"id": "dirt_grass_south",
+		"x": 3,
+		"y": 2,
+		"name": "Dirt to Grass (South)",
+		"category": "grasslands",
+		"transitionCode": 2,
+		"transitionInner": "dirt",
+		"transitionOuter": "grass",
+		"footstepSound": "stone"
+	},
+	{
+		"no": 9,
+		"id": "dirt_grass_south_east",
+		"x": 4,
+		"y": 2,
+		"name": "Dirt to Grass (South East)",
+		"category": "grasslands",
+		"transitionCode": 6,
+		"transitionInner": "dirt",
+		"transitionOuter": "grass",
+		"footstepSound": "stone"
+	},
+	{
+		"no": 10,
+		"id": "dirt_grass_east",
+		"x": 4,
+		"y": 1,
+		"name": "Dirt to Grass (East)",
+		"category": "grasslands",
+		"transitionCode": 3,
+		"transitionInner": "dirt",
+		"transitionOuter": "grass",
+		"footstepSound": "stone"
+	},
+	{
+		"no": 11,
+		"id": "dirt_grass_inner_south_east",
+		"y": 1,
+		"name": "Dirt to Grass (Inner South East)",
+		"category": "grasslands",
+		"transitionCode": 9,
+		"transitionInner": "dirt",
+		"transitionOuter": "grass",
+		"footstepSound": "stone"
+	},
+	{
+		"no": 12,
+		"id": "dirt_grass_inner_south_west",
+		"x": 1,
+		"y": 1,
+		"name": "Dirt to Grass (Inner South West)",
+		"category": "grasslands",
+		"transitionCode": 8,
+		"transitionInner": "dirt",
+		"transitionOuter": "grass",
+		"footstepSound": "stone"
+	},
+	{
+		"no": 13,
+		"id": "dirt_grass_inner_north_east",
+		"y": 2,
+		"name": "Dirt to Grass (Inner North East)",
+		"category": "grasslands",
+		"transitionCode": 11,
+		"transitionInner": "dirt",
+		"transitionOuter": "grass",
+		"footstepSound": "stone"
+	},
+	{
+		"no": 14,
+		"id": "dirt_grass_inner_north_west",
+		"x": 1,
+		"y": 2,
+		"name": "Dirt to Grass (Inner North West)",
+		"category": "grasslands",
+		"transitionCode": 10,
+		"transitionInner": "dirt",
+		"transitionOuter": "grass",
+		"footstepSound": "stone"
+	}
+]
+}

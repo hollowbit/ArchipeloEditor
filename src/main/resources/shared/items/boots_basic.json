@@ -1,0 +1,7 @@
+{
+	"minDamage":1,
+	"durability":400,
+	"equipType":0,
+	"defense": 1,
+	"speedMultiplier": 1.5
+}

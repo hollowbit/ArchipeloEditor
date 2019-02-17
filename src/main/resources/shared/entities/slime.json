@@ -1,0 +1,25 @@
+{
+	"id":"slime",
+	"hittable":true,
+	"maxDirections":4,
+	"speed":30,
+	"maxHealth":30,
+	"showHealthBar": true,
+	"footstepSound":"slime",
+	"imgWidth":24,
+	"imgHeight":16,
+	"footstepOffsetX":12,
+	"footstepOffsetY":8,
+	"drawOrderOffsetY":8,
+	"collisionRects":[
+		{"name":"hit", "hard": true, "offsetX":2, "offsetY":2, "width":20, "height":6}
+		],
+	"animations":[
+		{"id":"walk", "totalRuntime":0.7, "numberOfDirections":8, "looping":true},
+		{"id":"default", "fileName":"walk", "totalRuntime":0, "numberOfDirections": 8, "looping": true},
+		],
+	"properties": [
+		{"name":"activationZoneDistance", "type":"int"},
+		{"name":"deactivationZoneDistance", "type":"int"},
+	]
+}

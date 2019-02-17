@@ -1,0 +1,21 @@
+{
+	"id":"door",
+	"hittable":false,
+	"maxDirections":1,
+	"imgWidth":12,
+	"imgHeight":13,
+	"collisionRects":[
+					{"name":"bottom", "width":12, "height":5, "hard":true},
+					{"name":"top", "width":12, "height":8, "offsetY":5}
+					],
+	"animations":[
+				{"id":"open"},
+				{"id":"closed"},
+				{"id":"locked"}
+				],
+	"properties":[
+				{"name":"teleports", "type":"boolean"},
+				{"name":"teleportLocation", "type":"location", "required":false},
+				{"name":"unlockFlag", "type":"string"},
+				]
+}

@@ -1,0 +1,19 @@
+{
+	"id":"wizard",
+	"hittable":false,
+	"maxDirections":4,
+	"speed":40,
+	"imgWidth":16,
+	"imgHeight":23,
+	"footstepOffsetX":8,
+	"footstepOffsetY":1,
+	"collisionRects":[
+				{"name":"feet", "offsetX":4,"offsetY":0,"width":8,"height":8,"hard":true},
+				],
+	"animations":[
+				{"id":"default", "fileName":"walk", "totalRuntime":0, "numberOfDirections":1, "looping":true}
+				],
+	"sounds":[
+			{"id":"hit", "path":"actions/hit"}
+			]
+}

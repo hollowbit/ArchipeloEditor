@@ -1,0 +1,26 @@
+{
+	"id":"player",
+	"hittable":true,
+	"maxDirections":8,
+	"speed":120,
+	"maxHealth":100,
+	"footstepSound": "player",
+	"imgWidth":90,
+	"imgHeight":90,
+	"footstepOffsetX":45,
+	"footstepOffsetY":34,
+	"drawOrderOffsetY":34,
+	"headOffsetFromTop":30,
+	"collisionRects":[
+				{"name": "feet", "offsetX":40,"offsetY":34,"width":9,"height":9}
+				],
+	"animations":[
+				{"id":"default", "fileName":"walk", "totalRuntime":0, "numberOfDirections":8, "looping":true},
+				{"id":"walk", "totalRuntime":0.8, "numberOfDirections":8, "looping":true},
+				{"id":"roll", "totalRuntime":0.64, "numberOfDirections":8, "looping":false, "finiteLength": true},
+				{"id":"sprint", "fileName":"walk", "totalRuntime":0.64, "numberOfDirections":8, "looping":true},
+				{"id":"use", "totalRuntime":0, "numberOfDirections":8, "looping":false, "finiteLength":true},
+				{"id":"usewalk", "fileName":"use", "totalRuntime":0.08, "numberOfDirections":8, "looping":true, "finiteLength":true},
+				{"id":"thrust", "totalRuntime":0, "numberOfDirections":8, "looping":false, "finiteLength":true},
+				]
+}
