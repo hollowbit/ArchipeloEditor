@@ -1,6 +1,8 @@
 # ArchipeloEditor
 Editor for various things related to Archipelo. This tool is designed for the developers of Archipelo to make it easier for us to work on maps, entity types, tile, elements and more, all related to Archipelo.
 
+![Screenshot of what the editor looks like](screenshot.png)
+
 ## Features
 
 - Create maps with tiles, elements (trees, houses, etc), entities (signs, NPCs, etc) and export them in JSON format that is compatible with the [ArchipeloServer](https://github.com/hollowbit/ArchipeloServer).
